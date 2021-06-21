@@ -105,7 +105,8 @@ namespace GTranslate.Translators
             string json;
             using (var content = new FormUrlEncodedContent(data))
             {
-                var response = await _httpClient.PostAsync(new Uri(_apiEndpoint), content).ConfigureAwait(false);
+                // For some reason the "isVertical" parameter allows you to translate up to 1000 characters instead of 500
+                var response = await _httpClient.PostAsync(new Uri($"{_apiEndpoint}?isVertical=1"), content).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
                 json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             }

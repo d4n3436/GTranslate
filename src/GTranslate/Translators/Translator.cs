@@ -28,13 +28,6 @@ namespace GTranslate.Translators
                 new BingTranslator(),
                 new YandexTranslator()
             };
-
-            /*
-            _translators = typeof(ITranslator).GetTypeInfo().Assembly.DefinedTypes
-                .Where(x => !x.IsInterface && !x.IsAbstract && !Equals(x, GetType().GetTypeInfo()) && x.ImplementedInterfaces.Contains(typeof(ITranslator)))
-                .Select(x => (ITranslator)Activator.CreateInstance(x.AsType()))
-                .ToArray();
-            */
         }
 
         /// <summary>
