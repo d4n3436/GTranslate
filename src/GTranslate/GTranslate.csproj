@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.3</TargetFramework>
+    <Authors>d4n3436</Authors>
+    <Product>GTranslate</Product>
+    <Description>A collection of free translation APIs (Google Translate, Bing Translator and Yandex.Translate). Currently supports translation, transliteration and language detection.</Description>
+    <NeutralLanguage>en</NeutralLanguage>
+    <PackageTags>translator;translator-api;translation;translation-api</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/d4n3436/GTranslate</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/d4n3436/GTranslate</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Copyright>Copyright ©2021 d4n3436</Copyright>
+	<IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+</Project>

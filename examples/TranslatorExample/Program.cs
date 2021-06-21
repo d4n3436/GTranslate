@@ -1,0 +1,41 @@
+﻿using System;
+using System.Threading.Tasks;
+using GTranslate.Translators;
+
+namespace TranslatorExample
+{
+    internal static class Program
+    {
+        private static async Task Main()
+        {
+            Console.WriteLine("Translator Example\n");
+            var translator = new Translator();
+
+            while (true)
+            {
+                Console.Write("Enter a text to translate or enter 'e' to exit: ");
+                string text = Console.ReadLine();
+                if (text == "e")
+                {
+                    break;
+                }
+
+                Console.Write("Language to translate to: ");
+                string language = Console.ReadLine();
+
+                try
+                {
+                    var result = await translator.TranslateAsync(text, language);
+                    Console.WriteLine($"Result: {result.Result}");
+                    Console.WriteLine($"Source Language: {result.SourceLanguage}");
+                    Console.WriteLine($"Target Language: {result.TargetLanguage}");
+                    Console.WriteLine($"Service: {result.Service}");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+        }
+    }
+}
