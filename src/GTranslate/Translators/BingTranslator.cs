@@ -187,7 +187,7 @@ namespace GTranslate.Translators
         /// <returns><see langword="true"/> if the language is supported, otherwise <see langword="false"/>.</returns>
         public bool IsLanguageSupported(string language)
         {
-            if (!string.IsNullOrEmpty(language))
+            if (string.IsNullOrEmpty(language))
             {
                 throw new ArgumentNullException(nameof(language));
             }

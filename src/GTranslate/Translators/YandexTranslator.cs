@@ -198,14 +198,14 @@ namespace GTranslate.Translators
             return Language.GetLanguage(model.Lang);
         }
 
-        /// <summary>   
+        /// <summary>
         /// Returns whether Yandex.Translate supports the specified language.
         /// </summary>
         /// <param name="language">The language.</param>
         /// <returns><see langword="true"/> if the language is supported, otherwise <see langword="false"/>.</returns>
         public bool IsLanguageSupported(string language)
         {
-            if (!string.IsNullOrEmpty(language))
+            if (string.IsNullOrEmpty(language))
             {
                 throw new ArgumentNullException(nameof(language));
             }
