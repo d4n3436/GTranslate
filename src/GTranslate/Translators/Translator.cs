@@ -25,7 +25,8 @@ namespace GTranslate.Translators
             _translators = new ITranslator[]
             {
                 new GoogleTranslator(),
-                new BingTranslator()
+                new BingTranslator(),
+                new YandexTranslator()
             };
 
             /*
