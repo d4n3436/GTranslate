@@ -298,7 +298,13 @@ namespace GTranslate.Translators
                 throw new TranslatorException("Unable to find the Bing key.", Name);
             }
 
+            // Unix timestamp generated once the page is loaded. Valid for 3600000 milliseconds or 1 hour
             string key = content.Substring(keyStartIndex, keyEndIndex - keyStartIndex);
+            if (!long.TryParse(key, out long timestamp))
+            {
+                // This shouldn't happen but we'll handle this case anyways
+                timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            }
 
             int tokenStartIndex = keyEndIndex + 2;
             int tokenEndIndex = content.IndexOf('"', tokenStartIndex);
@@ -308,8 +314,9 @@ namespace GTranslate.Translators
             }
 
             string token = content.Substring(tokenStartIndex, tokenEndIndex - tokenStartIndex);
+            var credentials = new BingCredentials { Key = key, Token = token };
 
-            _cachedCredentials = new CachedObject<BingCredentials>(new BingCredentials { Key = key, Token = token }, TimeSpan.FromMinutes(10));
+            _cachedCredentials = new CachedObject<BingCredentials>(credentials, DateTimeOffset.FromUnixTimeMilliseconds(timestamp + 3600000));
             return _cachedCredentials.Value;
         }
 
