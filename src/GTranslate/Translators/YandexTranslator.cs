@@ -84,7 +84,7 @@ namespace GTranslate.Translators
             var data = new Dictionary<string, string>
             {
                 { "text", text },
-                { "lang", fromLanguage == null ? toLanguage.ISO6391 : $"{fromLanguage.ISO6391}-{toLanguage.ISO6391}" }
+                { "lang", fromLanguage == null ? YandexHotPatch(toLanguage.ISO6391) : $"{YandexHotPatch(fromLanguage.ISO6391)}-{YandexHotPatch(toLanguage.ISO6391)}" }
             };
 
             string json;
@@ -144,7 +144,7 @@ namespace GTranslate.Translators
             var data = new Dictionary<string, string>
             {
                 { "text", text },
-                { "lang", $"{fromLanguage.ISO6391}-{toLanguage.ISO6391}" }
+                { "lang", $"{YandexHotPatch(fromLanguage.ISO6391)}-{YandexHotPatch(toLanguage.ISO6391)}" }
             };
 
             string transliteration;
@@ -260,6 +260,23 @@ namespace GTranslate.Translators
 
             _httpClient.Dispose();
             _disposed = true;
+        }
+
+        /// <summary>
+        /// Hot-patches language codes to Yandex-specific ones.
+        /// </summary>
+        /// <param name="languageCode">The language code.</param>
+        /// <returns>The hot-patched language code.</returns>
+        private static string YandexHotPatch(string languageCode)
+        {
+            switch (languageCode)
+            {
+                case "zh-CN":
+                    return "zh";
+
+                default:
+                    return languageCode;
+            }
         }
 
         private string GetOrUpdateUcid()

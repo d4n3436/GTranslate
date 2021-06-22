@@ -90,8 +90,8 @@ namespace GTranslate.Translators
             TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
             string query = "?client=dict-chrome-ex" +
-                           $"&sl={GoogleHotPath(fromLanguage?.ISO6393) ?? "auto"}" +
-                           $"&tl={GoogleHotPath(toLanguage.ISO6391)}" +
+                           $"&sl={GoogleHotPatch(fromLanguage?.ISO6393) ?? "auto"}" +
+                           $"&tl={GoogleHotPatch(toLanguage.ISO6391)}" +
                            $"&q={Uri.EscapeDataString(text)}";
 
             string json = await _httpClient.GetStringAsync(new Uri(query, UriKind.Relative)).ConfigureAwait(false);
@@ -264,13 +264,10 @@ namespace GTranslate.Translators
         /// </summary>
         /// <param name="languageCode">The language code.</param>
         /// <returns>The hot-patched language code.</returns>
-        private static string GoogleHotPath(string languageCode)
+        private static string GoogleHotPatch(string languageCode)
         {
             switch (languageCode)
             {
-                case "pt-BR":
-                    return "pt";
-
                 case "jv":
                     return "jw";
 

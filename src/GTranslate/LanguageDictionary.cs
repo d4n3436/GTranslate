@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 namespace GTranslate
 {
     /// <summary>
-    /// Represents the default language dictionary used in GTranslate.
+    /// Represents the default language dictionary used in GTranslate. It contains all the supported languages across all the included translators.
     /// </summary>
     public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
     {
@@ -89,7 +89,7 @@ namespace GTranslate
 
             foreach (var kvp in _languages)
             {
-                aliases[kvp.Value.ISO6393] = kvp.Key;
+                aliases[kvp.Value.ISO6393.ToLowerInvariant()] = kvp.Key;
                 aliases[kvp.Value.Name.ToLowerInvariant()] = kvp.Key;
             }
 
@@ -102,21 +102,21 @@ namespace GTranslate
             aliases["mo"] = "ro";
             aliases["nb"] = "no";
             aliases["nn"] = "no";
-            aliases["pt"] = "pt-BR";
-            aliases["portuguese"] = "pt-BR";
+            aliases["portuguese"] = "pt";
             aliases["sh"] = "sr-Cyrl";
             aliases["sr"] = "sr-Cyrl";
             aliases["srp"] = "sr-Cyrl";
             aliases["serbian"] = "sr-Cyrl";
             aliases["zh"] = "zh-CN";
-            aliases["zh-CHS"] = "zh-CN";
-            aliases["zh-CHT"] = "zh-TW";
-            aliases["zh-Hans"] = "zh-CN";
-            aliases["zh-Hant"] = "zh-TW";
+            aliases["zh-chs"] = "zh-CN";
+            aliases["zh-cht"] = "zh-TW";
+            aliases["zh-hans"] = "zh-CN";
+            aliases["zh-hant"] = "zh-TW";
             aliases["zho"] = "zh-CN";
             aliases["chinese"] = "zh-CN";
-            aliases["tlh-Latn"] = "tlh";
-            aliases["tlh-Piqd"] = "tlh-Qaak";
+            aliases["tlh-latn"] = "tlh";
+            aliases["tlh-piqd"] = "tlh-Qaak";
+            aliases["sr-cyrl"] = "sr";
 
             return aliases;
         }
@@ -138,7 +138,7 @@ namespace GTranslate
             ["ca"] = new Language("Catalan", "ca", "cat"),
             ["ceb"] = new Language("Cebuano", "ceb", "ceb", TranslationServices.Google | TranslationServices.Yandex),
             ["ny"] = new Language("Chichewa", "ny", "nya", TranslationServices.Google),
-            ["zh-CN"] = new Language("Chinese Simplified", "zh-CN", "zho-CN", TranslationServices.Google | TranslationServices.Bing),
+            ["zh-CN"] = new Language("Chinese Simplified", "zh-CN", "zho-CN"),
             ["zh-TW"] = new Language("Chinese Traditional", "zh-TW", "zho-TW", TranslationServices.Google | TranslationServices.Bing),
             ["co"] = new Language("Corsican", "co", "cos", TranslationServices.Google),
             ["hr"] = new Language("Croatian", "hr", "hrv"),
@@ -217,7 +217,7 @@ namespace GTranslate
             ["tl"] = new Language("Tagalog", "tl", "tgl", TranslationServices.Google | TranslationServices.Yandex),
             ["tg"] = new Language("Tajik", "tg", "tgk", TranslationServices.Google | TranslationServices.Yandex),
             ["ta"] = new Language("Tamil", "ta", "tam"),
-            ["tt"] = new Language("Tatar", "tt", "tat", TranslationServices.Yandex),
+            ["tt"] = new Language("Tatar", "tt", "tat", TranslationServices.Google | TranslationServices.Yandex),
             ["te"] = new Language("Telugu", "te", "tel"),
             ["th"] = new Language("Thai", "th", "tha"),
             ["tr"] = new Language("Turkish", "tr", "tur"),
@@ -238,12 +238,14 @@ namespace GTranslate
             ["prs"] = new Language("Dari", "prs", "prs", TranslationServices.Bing),
             ["fj"] = new Language("Fijian", "fj", "fij", TranslationServices.Bing),
             ["fil"] = new Language("Filipino", "fil", "fil", TranslationServices.Bing),
+            ["fr-CA"] = new Language("French (Canada)", "fr-CA", "fr-CA", TranslationServices.Bing),
             ["mww"] = new Language("Hmong Daw", "mww", "mww", TranslationServices.Bing),
             ["iu"] = new Language("Inuktitut", "iu", "iku", TranslationServices.Bing),
-            ["pt-PT"] = new Language("Portuguese (Portugal)", "pt-PT", "por", TranslationServices.Bing),
+            ["pt-PT"] = new Language("Portuguese (Portugal)", "pt-PT", "pt-PT", TranslationServices.Bing),
             ["otq"] = new Language("Querétaro Otomi", "otq", "otq", TranslationServices.Bing),
             ["sr-Latn"] = new Language("Serbian (Latin)", "sr-Latn", "srp-Latn", TranslationServices.Bing),
             ["ty"] = new Language("Tahitian", "ty", "tah", TranslationServices.Bing),
+            ["ti"] = new Language("Tigrinya", "ti", "tir", TranslationServices.Bing),
             ["to"] = new Language("Tongan", "to", "ton", TranslationServices.Bing),
             ["tlh"] = new Language("Klingon", "tlh", "tlh", TranslationServices.Bing),
             ["tlh-Piqd"] = new Language("Klingon (pIqaD)", "tlh-Piqd", "tlh-Piqd", TranslationServices.Bing),
@@ -256,9 +258,11 @@ namespace GTranslate
             ["emj"] = new Language("Emoji", "emj", "emj", TranslationServices.Yandex),
             ["kazlat"] = new Language("Kazakh (Latin)", "kazlat", "kazlat", TranslationServices.Yandex),
             ["pap"] = new Language("Papiamento", "pap", "pap", TranslationServices.Yandex),
+            ["sjn"] = new Language("Sindarin", "sjn", "sjn", TranslationServices.Yandex),
             ["udm"] = new Language("Udmurt", "udm", "udm", TranslationServices.Yandex),
             ["uzbcyr"] = new Language("Uzbek (Cyrillic)", "uzbcyr", "uzbcyr", TranslationServices.Yandex),
             ["mrj"] = new Language("Western Mari", "mrj", "mrj", TranslationServices.Yandex),
+            ["sah"] = new Language("Yakut", "sah", "sah", TranslationServices.Yandex)
         });
     }
 }
