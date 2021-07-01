@@ -115,7 +115,6 @@ namespace GTranslate
             aliases["zho"] = "zh-CN";
             aliases["chinese"] = "zh-CN";
             aliases["tlh-latn"] = "tlh";
-            aliases["tlh-piqd"] = "tlh-Qaak";
             aliases["sr-cyrl"] = "sr";
 
             return aliases;
@@ -248,7 +247,7 @@ namespace GTranslate
             ["ti"] = new Language("Tigrinya", "ti", "tir", TranslationServices.Bing),
             ["to"] = new Language("Tongan", "to", "ton", TranslationServices.Bing),
             ["tlh"] = new Language("Klingon", "tlh", "tlh", TranslationServices.Bing),
-            ["tlh-Piqd"] = new Language("Klingon (pIqaD)", "tlh-Piqd", "tlh-Piqd", TranslationServices.Bing),
+            //["tlh-Piqd"] = new Language("Klingon (pIqaD)", "tlh-Piqd", "tlh-Piqd", TranslationServices.Bing),
             ["kmr"] = new Language("Kurdish (Northern)", "kmr", "kmr", TranslationServices.Bing),
             ["yua"] = new Language("Yucatec Maya", "yua", "yua", TranslationServices.Bing),
 

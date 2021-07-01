@@ -118,7 +118,7 @@ namespace GTranslate.Translators
             if (statusCode != null)
             {
                 var errorMessage = props.FirstOrDefault(x => x.Name == "errorMessage")?.Value.ToString();
-                throw new TranslatorException(!string.IsNullOrEmpty(errorMessage) ? errorMessage : $"The API returned error code {statusCode.Value}", Name);
+                throw new TranslatorException(!string.IsNullOrEmpty(errorMessage) ? errorMessage : $"The API returned error code {statusCode.Value}.", Name);
             }
 
             var model = JsonConvert.DeserializeObject<List<BingTranslationModel>>(json);
