@@ -281,7 +281,7 @@ namespace GTranslate.Translators
 
         private string GetOrUpdateUcid()
         {
-            if (_cachedUcid == null || _cachedUcid.IsExpired())
+            if (_cachedUcid.Value == null || _cachedUcid.IsExpired())
             {
                 _cachedUcid = new CachedObject<string>(Guid.NewGuid().ToString("N"), TimeSpan.FromSeconds(360));
             }

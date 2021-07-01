@@ -276,7 +276,7 @@ namespace GTranslate.Translators
 
         private async Task<BingCredentials> GetOrUpdateCredentialsAsync()
         {
-            if (_cachedCredentials != null && !_cachedCredentials.IsExpired())
+            if (_cachedCredentials.Value != null && !_cachedCredentials.IsExpired())
             {
                 return _cachedCredentials.Value;
             }

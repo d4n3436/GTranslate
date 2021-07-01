@@ -8,21 +8,23 @@ namespace GTranslate
     /// </summary>
     /// <typeparam name="T">The type of the value to cache.</typeparam>
     [DebuggerDisplay("{" + nameof(DebuggerDisplay) + ",nq}")]
-    internal class CachedObject<T>
+    internal struct CachedObject<T>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="CachedObject{T}"/> class with a specified value and no expiration date.
+        /// Initializes a new instance of the <see cref="CachedObject{T}"/> structure with a specified value and no expiration date.
         /// </summary>
         /// <param name="value">The value.</param>
         public CachedObject(T value)
         {
             Value = value;
+            ExpirationDate = DateTimeOffset.MaxValue;
+            CachedDate = DateTimeOffset.UtcNow;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CachedObject{T}"/> class with a specified value and expiration date.
+        /// Initializes a new instance of the <see cref="CachedObject{T}"/> structure with a specified value and expiration date.
         /// </summary>
-        /// <param name="value">The value</param>
+        /// <param name="value">The value.</param>
         /// <param name="expirationDate">The date this object will expire.</param>
         public CachedObject(T value, DateTimeOffset expirationDate) : this(value)
         {
@@ -30,9 +32,9 @@ namespace GTranslate
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CachedObject{T}"/> class with a specified value and duration.
+        /// Initializes a new instance of the <see cref="CachedObject{T}"/> structure with a specified value and duration.
         /// </summary>
-        /// <param name="value">The value</param>
+        /// <param name="value">The value.</param>
         /// <param name="duration">The duration this object will be valid.</param>
         public CachedObject(T value, TimeSpan duration) : this(value)
         {
@@ -47,17 +49,17 @@ namespace GTranslate
         /// <summary>
         /// Gets the date this object will expire.
         /// </summary>
-        public DateTimeOffset ExpirationDate { get; } = DateTimeOffset.MaxValue;
+        public DateTimeOffset ExpirationDate { get; }
 
         /// <summary>
         /// Gets the date this object was cached.
         /// </summary>
-        public DateTimeOffset CachedDate { get; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset CachedDate { get; }
 
         /// <summary>
         /// Returns whether this object has expired.
         /// </summary>
-        /// <returns><see langword="true"/> if the language was found, otherwise <see langword="false"/>.</returns>
+        /// <returns><see langword="true"/> if the object has expired, otherwise <see langword="false"/>.</returns>
         public bool IsExpired() => DateTimeOffset.UtcNow > ExpirationDate;
 
         /// <inheritdoc/>
