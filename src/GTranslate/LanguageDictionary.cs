@@ -103,10 +103,10 @@ namespace GTranslate
             aliases["nb"] = "no";
             aliases["nn"] = "no";
             aliases["portuguese"] = "pt";
-            aliases["sh"] = "sr-Cyrl";
-            aliases["sr"] = "sr-Cyrl";
-            aliases["srp"] = "sr-Cyrl";
-            aliases["serbian"] = "sr-Cyrl";
+            aliases["sh"] = "sr";
+            aliases["sr"] = "sr";
+            aliases["srp"] = "sr";
+            aliases["serbian"] = "sr";
             aliases["zh"] = "zh-CN";
             aliases["zh-chs"] = "zh-CN";
             aliases["zh-cht"] = "zh-TW";
