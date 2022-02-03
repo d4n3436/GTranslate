@@ -9,7 +9,7 @@ namespace GTranslate.Translators
     /// <summary>
     /// Represents an aggregate translator. This class groups all translation services into a single class for ease of use.
     /// </summary>
-    public sealed class Translator : ITranslator, IDisposable
+    public sealed class AggregateTranslator : ITranslator, IDisposable
     {
         /// <inheritdoc/>
         public string Name => "Translator";
@@ -18,9 +18,9 @@ namespace GTranslate.Translators
         private bool _disposed;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Translator"/> class.
+        /// Initializes a new instance of the <see cref="AggregateTranslator"/> class.
         /// </summary>
-        public Translator()
+        public AggregateTranslator()
         {
             _translators = new ITranslator[]
             {
@@ -31,9 +31,9 @@ namespace GTranslate.Translators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Translator"/> class with the specified translators.
+        /// Initializes a new instance of the <see cref="AggregateTranslator"/> class with the specified translators.
         /// </summary>
-        public Translator(IReadOnlyCollection<ITranslator> translators)
+        public AggregateTranslator(IReadOnlyCollection<ITranslator> translators)
         {
             if (translators == null)
             {
@@ -45,7 +45,7 @@ namespace GTranslate.Translators
                 throw new InvalidOperationException("Collection must not be empty.");
             }
 
-            if (translators.Any(x => x is Translator))
+            if (translators.Any(x => x is AggregateTranslator))
             {
                 throw new ArgumentException("Collection must not contain an instance of Translator.");
             }

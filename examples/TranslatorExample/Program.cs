@@ -9,7 +9,7 @@ namespace TranslatorExample
         private static async Task Main()
         {
             Console.WriteLine("Translator Example\n");
-            var translator = new Translator();
+            var translator = new AggregateTranslator();
 
             while (true)
             {

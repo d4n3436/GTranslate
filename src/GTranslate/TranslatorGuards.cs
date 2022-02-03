@@ -62,7 +62,7 @@ namespace GTranslate
             }
         }
 
-        public static void LanguageSupported(Translator translator, string toLanguage, string fromLanguage)
+        public static void LanguageSupported(AggregateTranslator translator, string toLanguage, string fromLanguage)
         {
             if (!translator.IsLanguageSupported(toLanguage))
             {
@@ -75,7 +75,7 @@ namespace GTranslate
             }
         }
 
-        public static void LanguageSupported(Translator translator, ILanguage toLanguage, ILanguage fromLanguage)
+        public static void LanguageSupported(AggregateTranslator translator, ILanguage toLanguage, ILanguage fromLanguage)
         {
             if (!translator.IsLanguageSupported(toLanguage))
             {
