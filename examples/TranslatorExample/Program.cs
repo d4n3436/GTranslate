@@ -26,7 +26,7 @@ namespace TranslatorExample
                 try
                 {
                     var result = await translator.TranslateAsync(text, language);
-                    Console.WriteLine($"Result: {result.Result}");
+                    Console.WriteLine($"Translation: {result.Translation}");
                     Console.WriteLine($"Source Language: {result.SourceLanguage}");
                     Console.WriteLine($"Target Language: {result.TargetLanguage}");
                     Console.WriteLine($"Service: {result.Service}");

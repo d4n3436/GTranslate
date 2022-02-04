@@ -8,17 +8,17 @@ namespace GTranslate.Results
     /// </summary>
     public class GoogleTranslationResult : ITranslationResult
     {
-        internal GoogleTranslationResult(string result, string source, Language targetLanguage, Language sourceLanguage)
+        internal GoogleTranslationResult(string translation, string source, Language targetLanguage, Language sourceLanguage)
         {
-            Result = result;
+            Translation = translation;
             Source = source;
             TargetLanguage = targetLanguage;
             SourceLanguage = sourceLanguage;
         }
 
-        internal GoogleTranslationResult(string result, string source, Language targetLanguage, Language sourceLanguage,
+        internal GoogleTranslationResult(string translation, string source, Language targetLanguage, Language sourceLanguage,
             string transliteration, double confidence, IReadOnlyList<GoogleAlternativeTranslation> alternativeTranslations,
-            IReadOnlyList<GoogleLanguageDetection> languageDetections) : this(result, source, targetLanguage, sourceLanguage)
+            IReadOnlyList<GoogleLanguageDetection> languageDetections) : this(translation, source, targetLanguage, sourceLanguage)
         {
             Transliteration = transliteration;
             Confidence = confidence;
@@ -27,15 +27,13 @@ namespace GTranslate.Results
         }
 
         /// <inheritdoc/>
-        public string Service => "GoogleTranslator";
-
-        /// <summary>
-        /// Gets the translation result.
-        /// </summary>
-        public string Result { get; }
+        public string Translation { get; }
 
         /// <inheritdoc/>
         public string Source { get; }
+
+        /// <inheritdoc/>
+        public string Service => "GoogleTranslator";
 
         /// <inheritdoc/>
         public Language TargetLanguage { get; }

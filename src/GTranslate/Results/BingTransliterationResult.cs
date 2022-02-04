@@ -5,9 +5,9 @@
     /// </summary>
     public class BingTransliterationResult : ITransliterationResult
     {
-        internal BingTransliterationResult(string result, string source, Language targetLanguage, Language sourceLanguage, string script)
+        internal BingTransliterationResult(string transliteration, string source, Language targetLanguage, Language sourceLanguage, string script)
         {
-            Result = result;
+            Transliteration = transliteration;
             Source = source;
             TargetLanguage = targetLanguage;
             SourceLanguage = sourceLanguage;
@@ -15,15 +15,13 @@
         }
 
         /// <inheritdoc/>
-        public string Service => "BingTranslator";
-
-        /// <summary>
-        /// Gets the transliteration result.
-        /// </summary>
-        public string Result { get; }
+        public string Transliteration { get; }
 
         /// <inheritdoc/>
         public string Source { get; }
+
+        /// <inheritdoc/>
+        public string Service => "BingTranslator";
 
         /// <inheritdoc/>
         public Language TargetLanguage { get; }

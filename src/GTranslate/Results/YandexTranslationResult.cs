@@ -5,22 +5,22 @@
     /// </summary>
     public class YandexTranslationResult : ITranslationResult
     {
-        internal YandexTranslationResult(string result, string source, Language targetLanguage, Language sourceLanguage)
+        internal YandexTranslationResult(string translation, string source, Language targetLanguage, Language sourceLanguage)
         {
-            Result = result;
+            Translation = translation;
             Source = source;
             TargetLanguage = targetLanguage;
             SourceLanguage = sourceLanguage;
         }
 
         /// <inheritdoc/>
-        public string Service => "YandexTranslator";
-
-        /// <inheritdoc/>
-        public string Result { get; }
+        public string Translation { get; }
 
         /// <inheritdoc/>
         public string Source { get; }
+
+        /// <inheritdoc/>
+        public string Service => "YandexTranslator";
 
         /// <inheritdoc/>
         public Language TargetLanguage { get; }
