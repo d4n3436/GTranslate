@@ -3,7 +3,8 @@
     /// <summary>
     /// Represents a transliteration result.
     /// </summary>
-    public interface ITransliterationResult
+    /// <typeparam name="TLanguage">The language type.</typeparam>
+    public interface ITransliterationResult<out TLanguage> where TLanguage : ILanguage
     {
         /// <summary>
         /// Gets the transliteration.
@@ -23,11 +24,16 @@
         /// <summary>
         /// Gets the source language.
         /// </summary>
-        Language SourceLanguage { get; }
+        TLanguage SourceLanguage { get; }
 
         /// <summary>
         /// Gets the target language.
         /// </summary>
-        Language TargetLanguage { get; }
+        TLanguage TargetLanguage { get; }
+    }
+
+    /// <inheritdoc/>
+    public interface ITransliterationResult : ITransliterationResult<ILanguage>
+    {
     }
 }

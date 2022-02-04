@@ -3,7 +3,7 @@
     /// <summary>
     /// Represents a transliteration result from Bing Translator.
     /// </summary>
-    public class BingTransliterationResult : ITransliterationResult
+    public class BingTransliterationResult : ITransliterationResult<Language>, ITransliterationResult
     {
         internal BingTransliterationResult(string transliteration, string source, Language targetLanguage, Language sourceLanguage, string script)
         {
@@ -34,5 +34,11 @@
         /// </summary>
         /// <remarks>This value is not always present.</remarks>
         public string Script { get; }
+
+        /// <inheritdoc />
+        ILanguage ITransliterationResult<ILanguage>.SourceLanguage => SourceLanguage;
+
+        /// <inheritdoc />
+        ILanguage ITransliterationResult<ILanguage>.TargetLanguage => TargetLanguage;
     }
 }

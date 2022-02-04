@@ -3,7 +3,7 @@
     /// <summary>
     /// Represents a translation result from Yandex.Translate.
     /// </summary>
-    public class YandexTranslationResult : ITranslationResult
+    public class YandexTranslationResult : ITranslationResult<Language>, ITranslationResult
     {
         internal YandexTranslationResult(string translation, string source, Language targetLanguage, Language sourceLanguage)
         {
@@ -27,5 +27,11 @@
 
         /// <inheritdoc/>
         public Language SourceLanguage { get; }
+
+        /// <inheritdoc />
+        ILanguage ITranslationResult<ILanguage>.SourceLanguage => SourceLanguage;
+
+        /// <inheritdoc />
+        ILanguage ITranslationResult<ILanguage>.TargetLanguage => TargetLanguage;
     }
 }

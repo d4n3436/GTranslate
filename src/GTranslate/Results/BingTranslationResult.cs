@@ -3,7 +3,7 @@
     /// <summary>
     /// Represents a translation result from Bing Translator.
     /// </summary>
-    public class BingTranslationResult : ITranslationResult
+    public class BingTranslationResult : ITranslationResult<Language>, ITranslationResult
     {
         internal BingTranslationResult(string translation, string source, Language targetLanguage,
             Language sourceLanguage, string transliteration, string script, float score)
@@ -48,5 +48,11 @@
         /// Gets the language detection score.
         /// </summary>
         public float Score { get; }
+
+        /// <inheritdoc />
+        ILanguage ITranslationResult<ILanguage>.SourceLanguage => SourceLanguage;
+
+        /// <inheritdoc />
+        ILanguage ITranslationResult<ILanguage>.TargetLanguage => TargetLanguage;
     }
 }

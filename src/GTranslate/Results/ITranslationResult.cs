@@ -3,7 +3,8 @@
     /// <summary>
     /// Represents a translation result.
     /// </summary>
-    public interface ITranslationResult
+    /// <typeparam name="TLanguage">The language type.</typeparam>
+    public interface ITranslationResult<out TLanguage> where TLanguage : ILanguage
     {
         /// <summary>
         /// Gets the translation.
@@ -23,11 +24,16 @@
         /// <summary>
         /// Gets the source language.
         /// </summary>
-        Language SourceLanguage { get; }
+        TLanguage SourceLanguage { get; }
 
         /// <summary>
         /// Gets the target language.
         /// </summary>
-        Language TargetLanguage { get; }
+        TLanguage TargetLanguage { get; }
+    }
+
+    /// <inheritdoc/>
+    public interface ITranslationResult : ITranslationResult<ILanguage>
+    {
     }
 }

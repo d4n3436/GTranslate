@@ -6,7 +6,7 @@ namespace GTranslate.Results
     /// <summary>
     /// Represents a translation result from Google Translate.
     /// </summary>
-    public class GoogleTranslationResult : ITranslationResult
+    public class GoogleTranslationResult : ITranslationResult<Language>, ITranslationResult
     {
         internal GoogleTranslationResult(string translation, string source, Language targetLanguage, Language sourceLanguage)
         {
@@ -60,6 +60,12 @@ namespace GTranslate.Results
         /// Gets the language detections.
         /// </summary>
         public IReadOnlyList<GoogleLanguageDetection> LanguageDetections { get; } = Array.Empty<GoogleLanguageDetection>();
+
+        /// <inheritdoc />
+        ILanguage ITranslationResult<ILanguage>.SourceLanguage => SourceLanguage;
+
+        /// <inheritdoc />
+        ILanguage ITranslationResult<ILanguage>.TargetLanguage => TargetLanguage;
     }
 
     /// <summary>
