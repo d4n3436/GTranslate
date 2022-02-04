@@ -26,29 +26,31 @@ namespace GTranslate.Translators
         /// <inheritdoc/>
         public string Name => "YandexTranslator";
 
-        private readonly HttpClient _httpClient = new HttpClient();
+        private readonly HttpClient _httpClient;
         private CachedObject<string> _cachedUcid;
-        private readonly string _apiUrl;
         private bool _disposed;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BingTranslator"/> class.
+        /// Initializes a new instance of the <see cref="YandexTranslator"/> class.
         /// </summary>
-        public YandexTranslator()
+        public YandexTranslator() : this(new HttpClient())
         {
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(DefaultUserAgent);
-            _apiUrl = DefaultApiUrl;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BingTranslator"/> class with the provided API endpoint.
+        /// Initializes a new instance of the <see cref="YandexTranslator"/> class with the provided <see cref="HttpClient"/>.
         /// </summary>
-        public YandexTranslator(string apiUrl)
+        public YandexTranslator(HttpClient httpClient)
         {
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(DefaultUserAgent);
-            _apiUrl = apiUrl;
-        }
+            TranslatorGuards.NotNull(httpClient, nameof(httpClient));
 
+            if (httpClient.DefaultRequestHeaders.UserAgent.Count == 0)
+            {
+                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(DefaultUserAgent);
+            }
+
+            _httpClient = httpClient;
+        }
         /// <summary>
         /// Translates a text using Yandex.Translate.
         /// </summary>
@@ -90,7 +92,7 @@ namespace GTranslate.Translators
             string json;
             using (var content = new FormUrlEncodedContent(data))
             {
-                var response = await _httpClient.PostAsync(new Uri($"{_apiUrl}/translate{query}"), content).ConfigureAwait(false);
+                var response = await _httpClient.PostAsync(new Uri($"{DefaultApiUrl}/translate{query}"), content).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
                 json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
@@ -184,7 +186,7 @@ namespace GTranslate.Translators
             string json;
             using (var content = new FormUrlEncodedContent(data))
             {
-                var response = await _httpClient.PostAsync(new Uri($"{_apiUrl}/translate{query}"), content).ConfigureAwait(false);
+                var response = await _httpClient.PostAsync(new Uri($"{DefaultApiUrl}/translate{query}"), content).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
                 json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             }

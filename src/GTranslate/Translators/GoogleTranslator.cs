@@ -28,37 +28,29 @@ namespace GTranslate.Translators
         /// <inheritdoc/>
         public string Name => "GoogleTranslator";
 
-        private readonly HttpClient _httpClient = new HttpClient();
+        private readonly HttpClient _httpClient;
         private bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GoogleTranslator"/> class.
         /// </summary>
-        public GoogleTranslator()
+        public GoogleTranslator() : this(new HttpClient())
         {
-            Init(DefaultApiEndpoint, DefaultUserAgent);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GoogleTranslator"/> class with the provided API endpoint.
+        /// Initializes a new instance of the <see cref="GoogleTranslator"/> class with the provided <see cref="HttpClient"/>.
         /// </summary>
-        public GoogleTranslator(string apiEndpoint)
+        public GoogleTranslator(HttpClient httpClient)
         {
-            Init(apiEndpoint, DefaultUserAgent);
-        }
+            TranslatorGuards.NotNull(httpClient, nameof(httpClient));
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="GoogleTranslator"/> class with the provided API endpoint and User-Agent header.
-        /// </summary>
-        public GoogleTranslator(string apiEndpoint, string userAgent)
-        {
-            Init(apiEndpoint, userAgent);
-        }
+            if (httpClient.DefaultRequestHeaders.UserAgent.Count == 0)
+            {
+                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(DefaultUserAgent);
+            }
 
-        private void Init(string apiEndpoint, string userAgent)
-        {
-            _httpClient.BaseAddress = new Uri(apiEndpoint);
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+            _httpClient = httpClient;
         }
 
         /// <summary>
@@ -94,7 +86,7 @@ namespace GTranslate.Translators
                            $"&tl={GoogleHotPatch(toLanguage.ISO6391)}" +
                            $"&q={Uri.EscapeDataString(text)}";
 
-            string json = await _httpClient.GetStringAsync(new Uri(query, UriKind.Relative)).ConfigureAwait(false);
+            string json = await _httpClient.GetStringAsync(new Uri($"{DefaultApiEndpoint}{query}")).ConfigureAwait(false);
             try
             {
                 var model = JsonConvert.DeserializeObject<GoogleTranslationModel>(json);

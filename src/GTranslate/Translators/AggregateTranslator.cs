@@ -35,10 +35,7 @@ namespace GTranslate.Translators
         /// </summary>
         public AggregateTranslator(IReadOnlyCollection<ITranslator> translators)
         {
-            if (translators == null)
-            {
-                throw new ArgumentNullException(nameof(translators));
-            }
+            TranslatorGuards.NotNull(translators, nameof(translators));
 
             if (translators.Count == 0)
             {
@@ -47,7 +44,7 @@ namespace GTranslate.Translators
 
             if (translators.Any(x => x is AggregateTranslator))
             {
-                throw new ArgumentException("Collection must not contain an instance of Translator.");
+                throw new ArgumentException("Collection must not contain an instance of AggregateTranslator.", nameof(translators));
             }
 
             _translators = translators;

@@ -28,39 +28,30 @@ namespace GTranslate.Translators
         /// <inheritdoc/>
         public string Name => "BingTranslator";
 
-        private readonly HttpClient _httpClient = new HttpClient();
+        private readonly HttpClient _httpClient;
         private CachedObject<BingCredentials> _cachedCredentials;
-        private string _apiEndpoint;
         private bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BingTranslator"/> class.
         /// </summary>
-        public BingTranslator()
+        public BingTranslator() : this(new HttpClient())
         {
-            Init(DefaultApiEndpoint, DefaultUserAgent);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BingTranslator"/> class with the provided API endpoint.
+        /// Initializes a new instance of the <see cref="BingTranslator"/> class with the provided <see cref="HttpClient"/>.
         /// </summary>
-        public BingTranslator(string apiEndpoint)
+        public BingTranslator(HttpClient httpClient)
         {
-            Init(apiEndpoint, DefaultUserAgent);
-        }
+            TranslatorGuards.NotNull(httpClient, nameof(httpClient));
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BingTranslator"/> class with the provided API endpoint and User-Agent header.
-        /// </summary>
-        public BingTranslator(string apiEndpoint, string userAgent)
-        {
-            Init(apiEndpoint, userAgent);
-        }
+            if (httpClient.DefaultRequestHeaders.UserAgent.Count == 0)
+            {
+                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(DefaultUserAgent);
+            }
 
-        private void Init(string apiEndpoint, string userAgent)
-        {
-            _apiEndpoint = apiEndpoint;
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+            _httpClient = httpClient;
         }
 
         /// <summary>
@@ -106,7 +97,7 @@ namespace GTranslate.Translators
             using (var content = new FormUrlEncodedContent(data))
             {
                 // For some reason the "isVertical" parameter allows you to translate up to 1000 characters instead of 500
-                var response = await _httpClient.PostAsync(new Uri($"{_apiEndpoint}?isVertical=1"), content).ConfigureAwait(false);
+                var response = await _httpClient.PostAsync(new Uri($"{DefaultApiEndpoint}?isVertical=1"), content).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
                 json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             }

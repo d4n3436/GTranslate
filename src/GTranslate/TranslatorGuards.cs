@@ -5,6 +5,14 @@ namespace GTranslate
 {
     internal static class TranslatorGuards
     {
+        public static void NotNull<T>(T obj, string parameterName) where T : class
+        {
+            if (obj is null)
+            {
+                throw new ArgumentNullException(parameterName);
+            }
+        }
+
         public static void ArgumentNotNull(string text)
         {
             if (string.IsNullOrEmpty(text))
