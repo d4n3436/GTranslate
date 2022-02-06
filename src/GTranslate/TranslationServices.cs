@@ -1,26 +1,25 @@
 ﻿using System;
 
-namespace GTranslate
+namespace GTranslate;
+
+/// <summary>
+/// Specifies the translation services.
+/// </summary>
+[Flags]
+public enum TranslationServices
 {
     /// <summary>
-    /// Specifies the translation services.
+    /// Google Translate.
     /// </summary>
-    [Flags]
-    public enum TranslationServices
-    {
-        /// <summary>
-        /// Google Translate.
-        /// </summary>
-        Google = 1 << 0,
+    Google = 1 << 0,
 
-        /// <summary>
-        /// Bing Translator.
-        /// </summary>
-        Bing = 1 << 1,
+    /// <summary>
+    /// Bing Translator.
+    /// </summary>
+    Bing = 1 << 1,
 
-        /// <summary>
-        /// Yandex.Translate.
-        /// </summary>
-        Yandex = 1 << 2
-    }
+    /// <summary>
+    /// Yandex.Translate.
+    /// </summary>
+    Yandex = 1 << 2
 }

@@ -1,321 +1,323 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
-using GTranslate.Models;
 using GTranslate.Results;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
-namespace GTranslate.Translators
+namespace GTranslate.Translators;
+
+/// <summary>
+/// Represents the Bing Translator.
+/// </summary>
+public sealed class BingTranslator : ITranslator, IDisposable
 {
+    private const string _apiEndpoint = "https://www.bing.com/ttranslatev3";
+    private static readonly Uri _bingTranslatorUri = new("https://www.bing.com/translator");
+    private const string _defaultUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36";
+
+    /// <inheritdoc/>
+    public string Name => "BingTranslator";
+
+    private readonly HttpClient _httpClient;
+    private CachedObject<BingCredentials> _cachedCredentials;
+    private bool _disposed;
+
     /// <summary>
-    /// Represents the Bing Translator.
+    /// Initializes a new instance of the <see cref="BingTranslator"/> class.
     /// </summary>
-    public class BingTranslator : ITranslator, IDisposable
+    public BingTranslator() : this(new HttpClient())
     {
-        /// <summary>
-        /// Returns the default API endpoint.
-        /// </summary>
-        public const string DefaultApiEndpoint = "https://www.bing.com/ttranslatev3";
+    }
 
-        /// <summary>
-        /// Returns the default User-Agent header.
-        /// </summary>
-        public const string DefaultUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36";
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BingTranslator"/> class with the provided <see cref="HttpClient"/>.
+    /// </summary>
+    public BingTranslator(HttpClient httpClient)
+    {
+        TranslatorGuards.NotNull(httpClient);
 
-        /// <inheritdoc/>
-        public string Name => "BingTranslator";
-
-        private readonly HttpClient _httpClient;
-        private CachedObject<BingCredentials> _cachedCredentials;
-        private bool _disposed;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BingTranslator"/> class.
-        /// </summary>
-        public BingTranslator() : this(new HttpClient())
+        if (httpClient.DefaultRequestHeaders.UserAgent.Count == 0)
         {
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_defaultUserAgent);
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BingTranslator"/> class with the provided <see cref="HttpClient"/>.
-        /// </summary>
-        public BingTranslator(HttpClient httpClient)
+        _httpClient = httpClient;
+    }
+
+    /// <summary>
+    /// Translates a text using Bing Translator.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <param name="toLanguage">The target language.</param>
+    /// <param name="fromLanguage">The source language.</param>
+    /// <returns>A task that represents the asynchronous translation operation. The task contains the translation result.</returns>
+    /// <exception cref="ObjectDisposedException"/>
+    /// <exception cref="ArgumentNullException"/>
+    /// <exception cref="ArgumentException"/>
+    /// <exception cref="TranslatorException"/>
+    public async Task<BingTranslationResult> TranslateAsync(string text, string toLanguage, string? fromLanguage = null)
+    {
+        TranslatorGuards.ObjectNotDisposed(this, _disposed);
+        TranslatorGuards.NotNull(text);
+        TranslatorGuards.NotNull(toLanguage);
+        TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
+        TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
+        TranslatorGuards.LanguageSupported(this, toLang, fromLang);
+
+        return await TranslateAsync(text, toLang, fromLang).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="TranslateAsync(string, string, string)"/>
+    public async Task<BingTranslationResult> TranslateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage = null)
+    {
+        TranslatorGuards.ObjectNotDisposed(this, _disposed);
+        TranslatorGuards.NotNull(text);
+        TranslatorGuards.NotNull(toLanguage);
+        TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
+
+        var credentials = await GetOrUpdateCredentialsAsync().ConfigureAwait(false);
+
+        var data = new Dictionary<string, string>
         {
-            TranslatorGuards.NotNull(httpClient, nameof(httpClient));
+            { "fromLang", BingHotPatch(fromLanguage?.ISO6391 ?? "auto-detect") },
+            { "text", text },
+            { "to", BingHotPatch(toLanguage.ISO6391) },
+            { "token", credentials.Token },
+            { "key", credentials.Key.ToString() }
+        };
 
-            if (httpClient.DefaultRequestHeaders.UserAgent.Count == 0)
-            {
-                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(DefaultUserAgent);
-            }
+        using var content = new FormUrlEncodedContent(data);
+        // For some reason the "isVertical" parameter allows you to translate up to 1000 characters instead of 500
+        var response = await _httpClient.PostAsync(new Uri($"{_apiEndpoint}?isVertical=1"), content).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
-            _httpClient = httpClient;
+        // Bing Translator always return status code 200 regardless of the content
+        using var document = JsonDocument.Parse(bytes);
+        var root = document.RootElement;
+
+        if (root.TryGetInt32("statusCode", out int code))
+        {
+            var errorMessage = root.GetPropertyOrDefault("errorMessage").GetStringOrDefault();
+            throw new TranslatorException(!string.IsNullOrEmpty(errorMessage) ? errorMessage! : $"The API returned status code {code}.", Name);
         }
 
-        /// <summary>
-        /// Translates a text using Bing Translator.
-        /// </summary>
-        /// <param name="text">The text to translate.</param>
-        /// <param name="toLanguage">The target language.</param>
-        /// <param name="fromLanguage">The source language.</param>
-        /// <returns>A task that represents the asynchronous translation operation. The task contains the translation result.</returns>
-        /// <exception cref="ObjectDisposedException"/>
-        /// <exception cref="ArgumentNullException"/>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="TranslatorException"/>
-        public async Task<BingTranslationResult> TranslateAsync(string text, string toLanguage, string fromLanguage = null)
-        {
-            TranslatorGuards.ObjectNotDisposed(this, _disposed);
-            TranslatorGuards.ArgumentNotNull(text, toLanguage);
-            TranslatorGuards.LanguageFound(toLanguage, fromLanguage, out var toLang, out var fromLang);
-            TranslatorGuards.LanguageSupported(this, toLang, fromLang);
+        var first = root.FirstOrDefault();
+        var translation = first.GetPropertyOrDefault("translation").FirstOrDefault();
 
-            return await TranslateAsync(text, toLang, fromLang).ConfigureAwait(false);
+        if (first.ValueKind == JsonValueKind.Undefined || translation.ValueKind == JsonValueKind.Undefined)
+        {
+            throw new TranslatorException("The API returned an empty response.", Name);
         }
 
-        /// <inheritdoc cref="TranslateAsync(string, string, string)"/>
-        public async Task<BingTranslationResult> TranslateAsync(string text, ILanguage toLanguage, ILanguage fromLanguage = null)
+        var langDetection = first.GetProperty("detectedLanguage");
+        string detectedLanguage = langDetection.GetProperty("language").GetString() ?? "";
+        float score = langDetection.GetProperty("score").GetSingle();
+        string translatedText = translation.GetProperty("text").GetString() ?? throw new TranslatorException("Failed to get the translated text.", Name);
+        string targetLanguage = translation.GetProperty("to").GetString() ?? toLanguage.ISO6391;
+        string? script = translation.GetPropertyOrDefault("transliteration").GetPropertyOrDefault("script").GetStringOrDefault();
+        string? transliteration = translation.GetPropertyOrDefault("transliteration").GetPropertyOrDefault("text").GetStringOrDefault()
+                                  ?? root.ElementAtOrDefault(1).GetPropertyOrDefault("inputTransliteration").GetStringOrDefault();
+
+        var sourceLanguage = Language.TryGetLanguage(detectedLanguage, out var lang) ? lang : null;
+
+        return new BingTranslationResult(translatedText, text, Language.GetLanguage(targetLanguage), sourceLanguage, transliteration, script, score);
+    }
+
+    /// <summary>
+    /// Transliterates a text using Bing Translator.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <param name="toLanguage">The target language.</param>
+    /// <param name="fromLanguage">The source language.</param>
+    /// <returns>A task that represents the asynchronous transliteration operation. The task contains the transliteration result.</returns>
+    /// <exception cref="ObjectDisposedException"/>
+    /// <exception cref="ArgumentNullException"/>
+    /// <exception cref="ArgumentException"/>
+    /// <exception cref="TranslatorException"/>
+    public async Task<BingTransliterationResult> TransliterateAsync(string text, string toLanguage, string? fromLanguage = null)
+    {
+        TranslatorGuards.ObjectNotDisposed(this, _disposed);
+        TranslatorGuards.NotNull(text);
+        TranslatorGuards.NotNull(toLanguage);
+        TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
+        TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
+        TranslatorGuards.LanguageSupported(this, toLang, fromLang);
+
+        return await TransliterateAsync(text, toLang, fromLang).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="TransliterateAsync(string, string, string)"/>
+    public async Task<BingTransliterationResult> TransliterateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage = null)
+    {
+        TranslatorGuards.ObjectNotDisposed(this, _disposed);
+        TranslatorGuards.NotNull(text);
+        TranslatorGuards.NotNull(toLanguage);
+        TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
+
+        var result = await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
+        if (string.IsNullOrEmpty(result.Transliteration))
         {
-            TranslatorGuards.ObjectNotDisposed(this, _disposed);
-            TranslatorGuards.ArgumentNotNull(text, toLanguage);
-            TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
-
-            var credentials = await GetOrUpdateCredentialsAsync().ConfigureAwait(false);
-
-            var data = new Dictionary<string, string>
-            {
-                { "fromLang", BingHotPatch(fromLanguage?.ISO6391) ?? "auto-detect" },
-                { "text", text },
-                { "to", BingHotPatch(toLanguage.ISO6391) },
-                { "token", credentials.Token },
-                { "key", credentials.Key }
-            };
-
-            string json;
-            using (var content = new FormUrlEncodedContent(data))
-            {
-                // For some reason the "isVertical" parameter allows you to translate up to 1000 characters instead of 500
-                var response = await _httpClient.PostAsync(new Uri($"{DefaultApiEndpoint}?isVertical=1"), content).ConfigureAwait(false);
-                response.EnsureSuccessStatusCode();
-                json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            }
-
-            // Bing Translator always sends status code 200 but sends a different response on errors
-            var props = JToken.Parse(json).OfType<JProperty>();
-            var statusCode = props.FirstOrDefault(x => x.Name == "statusCode");
-
-            if (statusCode != null)
-            {
-                var errorMessage = props.FirstOrDefault(x => x.Name == "errorMessage")?.Value.ToString();
-                throw new TranslatorException(!string.IsNullOrEmpty(errorMessage) ? errorMessage : $"The API returned error code {statusCode.Value}.", Name);
-            }
-
-            var model = JsonConvert.DeserializeObject<List<BingTranslationModel>>(json);
-            if (model == null || model.Count == 0 || model[0].Translations.Count == 0)
-            {
-                throw new TranslatorException("The API returned an empty response.", Name);
-            }
-
-            var translation = model[0].Translations[0];
-            string transliteration = model.Count > 1 ? model[1].InputTransliteration : translation.Transliteration.Text;
-
-            return new BingTranslationResult(translation.Text, text, Language.GetLanguage(translation.To),
-                Language.GetLanguage(model[0].DetectedLanguage.Language), transliteration, translation.Transliteration.Script, model[0].DetectedLanguage.Score);
+            throw new TranslatorException("Failed to get the transliteration.", Name);
         }
 
-        /// <summary>
-        /// Transliterates a text using Bing Translator.
-        /// </summary>
-        /// <param name="text">The text to translate.</param>
-        /// <param name="toLanguage">The target language.</param>
-        /// <param name="fromLanguage">The source language.</param>
-        /// <returns>A task that represents the asynchronous transliteration operation. The task contains the transliteration result.</returns>
-        /// <exception cref="ObjectDisposedException"/>
-        /// <exception cref="ArgumentNullException"/>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="TranslatorException"/>
-        public async Task<BingTransliterationResult> TransliterateAsync(string text, string toLanguage, string fromLanguage = null)
-        {
-            TranslatorGuards.ObjectNotDisposed(this, _disposed);
-            TranslatorGuards.ArgumentNotNull(text, toLanguage);
-            TranslatorGuards.LanguageFound(toLanguage, fromLanguage, out var toLang, out var fromLang);
-            TranslatorGuards.LanguageSupported(this, toLang, fromLang);
+        return new BingTransliterationResult(result.Transliteration!, text, result.TargetLanguage, result.SourceLanguage, result.Script);
+    }
 
-            return await TransliterateAsync(text, toLang, fromLang).ConfigureAwait(false);
+    /// <summary>
+    /// Detects the language of a text using Bing Translator.
+    /// </summary>
+    /// <param name="text">The text to detect its language.</param>
+    /// <returns>A task that represents the asynchronous language detection operation. The task contains the detected language.</returns>
+    /// <exception cref="ObjectDisposedException"/>
+    /// <exception cref="ArgumentNullException"/>
+    /// <exception cref="TranslatorException"/>
+    public async Task<Language> DetectLanguageAsync(string text)
+    {
+        TranslatorGuards.NotNull(text);
+
+        var result = await TranslateAsync(text, "en").ConfigureAwait(false);
+        if (result.SourceLanguage is null)
+        {
+            throw new TranslatorException("Failed to get the detected language", Name);
         }
 
-        /// <inheritdoc cref="TransliterateAsync(string, string, string)"/>
-        public async Task<BingTransliterationResult> TransliterateAsync(string text, ILanguage toLanguage, ILanguage fromLanguage = null)
+        return result.SourceLanguage;
+    }
+
+    /// <summary>
+    /// Returns whether Bing Translator supports the specified language.
+    /// </summary>
+    /// <param name="language">The language.</param>
+    /// <returns><see langword="true"/> if the language is supported, otherwise <see langword="false"/>.</returns>
+    public bool IsLanguageSupported(string language)
+    {
+        TranslatorGuards.NotNull(language);
+
+        return Language.TryGetLanguage(language, out var lang) && IsLanguageSupported(lang);
+    }
+
+    /// <inheritdoc cref="IsLanguageSupported(string)"/>
+    public bool IsLanguageSupported(Language language)
+    {
+        TranslatorGuards.NotNull(language);
+
+        return (language.SupportedServices & TranslationServices.Bing) == TranslationServices.Bing;
+    }
+
+    /// <inheritdoc/>
+    public void Dispose() => Dispose(true);
+
+    /// <inheritdoc cref="TranslateAsync(string, string, string)"/>
+    async Task<ITranslationResult> ITranslator.TranslateAsync(string text, string toLanguage, string? fromLanguage)
+        => await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
+
+    /// <inheritdoc cref="TranslateAsync(string, ILanguage, ILanguage)"/>
+    async Task<ITranslationResult> ITranslator.TranslateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage)
+        => await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
+
+    /// <inheritdoc cref="TransliterateAsync(string, string, string)"/>
+    async Task<ITransliterationResult> ITranslator.TransliterateAsync(string text, string toLanguage, string? fromLanguage)
+        => await TransliterateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
+
+    /// <inheritdoc cref="TransliterateAsync(string, ILanguage, ILanguage)"/>
+    async Task<ITransliterationResult> ITranslator.TransliterateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage)
+        => await TransliterateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
+
+    /// <inheritdoc cref="DetectLanguageAsync(string)"/>
+    async Task<ILanguage> ITranslator.DetectLanguageAsync(string text) => await DetectLanguageAsync(text).ConfigureAwait(false);
+
+    /// <inheritdoc cref="IsLanguageSupported(Language)"/>
+    bool ITranslator.IsLanguageSupported(ILanguage language) => language is Language lang && IsLanguageSupported(lang);
+
+    /// <inheritdoc cref="Dispose()"/>
+    private void Dispose(bool disposing)
+    {
+        if (!disposing || _disposed) return;
+
+        _httpClient.Dispose();
+        _disposed = true;
+    }
+
+    /// <summary>
+    /// Hot-patches language codes to Bing-specific ones.
+    /// </summary>
+    /// <param name="languageCode">The language code.</param>
+    /// <returns>The hot-patched language code.</returns>
+    private static string BingHotPatch(string languageCode)
+    {
+        TranslatorGuards.NotNull(languageCode);
+
+        return languageCode switch
         {
-            var result = await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
-            if (string.IsNullOrEmpty(result.Transliteration))
-            {
-                throw new TranslatorException("Failed to get the transliteration.", Name);
-            }
+            "no" => "nb",
+            "sr" => "sr-Cyrl",
+            "tlh" => "tlh-Latn",
+            "zh-CN" => "zh-Hans",
+            "zh-TW" => "zh-Hant",
+            _ => languageCode
+        };
+    }
 
-            return new BingTransliterationResult(result.Transliteration, text, result.TargetLanguage, result.SourceLanguage, result.Script);
-        }
-
-        /// <summary>
-        /// Detects the language of a text using Bing Translator.
-        /// </summary>
-        /// <param name="text">The text to detect its language.</param>
-        /// <returns>A task that represents the asynchronous language detection operation. The task contains the detected language.</returns>
-        /// <exception cref="ObjectDisposedException"/>
-        /// <exception cref="ArgumentNullException"/>
-        /// <exception cref="TranslatorException"/>
-        public async Task<Language> DetectLanguageAsync(string text)
+    private async ValueTask<BingCredentials> GetOrUpdateCredentialsAsync()
+    {
+        if (!_cachedCredentials.IsExpired())
         {
-            var result = await TranslateAsync(text, "en").ConfigureAwait(false);
-            return result.SourceLanguage;
-        }
-
-        /// <summary>
-        /// Returns whether Bing Translator supports the specified language.
-        /// </summary>
-        /// <param name="language">The language.</param>
-        /// <returns><see langword="true"/> if the language is supported, otherwise <see langword="false"/>.</returns>
-        public bool IsLanguageSupported(string language)
-        {
-            if (string.IsNullOrEmpty(language))
-            {
-                throw new ArgumentNullException(nameof(language));
-            }
-
-            return Language.TryGetLanguage(language, out var lang) && IsLanguageSupported(lang);
-        }
-
-        /// <inheritdoc cref="IsLanguageSupported(string)"/>
-        public bool IsLanguageSupported(Language language)
-        {
-            if (language == null)
-            {
-                throw new ArgumentNullException(nameof(language));
-            }
-
-            return (language.SupportedServices & TranslationServices.Bing) == TranslationServices.Bing;
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <inheritdoc cref="TranslateAsync(string, string, string)"/>
-        async Task<ITranslationResult> ITranslator.TranslateAsync(string text, string toLanguage, string fromLanguage)
-            => await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
-
-        /// <inheritdoc cref="TranslateAsync(string, ILanguage, ILanguage)"/>
-        async Task<ITranslationResult> ITranslator.TranslateAsync(string text, ILanguage toLanguage, ILanguage fromLanguage)
-            => await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
-
-        /// <inheritdoc cref="TransliterateAsync(string, string, string)"/>
-        async Task<ITransliterationResult> ITranslator.TransliterateAsync(string text, string toLanguage, string fromLanguage)
-            => await TransliterateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
-
-        /// <inheritdoc cref="TransliterateAsync(string, ILanguage, ILanguage)"/>
-        async Task<ITransliterationResult> ITranslator.TransliterateAsync(string text, ILanguage toLanguage, ILanguage fromLanguage)
-            => await TransliterateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
-
-        /// <inheritdoc cref="DetectLanguageAsync(string)"/>
-        async Task<ILanguage> ITranslator.DetectLanguageAsync(string text) => await DetectLanguageAsync(text).ConfigureAwait(false);
-
-        /// <inheritdoc cref="IsLanguageSupported(Language)"/>
-        bool ITranslator.IsLanguageSupported(ILanguage language) => language is Language lang && IsLanguageSupported(lang);
-
-        /// <inheritdoc cref="Dispose()"/>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposing || _disposed) return;
-
-            _httpClient.Dispose();
-            _disposed = true;
-        }
-
-        /// <summary>
-        /// Hot-patches language codes to Bing-specific ones.
-        /// </summary>
-        /// <param name="languageCode">The language code.</param>
-        /// <returns>The hot-patched language code.</returns>
-        private static string BingHotPatch(string languageCode)
-        {
-            switch (languageCode)
-            {
-                case "no":
-                    return "nb";
-
-                case "sr":
-                    return "sr-Cyrl";
-
-                case "tlh":
-                    return "tlh-Latn";
-
-                case "zh-CN":
-                    return "zh-Hans";
-
-                case "zh-TW":
-                    return "zh-Hant";
-
-                default:
-                    return languageCode;
-            }
-        }
-
-        private async Task<BingCredentials> GetOrUpdateCredentialsAsync()
-        {
-            if (_cachedCredentials.Value != null && !_cachedCredentials.IsExpired())
-            {
-                return _cachedCredentials.Value;
-            }
-
-            const string credentialsStart = "var params_RichTranslateHelper = [";
-
-            string content = await _httpClient.GetStringAsync(new Uri("https://www.bing.com/translator")).ConfigureAwait(false);
-
-            int credentialsStartIndex = content.IndexOf(credentialsStart, StringComparison.Ordinal);
-            if (credentialsStartIndex == -1)
-            {
-                throw new TranslatorException("Unable to find the Bing credentials.", Name);
-            }
-
-            int keyStartIndex = credentialsStartIndex + credentialsStart.Length;
-            int keyEndIndex = content.IndexOf(',', keyStartIndex);
-            if (keyEndIndex == -1)
-            {
-                throw new TranslatorException("Unable to find the Bing key.", Name);
-            }
-
-            // Unix timestamp generated once the page is loaded. Valid for 3600000 milliseconds or 1 hour
-            string key = content.Substring(keyStartIndex, keyEndIndex - keyStartIndex);
-            if (!long.TryParse(key, out long timestamp))
-            {
-                // This shouldn't happen but we'll handle this case anyways
-                timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            }
-
-            int tokenStartIndex = keyEndIndex + 2;
-            int tokenEndIndex = content.IndexOf('"', tokenStartIndex);
-            if (tokenEndIndex == -1)
-            {
-                throw new TranslatorException("Unable to find the Bing token.", Name);
-            }
-
-            string token = content.Substring(tokenStartIndex, tokenEndIndex - tokenStartIndex);
-            var credentials = new BingCredentials { Key = key, Token = token };
-
-            _cachedCredentials = new CachedObject<BingCredentials>(credentials, DateTimeOffset.FromUnixTimeMilliseconds(timestamp + 3600000));
             return _cachedCredentials.Value;
         }
 
-        private class BingCredentials
-        {
-            public string Key { get; set; }
+        const string credentialsStart = "var params_RichTranslateHelper = [";
 
-            public string Token { get; set; }
+        string content = await _httpClient.GetStringAsync(_bingTranslatorUri).ConfigureAwait(false);
+
+        int credentialsStartIndex = content.IndexOf(credentialsStart, StringComparison.Ordinal);
+        if (credentialsStartIndex == -1)
+        {
+            throw new TranslatorException("Unable to find the Bing credentials.", Name);
         }
+
+        int keyStartIndex = credentialsStartIndex + credentialsStart.Length;
+        int keyEndIndex = content.IndexOf(',', keyStartIndex);
+        if (keyEndIndex == -1)
+        {
+            throw new TranslatorException("Unable to find the Bing key.", Name);
+        }
+
+        // Unix timestamp generated once the page is loaded. Valid for 3600000 milliseconds or 1 hour
+#if NET6_0_OR_GREATER
+        if (!long.TryParse(content.AsSpan(keyStartIndex, keyEndIndex - keyStartIndex), out long timestamp))
+#else
+        if (!long.TryParse(content.AsSpan(keyStartIndex, keyEndIndex - keyStartIndex).ToString(), out long timestamp))
+#endif
+        {
+            // This shouldn't happen but we'll handle this case anyways
+            timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        }
+
+        int tokenStartIndex = keyEndIndex + 2;
+        int tokenEndIndex = content.IndexOf('"', tokenStartIndex);
+        if (tokenEndIndex == -1)
+        {
+            throw new TranslatorException("Unable to find the Bing token.", Name);
+        }
+
+        string token = content.Substring(tokenStartIndex, tokenEndIndex);
+        var credentials = new BingCredentials(timestamp, token);
+
+        _cachedCredentials = new CachedObject<BingCredentials>(credentials, DateTimeOffset.FromUnixTimeMilliseconds(timestamp + 3600000));
+        return _cachedCredentials.Value;
+    }
+
+    private readonly struct BingCredentials
+    {
+        public BingCredentials(long key, string token)
+        {
+            Key = key;
+            Token = token;
+        }
+
+        public long Key { get; }
+        public string Token { get; }
     }
 }
