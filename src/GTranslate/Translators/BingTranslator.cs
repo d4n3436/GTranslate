@@ -89,7 +89,8 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
         using var content = new FormUrlEncodedContent(data);
         // For some reason the "isVertical" parameter allows you to translate up to 1000 characters instead of 500
-        var response = await _httpClient.PostAsync(new Uri($"{_apiEndpoint}?isVertical=1"), content).ConfigureAwait(false);
+        var uri = new Uri($"{_apiEndpoint}?isVertical=1&IG={credentials.ImpressionGuid.ToString("N").ToUpperInvariant()}&IID=translator.5023.3");
+        var response = await _httpClient.PostAsync(uri, content).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
@@ -104,7 +105,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         }
 
         var first = root.FirstOrDefault();
-        var translation = first.GetPropertyOrDefault("translation").FirstOrDefault();
+        var translation = first.GetPropertyOrDefault("translations").FirstOrDefault();
 
         if (first.ValueKind == JsonValueKind.Undefined || translation.ValueKind == JsonValueKind.Undefined)
         {
@@ -286,13 +287,13 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
         // Unix timestamp generated once the page is loaded. Valid for 3600000 milliseconds or 1 hour
 #if NET6_0_OR_GREATER
-        if (!long.TryParse(content.AsSpan(keyStartIndex, keyEndIndex - keyStartIndex), out long timestamp))
+        if (!long.TryParse(content.AsSpan(keyStartIndex, keyEndIndex - keyStartIndex), out long key))
 #else
-        if (!long.TryParse(content.AsSpan(keyStartIndex, keyEndIndex - keyStartIndex).ToString(), out long timestamp))
+        if (!long.TryParse(content.AsSpan(keyStartIndex, keyEndIndex - keyStartIndex).ToString(), out long key))
 #endif
         {
             // This shouldn't happen but we'll handle this case anyways
-            timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            key = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
 
         int tokenStartIndex = keyEndIndex + 2;
@@ -302,22 +303,26 @@ public sealed class BingTranslator : ITranslator, IDisposable
             throw new TranslatorException("Unable to find the Bing token.", Name);
         }
 
-        string token = content.Substring(tokenStartIndex, tokenEndIndex);
-        var credentials = new BingCredentials(timestamp, token);
+        string token = content.Substring(tokenStartIndex, tokenEndIndex - tokenStartIndex);
+        var credentials = new BingCredentials(token, key, Guid.NewGuid());
 
-        _cachedCredentials = new CachedObject<BingCredentials>(credentials, DateTimeOffset.FromUnixTimeMilliseconds(timestamp + 3600000));
+        _cachedCredentials = new CachedObject<BingCredentials>(credentials, DateTimeOffset.FromUnixTimeMilliseconds(key + 3600000));
         return _cachedCredentials.Value;
     }
 
     private readonly struct BingCredentials
     {
-        public BingCredentials(long key, string token)
+        public BingCredentials(string token, long key, Guid impressionGuid)
         {
-            Key = key;
             Token = token;
+            Key = key;
+            ImpressionGuid = impressionGuid;
         }
 
-        public long Key { get; }
         public string Token { get; }
+
+        public long Key { get; }
+
+        public Guid ImpressionGuid { get; }
     }
 }
