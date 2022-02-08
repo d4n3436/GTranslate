@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -12,7 +13,9 @@ namespace GTranslate.Translators;
 /// </summary>
 public sealed class GoogleTranslator : ITranslator, IDisposable
 {
-    private const string _apiEndpoint = "https://clients5.google.com/translate_a/t";
+    private const string _salt1 = "+-a^+6";
+    private const string _salt2 = "+-3^+b+-f";
+    private const string _apiEndpoint = "https://translate.googleapis.com/translate_a/single";
     private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36";
 
     /// <inheritdoc/>
@@ -74,20 +77,27 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        string query = "?client=dict-chrome-ex" +
+        string query = "?client=gtx" +
                        $"&sl={GoogleHotPatch(fromLanguage?.ISO6393 ?? "auto")}" +
                        $"&tl={GoogleHotPatch(toLanguage.ISO6391)}" +
-                       $"&q={Uri.EscapeDataString(text)}";
+                       "&dt=t" +
+                       "&dt=bd" +
+                       "&dj=1" +
+                       "&source=input" +
+                       $"&tk={MakeToken(text)}";
 
-        byte[] bytes = await _httpClient.GetByteArrayAsync(new Uri($"{_apiEndpoint}{query}")).ConfigureAwait(false);
-        using var document = JsonDocument.Parse(bytes);
-
-        var translation = document.RootElement.FirstOrDefault().GetStringOrDefault();
-
-        if (translation is not null)
+        using var content = new FormUrlEncodedContent(new KeyValuePair<string, string>[] { new("q", text) });
+        using var request = new HttpRequestMessage
         {
-            return new GoogleTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391));
-        }
+            Method = HttpMethod.Post,
+            RequestUri = new Uri($"{_apiEndpoint}{query}"),
+            Content = content
+        };
+
+        using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+        using var document = JsonDocument.Parse(bytes);
 
         var sentences = document.RootElement.GetProperty("sentences");
         if (sentences.ValueKind != JsonValueKind.Array)
@@ -95,8 +105,8 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
             throw new TranslatorException("Failed to get the translated text.", Name);
         }
 
-        translation = string.Concat(sentences.EnumerateArray().Select(x => x.GetProperty("trans").GetString()));
-        var transliteration = string.Concat(sentences.EnumerateArray().Select(x => x.GetProperty("translit").GetString()));
+        var translation = string.Concat(sentences.EnumerateArray().Select(x => x.GetProperty("trans").GetString()));
+        var transliteration = string.Concat(sentences.EnumerateArray().Select(x => x.GetPropertyOrDefault("translit").GetStringOrDefault()));
         string source = document.RootElement.GetProperty("src").GetString() ?? "";
         var sourceLanguage = Language.TryGetLanguage(source, out var lang) ? lang : null;
         float? confidence = document.RootElement.TryGetSingle("confidence", out var temp) ? temp : null;
@@ -231,5 +241,49 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
             "jv" => "jw",
             _ => languageCode
         };
+    }
+
+    private static string MakeToken(string text)
+    {
+        long a = DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 3600, b = a;
+
+        foreach (char ch in text)
+        {
+            a = WorkToken(a + ch, _salt1);
+        }
+
+        a = WorkToken(a, _salt2);
+
+        if (a < 0)
+        {
+            a = (a & int.MaxValue) + int.MaxValue + 1;
+        }
+
+        a %= 1000000;
+
+        return $"{a}.{a ^ b}";
+    }
+
+    private static long WorkToken(long num, string seed)
+    {
+        for (int i = 0; i < seed.Length - 2; i += 3)
+        {
+            int d = seed[i + 2];
+
+            if (d >= 'a') // 97
+            {
+                d -= 'W'; // 87
+            }
+
+            if (seed[i + 1] == '+') // 43
+            {
+                num = (num + (num >> d)) & uint.MaxValue;
+            }
+            else
+            {
+                num ^= num << d;
+            }
+        }
+        return num;
     }
 }
