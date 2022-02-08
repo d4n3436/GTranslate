@@ -6,7 +6,7 @@
 public class BingTranslationResult : ITranslationResult<Language>, ITranslationResult
 {
     internal BingTranslationResult(string translation, string source, Language targetLanguage,
-        Language? sourceLanguage, string? transliteration, string? script, float score)
+        Language sourceLanguage, string? transliteration, string? script, float score)
     {
         Translation = translation;
         Source = source;
@@ -30,7 +30,7 @@ public class BingTranslationResult : ITranslationResult<Language>, ITranslationR
     public Language TargetLanguage { get; }
 
     /// <inheritdoc/>
-    public Language? SourceLanguage { get; }
+    public Language SourceLanguage { get; }
 
     /// <summary>
     /// Gets the transliteration of the text.
@@ -48,7 +48,7 @@ public class BingTranslationResult : ITranslationResult<Language>, ITranslationR
     public float Score { get; }
 
     /// <inheritdoc />
-    ILanguage? ITranslationResult<ILanguage>.SourceLanguage => SourceLanguage;
+    ILanguage ITranslationResult<ILanguage>.SourceLanguage => SourceLanguage;
 
     /// <inheritdoc />
     ILanguage ITranslationResult<ILanguage>.TargetLanguage => TargetLanguage;

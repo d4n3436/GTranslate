@@ -5,7 +5,7 @@
 /// </summary>
 public class GoogleTransliterationResult : ITransliterationResult<Language>, ITransliterationResult
 {
-    internal GoogleTransliterationResult(string transliteration, string source, Language targetLanguage, Language? sourceLanguage)
+    internal GoogleTransliterationResult(string transliteration, string source, Language targetLanguage, Language sourceLanguage)
     {
         Transliteration = transliteration;
         Source = source;
@@ -26,10 +26,10 @@ public class GoogleTransliterationResult : ITransliterationResult<Language>, ITr
     public Language TargetLanguage { get; }
 
     /// <inheritdoc/>
-    public Language? SourceLanguage { get; }
+    public Language SourceLanguage { get; }
 
     /// <inheritdoc />
-    ILanguage? ITransliterationResult<ILanguage>.SourceLanguage => SourceLanguage;
+    ILanguage ITransliterationResult<ILanguage>.SourceLanguage => SourceLanguage;
 
     /// <inheritdoc />
     ILanguage ITransliterationResult<ILanguage>.TargetLanguage => TargetLanguage;

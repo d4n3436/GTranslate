@@ -5,7 +5,7 @@
 /// </summary>
 public class BingTransliterationResult : ITransliterationResult<Language>, ITransliterationResult
 {
-    internal BingTransliterationResult(string transliteration, string source, Language targetLanguage, Language? sourceLanguage, string? script)
+    internal BingTransliterationResult(string transliteration, string source, Language targetLanguage, Language sourceLanguage, string? script)
     {
         Transliteration = transliteration;
         Source = source;
@@ -27,7 +27,7 @@ public class BingTransliterationResult : ITransliterationResult<Language>, ITran
     public Language TargetLanguage { get; }
 
     /// <inheritdoc/>
-    public Language? SourceLanguage { get; }
+    public Language SourceLanguage { get; }
 
     /// <summary>
     /// Gets the language script.
@@ -35,7 +35,7 @@ public class BingTransliterationResult : ITransliterationResult<Language>, ITran
     public string? Script { get; }
 
     /// <inheritdoc />
-    ILanguage? ITransliterationResult<ILanguage>.SourceLanguage => SourceLanguage;
+    ILanguage ITransliterationResult<ILanguage>.SourceLanguage => SourceLanguage;
 
     /// <inheritdoc />
     ILanguage ITransliterationResult<ILanguage>.TargetLanguage => TargetLanguage;

@@ -15,7 +15,7 @@ namespace GTranslate.Translators;
 public sealed class YandexTranslator : ITranslator, IDisposable
 {
     private const string _apiUrl = "https://translate.yandex.net/api/v1/tr.json";
-    private readonly Uri _transliterationApiUri = new("https://translate.yandex.net/translit/translit");
+    private static readonly Uri _transliterationApiUri = new("https://translate.yandex.net/translit/translit");
     private const string _defaultUserAgent = "ru.yandex.translate/3.20.2024";
 
     /// <inheritdoc/>
@@ -107,23 +107,17 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         var translation = string.Concat(textProp.EnumerateArray().Select(x => x.GetString()));
 
-        var language = document.RootElement.GetPropertyOrDefault("lang").GetStringOrDefault();
-        string? target = null;
-        string? source = null;
-        if (language is not null)
+        var language = document.RootElement.GetProperty("lang").GetString() ?? throw new TranslatorException("Failed to get the source language.", Name);
+        int index = language.IndexOf('-');
+        if (index == -1)
         {
-            int index = language.IndexOf('-');
-            if (index != -1)
-            {
-                source = language.Substring(0, index);
-                target = language.Substring(index + 1, language.Length - index);
-            }
+            throw new TranslatorException("Failed to get the source language.", Name);
         }
 
-        var targetLanguage = Language.GetLanguage(target ?? toLanguage.ISO6391);
-        var sourceLanguage = Language.TryGetLanguage(source ?? "", out var lang) ? lang : null;
+        string source = language.Substring(0, index);
+        string target = language.Substring(index + 1, language.Length - index - 1);
 
-        return new YandexTranslationResult(translation, text, targetLanguage, sourceLanguage);
+        return new YandexTranslationResult(translation, text, Language.GetLanguage(target), Language.GetLanguage(source));
     }
 
     /// <summary>

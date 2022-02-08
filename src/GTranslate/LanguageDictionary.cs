@@ -61,7 +61,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
             return language;
         }
 
-        return Aliases.TryGetValue(code.ToLowerInvariant(), out var iso) ? _languages[iso] : throw new ArgumentException("Unknown language.", nameof(code));
+        return Aliases.TryGetValue(code.ToLowerInvariant(), out var iso) ? _languages[iso] : throw new ArgumentException($"Unknown language \"{code}\".", nameof(code));
     }
 
     /// <summary>

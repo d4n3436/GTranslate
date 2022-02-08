@@ -108,10 +108,9 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         var translation = string.Concat(sentences.EnumerateArray().Select(x => x.GetProperty("trans").GetString()));
         var transliteration = string.Concat(sentences.EnumerateArray().Select(x => x.GetPropertyOrDefault("translit").GetStringOrDefault()));
         string source = document.RootElement.GetProperty("src").GetString() ?? "";
-        var sourceLanguage = Language.TryGetLanguage(source, out var lang) ? lang : null;
         float? confidence = document.RootElement.TryGetSingle("confidence", out var temp) ? temp : null;
 
-        return new GoogleTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391), sourceLanguage, transliteration, confidence);
+        return new GoogleTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(source), transliteration, confidence);
     }
 
     /// <summary>

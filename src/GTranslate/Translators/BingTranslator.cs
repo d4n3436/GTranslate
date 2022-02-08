@@ -121,9 +121,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         string? transliteration = translation.GetPropertyOrDefault("transliteration").GetPropertyOrDefault("text").GetStringOrDefault()
                                   ?? root.ElementAtOrDefault(1).GetPropertyOrDefault("inputTransliteration").GetStringOrDefault();
 
-        var sourceLanguage = Language.TryGetLanguage(detectedLanguage, out var lang) ? lang : null;
-
-        return new BingTranslationResult(translatedText, text, Language.GetLanguage(targetLanguage), sourceLanguage, transliteration, script, score);
+        return new BingTranslationResult(translatedText, text, Language.GetLanguage(targetLanguage), Language.GetLanguage(detectedLanguage), transliteration, script, score);
     }
 
     /// <summary>

@@ -6,7 +6,7 @@
 public class GoogleTranslationResult : ITranslationResult<Language>, ITranslationResult
 {
     internal GoogleTranslationResult(string translation, string source, Language targetLanguage,
-        Language? sourceLanguage = null, string? transliteration = null, float? confidence = null)
+        Language sourceLanguage, string? transliteration = null, float? confidence = null)
     {
         Translation = translation;
         Source = source;
@@ -29,7 +29,7 @@ public class GoogleTranslationResult : ITranslationResult<Language>, ITranslatio
     public Language TargetLanguage { get; }
 
     /// <inheritdoc/>
-    public Language? SourceLanguage { get; }
+    public Language SourceLanguage { get; }
 
     /// <summary>
     /// Gets the transliteration of the text.
@@ -42,7 +42,7 @@ public class GoogleTranslationResult : ITranslationResult<Language>, ITranslatio
     public float? Confidence { get; }
 
     /// <inheritdoc />
-    ILanguage? ITranslationResult<ILanguage>.SourceLanguage => SourceLanguage;
+    ILanguage ITranslationResult<ILanguage>.SourceLanguage => SourceLanguage;
 
     /// <inheritdoc />
     ILanguage ITranslationResult<ILanguage>.TargetLanguage => TargetLanguage;

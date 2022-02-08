@@ -5,7 +5,7 @@
 /// </summary>
 public class YandexTranslationResult : ITranslationResult<Language>, ITranslationResult
 {
-    internal YandexTranslationResult(string translation, string source, Language targetLanguage, Language? sourceLanguage)
+    internal YandexTranslationResult(string translation, string source, Language targetLanguage, Language sourceLanguage)
     {
         Translation = translation;
         Source = source;
@@ -26,10 +26,10 @@ public class YandexTranslationResult : ITranslationResult<Language>, ITranslatio
     public Language TargetLanguage { get; }
 
     /// <inheritdoc/>
-    public Language? SourceLanguage { get; }
+    public Language SourceLanguage { get; }
 
     /// <inheritdoc />
-    ILanguage? ITranslationResult<ILanguage>.SourceLanguage => SourceLanguage;
+    ILanguage ITranslationResult<ILanguage>.SourceLanguage => SourceLanguage;
 
     /// <inheritdoc />
     ILanguage ITranslationResult<ILanguage>.TargetLanguage => TargetLanguage;

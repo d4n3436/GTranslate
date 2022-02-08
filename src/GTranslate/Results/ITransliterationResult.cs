@@ -24,7 +24,7 @@ public interface ITransliterationResult<out TLanguage> where TLanguage : ILangua
     /// <summary>
     /// Gets the source language.
     /// </summary>
-    TLanguage? SourceLanguage { get; }
+    TLanguage SourceLanguage { get; }
 
     /// <summary>
     /// Gets the target language.

@@ -27,7 +27,7 @@ internal static class Program
             {
                 var result = await translator.TranslateAsync(text, language);
                 Console.WriteLine($"Translation: {result.Translation}");
-                Console.WriteLine($"Source Language: {result.SourceLanguage?.ToString() ?? "?"}");
+                Console.WriteLine($"Source Language: {result.SourceLanguage}");
                 Console.WriteLine($"Target Language: {result.TargetLanguage}");
                 Console.WriteLine($"Service: {result.Service}");
             }
