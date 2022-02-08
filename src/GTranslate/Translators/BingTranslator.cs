@@ -14,7 +14,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
 {
     private const string _apiEndpoint = "https://www.bing.com/ttranslatev3";
     private static readonly Uri _bingTranslatorUri = new("https://www.bing.com/translator");
-    private const string _defaultUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36";
+    private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.81 Safari/537.36";
 
     /// <inheritdoc/>
     public string Name => "BingTranslator";

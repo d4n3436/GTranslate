@@ -16,7 +16,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     private const string _salt1 = "+-a^+6";
     private const string _salt2 = "+-3^+b+-f";
     private const string _apiEndpoint = "https://translate.googleapis.com/translate_a/single";
-    private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36";
+    private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.81 Safari/537.36";
 
     /// <inheritdoc/>
     public string Name => "GoogleTranslator";
