@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using GTranslate.Translators;
 
@@ -65,11 +66,11 @@ internal static class TranslatorGuards
         }
     }
 
-    public static void ObjectNotDisposed(ITranslator translator, bool disposed)
+    public static void ObjectNotDisposed<T>(T obj, [DoesNotReturnIf(true)] bool disposed, string? objectName = null) where T : IDisposable
     {
         if (disposed)
         {
-            throw new ObjectDisposedException(translator.GetType().Name);
+            throw new ObjectDisposedException(objectName ?? obj.GetType().Name);
         }
     }
 }
