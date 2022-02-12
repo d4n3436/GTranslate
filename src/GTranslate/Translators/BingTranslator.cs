@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -155,11 +156,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         using var document = JsonDocument.Parse(bytes);
         var root = document.RootElement;
 
-        if (root.TryGetInt32("statusCode", out int code))
-        {
-            var errorMessage = root.GetPropertyOrDefault("errorMessage").GetStringOrDefault();
-            throw new TranslatorException(!string.IsNullOrEmpty(errorMessage) ? errorMessage! : $"The API returned status code {code}.", Name);
-        }
+        ThrowIfStatusCodeIsPresent(root);
 
         var first = root.FirstOrDefault();
         var translation = first.GetPropertyOrDefault("translations").FirstOrDefault();
@@ -491,11 +488,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         using var document = JsonDocument.Parse(bytes);
         var root = document.RootElement;
 
-        if (root.TryGetInt32("statusCode", out int code))
-        {
-            var errorMessage = root.GetPropertyOrDefault("errorMessage").GetStringOrDefault();
-            throw new TranslatorException(!string.IsNullOrEmpty(errorMessage) ? errorMessage! : $"The API returned status code {code}.", Name);
-        }
+        ThrowIfStatusCodeIsPresent(root);
 
         // Authentication tokens seem to be always valid for 10 minutes
         // https://docs.microsoft.com/en-us/azure/cognitive-services/authentication?tabs=powershell#authenticate-with-an-authentication-token
@@ -508,6 +501,21 @@ public sealed class BingTranslator : ITranslator, IDisposable
         _cachedAuthTokenInfo = new CachedObject<BingAuthTokenInfo>(authInfo, TimeSpan.FromMilliseconds(expiryDurationInMs));
 
         return authInfo;
+    }
+
+    private static void ThrowIfStatusCodeIsPresent(JsonElement element)
+    {
+        // If we get a "statusCode" property, this means the response is not successful
+        if (element.TryGetInt32("statusCode", out int code))
+        {
+            var errorMessage = element.GetPropertyOrDefault("errorMessage").GetStringOrDefault($"The API returned status code {code}.");
+
+#if NET5_0_OR_GREATER
+            throw new HttpRequestException(errorMessage, null, (HttpStatusCode)code);
+#else
+            throw new HttpRequestException(errorMessage);
+#endif
+        }
     }
 
     /// <summary>

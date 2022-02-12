@@ -93,11 +93,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         using var document = JsonDocument.Parse(bytes);
 
-        if (document.RootElement.TryGetInt32("code", out int code) && code != 200)
-        {
-            var message = document.RootElement.GetPropertyOrDefault("message").GetStringOrDefault();
-            throw new TranslatorException($"The API returned status code {code}{(message == null ? "" : $" and message: {message}")}.", Name);
-        }
+        ThrowIfStatusCodeIsPresent(document.RootElement);
 
         var textProp = document.RootElement.GetProperty("text");
         if (textProp.ValueKind != JsonValueKind.Array)
@@ -212,11 +208,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         using var document = JsonDocument.Parse(bytes);
 
-        if (document.RootElement.TryGetInt32("code", out int code) && code != 200)
-        {
-            var message = document.RootElement.GetPropertyOrDefault("message").GetStringOrDefault();
-            throw new TranslatorException($"The API returned status code {code}{(message == null ? "" : $" and message: {message}")}.", Name);
-        }
+        ThrowIfStatusCodeIsPresent(document.RootElement);
 
         var language = document.RootElement.GetProperty("lang").GetString();
         if (language is null || !Language.TryGetLanguage(language, out var lang))
@@ -305,5 +297,19 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         }
 
         return _cachedUcid.Value;
+    }
+
+    private static void ThrowIfStatusCodeIsPresent(JsonElement element)
+    {
+        if (element.TryGetInt32("code", out int code) && code != 200)
+        {
+            var message = element.GetPropertyOrDefault("message").GetStringOrDefault($"The API returned status code {code}.");
+
+#if NET5_0_OR_GREATER
+            throw new HttpRequestException(message, null, (HttpStatusCode)code);
+#else
+            throw new HttpRequestException(message);
+#endif
+        }
     }
 }
