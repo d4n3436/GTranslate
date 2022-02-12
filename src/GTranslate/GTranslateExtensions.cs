@@ -17,8 +17,8 @@ internal static class GScraperExtensions
     public static string? GetStringOrDefault(this JsonElement element, string? defaultValue = null)
         => element.ValueKind is JsonValueKind.String or JsonValueKind.Null ? element.GetString() ?? defaultValue : defaultValue;
 
-    public static int GetInt32OrDefault(this JsonElement element)
-        => element.ValueKind == JsonValueKind.Number && element.TryGetInt32(out int value) ? value : default;
+    public static int GetInt32OrDefault(this JsonElement element, int defaultValue = default)
+        => element.ValueKind == JsonValueKind.Number && element.TryGetInt32(out int value) ? value : defaultValue;
 
     public static bool TryGetInt32(this JsonElement element, string propertyName, out int value)
     {
