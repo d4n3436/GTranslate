@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -10,29 +9,17 @@ using GTranslate.Results;
 namespace GTranslate.Translators;
 
 /// <summary>
-/// Represents a translator for the new Google Translate RPC API.
+/// Represents a translator that uses the old (previous) API that Google Translate used.
 /// </summary>
-public sealed class GoogleTranslator : ITranslator, IDisposable
+public sealed class OldGoogleTranslator : ITranslator, IDisposable
 {
-    private const string _translateRpcId = "MkEWBc";
-    private const string _ttsRpcId = "jQ1olc";
+    private const string _salt1 = "+-a^+6";
+    private const string _salt2 = "+-3^+b+-f";
+    private const string _apiEndpoint = "https://translate.googleapis.com/translate_a/single";
     private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.81 Safari/537.36";
-    private static readonly Uri _defaultBaseAddress = new("https://translate.google.com/");
-    private static readonly string[] _ttsLanguages =
-    {
-        "af", "ar", "bg", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "fi", "fr", "gu", "hi", "hr", "hu",
-        "hy", "id", "is", "it","iw", "ja", "jv", "km", "kn", "ko", "la", "lv", "mk", "ml", "mr", "ms", "my", "ne", "nl", "no", "pl",
-        "pt", "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh-CN", "zh-TW"
-    };
-    private static readonly Lazy<HashSet<ILanguage>> _lazyTtsLanguages = new(() => new HashSet<ILanguage>(_ttsLanguages.Select(Language.GetLanguage)));
 
     /// <inheritdoc/>
-    public string Name => "GoogleTranslator";
-
-    /// <summary>
-    /// Gets a read-only collection of languages that support text-to-speech.
-    /// </summary>
-    public static IReadOnlyCollection<ILanguage> TextToSpeechLanguages => _lazyTtsLanguages.Value;
+    public string Name => "OldGoogleTranslator";
 
     private readonly HttpClient _httpClient;
     private bool _disposed;
@@ -40,14 +27,14 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="GoogleTranslator"/> class.
     /// </summary>
-    public GoogleTranslator() : this(new HttpClient())
+    public OldGoogleTranslator() : this(new HttpClient())
     {
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GoogleTranslator"/> class with the provided <see cref="HttpClient"/>.
     /// </summary>
-    public GoogleTranslator(HttpClient httpClient)
+    public OldGoogleTranslator(HttpClient httpClient)
     {
         TranslatorGuards.NotNull(httpClient);
 
@@ -55,8 +42,6 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         {
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_defaultUserAgent);
         }
-
-        httpClient.BaseAddress ??= _defaultBaseAddress;
 
         _httpClient = httpClient;
     }
@@ -84,8 +69,6 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         return await TranslateAsync(text, toLang, fromLang).ConfigureAwait(false);
     }
 
-    // TODO: Decipher request header X-Goog-BatchExecute-Bgr, this produces a more accurate translation
-
     /// <inheritdoc cref="TranslateAsync(string, string, string)"/>
     public async Task<GoogleTranslationResult> TranslateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage = null)
     {
@@ -94,26 +77,40 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        string payload = $"[[\"{JsonEncodedText.Encode(text)}\",\"{fromLanguage?.ISO6391 ?? "auto"}\",\"{toLanguage.ISO6391}\",true],[null]]";
+        string query = "?client=gtx" +
+                       $"&sl={GoogleHotPatch(fromLanguage?.ISO6393 ?? "auto")}" +
+                       $"&tl={GoogleHotPatch(toLanguage.ISO6391)}" +
+                       "&dt=t" +
+                       "&dt=bd" +
+                       "&dj=1" +
+                       "&source=input" +
+                       $"&tk={MakeToken(text)}";
 
-        using var request = BuildRequest(_translateRpcId, payload);
-        using var document = await SendAndParseResponseAsync(request).ConfigureAwait(false);
+        using var content = new FormUrlEncodedContent(new KeyValuePair<string, string>[] { new("q", text) });
+        using var request = new HttpRequestMessage
+        {
+            Method = HttpMethod.Post,
+            RequestUri = new Uri($"{_apiEndpoint}{query}"),
+            Content = content
+        };
 
-        var root = document.RootElement;
+        using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+        using var document = JsonDocument.Parse(bytes);
 
-        string target = root[1][1].GetString() ?? toLanguage.ISO6391;
-        string source = root[1][3].GetString() ?? "";
-        string translation = root[1][0][0]
-            .LastOrDefault()
-            .FirstOrDefault()
-            .FirstOrDefault()
-            .GetStringOrDefault() ?? throw new TranslatorException("Failed to get the translated text.", Name);
+        var sentences = document.RootElement.GetProperty("sentences");
+        if (sentences.ValueKind != JsonValueKind.Array)
+        {
+            throw new TranslatorException("Failed to get the translated text.", Name);
+        }
 
-        string? transliteration = root[1][0][0]
-            .ElementAtOrDefault(1)
-            .GetStringOrDefault();
+        var translation = string.Concat(sentences.EnumerateArray().Select(x => x.GetProperty("trans").GetString()));
+        var transliteration = string.Concat(sentences.EnumerateArray().Select(x => x.GetPropertyOrDefault("translit").GetStringOrDefault()));
+        string source = document.RootElement.GetProperty("src").GetString() ?? "";
+        float? confidence = document.RootElement.TryGetSingle("confidence", out var temp) ? temp : null;
 
-        return new GoogleTranslationResult(translation, text, Language.GetLanguage(target), Language.GetLanguage(source), transliteration);
+        return new GoogleTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(source), transliteration, confidence);
     }
 
     /// <summary>
@@ -178,38 +175,6 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     }
 
     /// <summary>
-    /// Converts text into synthesized speech.
-    /// </summary>
-    /// <param name="text">The text to convert.</param>
-    /// <param name="language">The voice language. Only the languages in <see cref="TextToSpeechLanguages"/> are supported.</param>
-    /// <param name="slow">Whether to read the text slowly.</param>
-    /// <returns>A task that represents the asynchronous synthesis operation. The task contains the synthesized speech in a MP3 <see cref="byte"/> array.</returns>
-    public async Task<byte[]> TextToSpeechAsync(string text, string language, bool slow = false)
-    {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(language);
-        TranslatorGuards.LanguageFound(language, out var lang);
-
-        return await TextToSpeechAsync(text, lang, slow).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc cref="TextToSpeechAsync(string, string, bool)"/>
-    public async Task<byte[]> TextToSpeechAsync(string text, ILanguage language, bool slow = false)
-    {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(language);
-        EnsureValidTTSLanguage(language);
-
-        string payload = $"[\"{JsonEncodedText.Encode(text)}\",\"{language.ISO6391}\",{(slow ? "true" : "null")},\"null\"]";
-        using var request = BuildRequest(_ttsRpcId, payload);
-        using var document = await SendAndParseResponseAsync(request).ConfigureAwait(false);
-
-        return document.RootElement[0].GetBytesFromBase64();
-    }
-
-    /// <summary>
     /// Returns whether Google Translate supports the specified language.
     /// </summary>
     /// <param name="language">The language.</param>
@@ -263,44 +228,61 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         _disposed = true;
     }
 
-    private static void EnsureValidTTSLanguage(ILanguage language)
+    /// <summary>
+    /// Hot-patches language codes to Google-specific ones.
+    /// </summary>
+    /// <param name="languageCode">The language code.</param>
+    /// <returns>The hot-patched language code.</returns>
+    private static string GoogleHotPatch(string languageCode)
     {
-        if (!_lazyTtsLanguages.Value.Contains(language))
+        return languageCode switch
         {
-            throw new ArgumentException("Language not supported.", nameof(language));
-        }
+            "jv" => "jw",
+            _ => languageCode
+        };
     }
 
-    private static HttpRequestMessage BuildRequest(string rpcId, string payload) => new()
+    private static string MakeToken(string text)
     {
-        Method = HttpMethod.Post,
-        RequestUri = new Uri($"_/TranslateWebserverUi/data/batchexecute?rpcids={rpcId}", UriKind.Relative),
-        Content = new FormUrlEncodedContent(new KeyValuePair<string, string>[] { new("f.req", $"[[[\"{rpcId}\",\"{JsonEncodedText.Encode(payload)}\",null,\"generic\"]]]") })
-    };
+        long a = DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 3600, b = a;
 
-    private async Task<JsonDocument> SendAndParseResponseAsync(HttpRequestMessage request)
-    {
-        using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
-
-        var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-        JsonDocument document;
-
-        // skip magic chars
-        if (stream.CanSeek)
+        foreach (char ch in text)
         {
-            stream.Seek(6, SeekOrigin.Begin);
-            document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
-        }
-        else
-        {
-            var bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-            document = JsonDocument.Parse(bytes.AsMemory(6, bytes.Length - 6));
+            a = WorkToken(a + ch, _salt1);
         }
 
-        // get the actual data
-        var data = document.RootElement[0][2].GetString() ?? throw new TranslatorException("Unable to get the data from the response.", Name);
-        document.Dispose();
+        a = WorkToken(a, _salt2);
 
-        return JsonDocument.Parse(data);
+        if (a < 0)
+        {
+            a = (a & int.MaxValue) + int.MaxValue + 1;
+        }
+
+        a %= 1000000;
+
+        return $"{a}.{a ^ b}";
+    }
+
+    private static long WorkToken(long num, string seed)
+    {
+        for (int i = 0; i < seed.Length - 2; i += 3)
+        {
+            int d = seed[i + 2];
+
+            if (d >= 'a') // 97
+            {
+                d -= 'W'; // 87
+            }
+
+            if (seed[i + 1] == '+') // 43
+            {
+                num = (num + (num >> d)) & uint.MaxValue;
+            }
+            else
+            {
+                num ^= num << d;
+            }
+        }
+        return num;
     }
 }
