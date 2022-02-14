@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -17,6 +18,17 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     private const string _apiUrl = "https://translate.yandex.net/api/v1/tr.json";
     private static readonly Uri _transliterationApiUri = new("https://translate.yandex.net/translit/translit");
     private const string _defaultUserAgent = "ru.yandex.translate/3.20.2024";
+    private static readonly HashSet<ILanguage> _ttsLanguages = new()
+    {
+        Language.GetLanguage("ru"),
+        Language.GetLanguage("en"),
+        Language.GetLanguage("tr")
+    };
+
+    /// <summary>
+    /// Gets a read-only collection of languages that support text-to-speech.
+    /// </summary>
+    public static IReadOnlyCollection<ILanguage> TextToSpeechLanguages => _ttsLanguages;
 
     /// <inheritdoc/>
     public string Name => "YandexTranslator";
@@ -220,6 +232,41 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     }
 
     /// <summary>
+    /// Converts text into synthesized speech.
+    /// </summary>
+    /// <param name="text">The text to convert.</param>
+    /// <param name="language">The voice language. Only the languages in <see cref="TextToSpeechLanguages"/> are supported.</param>
+    /// <param name="speed">The rate (speed) of synthesized speech.</param>
+    /// <returns>A task that represents the asynchronous synthesis operation. The task contains the synthesized speech in a MP3 <see cref="Stream"/>.</returns>
+    public async Task<Stream> TextToSpeechAsync(string text, string language, float speed = 1)
+    {
+        TranslatorGuards.ObjectNotDisposed(this, _disposed);
+        TranslatorGuards.NotNull(text);
+        TranslatorGuards.NotNull(language);
+        TranslatorGuards.LanguageFound(language, out var lang);
+        EnsureValidTTSLanguage(lang);
+
+        return await TextToSpeechAsync(text, lang, speed).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="TextToSpeechAsync(string, string, float)"/>
+    public async Task<Stream> TextToSpeechAsync(string text, ILanguage language, float speed = 1)
+    {
+        TranslatorGuards.ObjectNotDisposed(this, _disposed);
+        TranslatorGuards.NotNull(text);
+        TranslatorGuards.NotNull(language);
+        EnsureValidTTSLanguage(language);
+
+        string url = $"https://tts.voicetech.yandex.net/tts?text={Uri.EscapeDataString(text)}&lang={YandexTTSHotPatch(language.ISO6391)}&speed={speed}&format=mp3&quality=hi&platform=android&application=translate";
+        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
+
+        var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsStreamAsync();
+    }
+
+    /// <summary>
     /// Returns whether Yandex.Translate supports the specified language.
     /// </summary>
     /// <param name="language">The language.</param>
@@ -289,6 +336,19 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         };
     }
 
+    private static string YandexTTSHotPatch(string languageCode)
+    {
+        TranslatorGuards.NotNull(languageCode);
+
+        return languageCode switch
+        {
+            "ru" => "ru_RU",
+            "en" => "en_GB",
+            "tr" => "tr_TR",
+            _ => throw new ArgumentException("Unknown language.", nameof(languageCode))
+        };
+    }
+
     private Guid GetOrUpdateUcid()
     {
         if (_cachedUcid.IsExpired())
@@ -310,6 +370,14 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 #else
             throw new HttpRequestException(message);
 #endif
+        }
+    }
+
+    private static void EnsureValidTTSLanguage(ILanguage language)
+    {
+        if (!_ttsLanguages.Contains(language))
+        {
+            throw new ArgumentException("Language not supported.", nameof(language));
         }
     }
 }
