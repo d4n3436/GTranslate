@@ -30,11 +30,12 @@ namespace GTranslate.Extensions
                     length = (index - offset <= 0 ? Math.Min(text.Length, maxLength) : index) - offset;
                 }
 
+                var line = text.AsMemory(offset, length);
                 offset += length;
                 if (index != -1)
                     offset++;
 
-                yield return text.AsMemory(offset, length);
+                yield return line;
             }
         }
     }
