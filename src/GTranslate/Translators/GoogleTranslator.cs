@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using GTranslate.Extensions;
 using GTranslate.Results;
 
 namespace GTranslate.Translators;
@@ -183,8 +185,8 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// <param name="text">The text to convert.</param>
     /// <param name="language">The voice language. Only the languages in <see cref="TextToSpeechLanguages"/> are supported.</param>
     /// <param name="slow">Whether to read the text slowly.</param>
-    /// <returns>A task that represents the asynchronous synthesis operation. The task contains the synthesized speech in a MP3 <see cref="byte"/> array.</returns>
-    public async Task<byte[]> TextToSpeechAsync(string text, string language, bool slow = false)
+    /// <returns>A task that represents the asynchronous synthesis operation. The task contains the synthesized speech in a MP3 <see cref="Stream"/>.</returns>
+    public async Task<Stream> TextToSpeechAsync(string text, string language, bool slow = false)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
         TranslatorGuards.NotNull(text);
@@ -195,18 +197,46 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     }
 
     /// <inheritdoc cref="TextToSpeechAsync(string, string, bool)"/>
-    public async Task<byte[]> TextToSpeechAsync(string text, ILanguage language, bool slow = false)
+    public async Task<Stream> TextToSpeechAsync(string text, ILanguage language, bool slow = false)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
         TranslatorGuards.NotNull(text);
         TranslatorGuards.NotNull(language);
         EnsureValidTTSLanguage(language);
 
-        string payload = $"[\"{JsonEncodedText.Encode(text)}\",\"{language.ISO6391}\",{(slow ? "true" : "null")},\"null\"]";
-        using var request = BuildRequest(_ttsRpcId, payload);
-        using var document = await SendAndParseResponseAsync(request).ConfigureAwait(false);
+        var tasks = text.SplitWithoutWordBreaking().Select(ProcessRequestAsync);
 
-        return document.RootElement[0].GetBytesFromBase64();
+        // Send requests and parse responses in parallel
+        var chunks = await Task.WhenAll(tasks);
+
+        ReadOnlySequence<byte> sequence;
+        if (chunks.Length == 1)
+        {
+            sequence = new ReadOnlySequence<byte>(chunks[0]);
+        }
+        else
+        {
+            var first = new MemorySegment<byte>(chunks[0]);
+            MemorySegment<byte> last = null!;
+
+            for (int i = 1; i < chunks.Length; i++)
+            {
+                last = first.Append(chunks[i]);
+            }
+
+            sequence = new ReadOnlySequence<byte>(first, 0, last, last.Memory.Length);
+        }
+
+        return sequence.AsStream();
+
+        async Task<Memory<byte>> ProcessRequestAsync(ReadOnlyMemory<char> textChunk)
+        {
+            string payload = $"[\"{JsonEncodedText.Encode(textChunk.Span)}\",\"{language.ISO6391}\",{(slow ? "true" : "null")},\"null\"]";
+            using var request = BuildRequest(_ttsRpcId, payload);
+            using var document = await SendAndParseResponseAsync(request).ConfigureAwait(false);
+
+            return document.RootElement[0].GetBytesFromBase64();
+        }
     }
 
     /// <summary>
