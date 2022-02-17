@@ -207,7 +207,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         var tasks = text.SplitWithoutWordBreaking().Select(ProcessRequestAsync);
 
         // Send requests and parse responses in parallel
-        var chunks = await Task.WhenAll(tasks);
+        var chunks = await Task.WhenAll(tasks).ConfigureAwait(false);
 
         ReadOnlySequence<byte> sequence;
         if (chunks.Length == 1)
@@ -216,15 +216,15 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         }
         else
         {
-            var first = new MemorySegment<byte>(chunks[0]);
-            MemorySegment<byte> last = null!;
+            var start = new MemorySegment<byte>(chunks[0]);
+            MemorySegment<byte> end = null!;
 
             for (int i = 1; i < chunks.Length; i++)
             {
-                last = first.Append(chunks[i]);
+                end = (end ?? start).Append(chunks[i]);
             }
 
-            sequence = new ReadOnlySequence<byte>(first, 0, last, last.Memory.Length);
+            sequence = new ReadOnlySequence<byte>(start, 0, end, end.Memory.Length);
         }
 
         return sequence.AsStream();
