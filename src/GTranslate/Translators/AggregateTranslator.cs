@@ -20,7 +20,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="AggregateTranslator"/> class.
     /// </summary>
-    public AggregateTranslator() : this(new GoogleTranslator(), new BingTranslator(), new YandexTranslator())
+    public AggregateTranslator() : this(new GoogleTranslator(), new GoogleTranslator2(), new BingTranslator(), new YandexTranslator())
     {
     }
 
@@ -47,16 +47,18 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="AggregateTranslator"/> class with the specified translators.
     /// </summary>
-    /// <param name="googleTranslator">The Google Translator.</param>
+    ///  <param name="googleTranslator">The Google Translator.</param>
+    /// <param name="googleTranslator2">The new Google Translator.</param>
     /// <param name="bingTranslator">The Bing Translator.</param>
     /// <param name="yandexTranslator">The Yandex Translator.</param>
-    public AggregateTranslator(GoogleTranslator googleTranslator, BingTranslator bingTranslator, YandexTranslator yandexTranslator)
+    public AggregateTranslator(GoogleTranslator googleTranslator, GoogleTranslator2 googleTranslator2, BingTranslator bingTranslator, YandexTranslator yandexTranslator)
     {
         TranslatorGuards.NotNull(googleTranslator);
+        TranslatorGuards.NotNull(googleTranslator2);
         TranslatorGuards.NotNull(bingTranslator);
         TranslatorGuards.NotNull(yandexTranslator);
 
-        _translators = new ITranslator[] { googleTranslator, bingTranslator, yandexTranslator };
+        _translators = new ITranslator[] { googleTranslator, googleTranslator2, bingTranslator, yandexTranslator };
     }
 
     /// <summary>
