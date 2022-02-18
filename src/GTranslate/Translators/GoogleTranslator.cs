@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -209,27 +208,9 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         // Send requests and parse responses in parallel
         var chunks = await Task.WhenAll(tasks).ConfigureAwait(false);
 
-        ReadOnlySequence<byte> sequence;
-        if (chunks.Length == 1)
-        {
-            sequence = new ReadOnlySequence<byte>(chunks[0]);
-        }
-        else
-        {
-            var start = new MemorySegment<byte>(chunks[0]);
-            MemorySegment<byte> end = null!;
+        return chunks.AsReadOnlySequence().AsStream();
 
-            for (int i = 1; i < chunks.Length; i++)
-            {
-                end = (end ?? start).Append(chunks[i]);
-            }
-
-            sequence = new ReadOnlySequence<byte>(start, 0, end, end.Memory.Length);
-        }
-
-        return sequence.AsStream();
-
-        async Task<Memory<byte>> ProcessRequestAsync(ReadOnlyMemory<char> textChunk)
+        async Task<ReadOnlyMemory<byte>> ProcessRequestAsync(ReadOnlyMemory<char> textChunk)
         {
             string payload = $"[\"{JsonEncodedText.Encode(textChunk.Span)}\",\"{language.ISO6391}\",{(slow ? "true" : "null")},\"null\"]";
             using var request = BuildRequest(_ttsRpcId, payload);

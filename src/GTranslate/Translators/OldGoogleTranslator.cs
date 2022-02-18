@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using GTranslate.Extensions;
 using GTranslate.Results;
 
 namespace GTranslate.Translators;
@@ -16,10 +18,23 @@ public sealed class OldGoogleTranslator : ITranslator, IDisposable
     private const string _salt1 = "+-a^+6";
     private const string _salt2 = "+-3^+b+-f";
     private const string _apiEndpoint = "https://translate.googleapis.com/translate_a/single";
+    private const string _ttsApiEndpoint = "https://translate.google.com/translate_tts";
     private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.81 Safari/537.36";
+    private static readonly string[] _ttsLanguages =
+    {
+        "af", "ar", "bg", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "fi", "fr", "gu", "hi", "hr", "hu",
+        "hy", "id", "is", "it","iw", "ja", "jv", "km", "kn", "ko", "la", "lv", "mk", "ml", "mr", "ms", "my", "ne", "nl", "no", "pl",
+        "pt", "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh-CN", "zh-TW"
+    };
+    private static readonly Lazy<HashSet<ILanguage>> _lazyTtsLanguages = new(() => new HashSet<ILanguage>(_ttsLanguages.Select(Language.GetLanguage)));
 
     /// <inheritdoc/>
     public string Name => "OldGoogleTranslator";
+
+    /// <summary>
+    /// Gets a read-only collection of languages that support text-to-speech.
+    /// </summary>
+    public static IReadOnlyCollection<ILanguage> TextToSpeechLanguages => _lazyTtsLanguages.Value;
 
     private readonly HttpClient _httpClient;
     private bool _disposed;
@@ -84,7 +99,7 @@ public sealed class OldGoogleTranslator : ITranslator, IDisposable
                        "&dt=bd" +
                        "&dj=1" +
                        "&source=input" +
-                       $"&tk={MakeToken(text)}";
+                       $"&tk={MakeToken(text.AsSpan())}";
 
         using var content = new FormUrlEncodedContent(new KeyValuePair<string, string>[] { new("q", text) });
         using var request = new HttpRequestMessage
@@ -175,6 +190,53 @@ public sealed class OldGoogleTranslator : ITranslator, IDisposable
     }
 
     /// <summary>
+    /// Converts text into synthesized speech.
+    /// </summary>
+    /// <param name="text">The text to convert.</param>
+    /// <param name="language">The voice language. Only the languages in <see cref="TextToSpeechLanguages"/> are supported.</param>
+    /// /// <param name="speed">The rate (speed) of synthesized speech. Google uses <c>1</c> for normal speed and <c>0.3</c> for slow speed.</param>
+    /// <returns>A task that represents the asynchronous synthesis operation. The task contains the synthesized speech in a MP3 <see cref="Stream"/>.</returns>
+    public async Task<Stream> TextToSpeechAsync(string text, string language, float speed = 1)
+    {
+        TranslatorGuards.ObjectNotDisposed(this, _disposed);
+        TranslatorGuards.NotNull(text);
+        TranslatorGuards.NotNull(language);
+        TranslatorGuards.LanguageFound(language, out var lang);
+
+        return await TextToSpeechAsync(text, lang, speed).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="TextToSpeechAsync(string, string, float)"/>
+    public async Task<Stream> TextToSpeechAsync(string text, ILanguage language, float speed = 1)
+    {
+        TranslatorGuards.ObjectNotDisposed(this, _disposed);
+        TranslatorGuards.NotNull(text);
+        TranslatorGuards.NotNull(language);
+        EnsureValidTTSLanguage(language);
+
+        var textParts = text.SplitWithoutWordBreaking().ToArray();
+        var tasks = new Task<ReadOnlyMemory<byte>>[textParts.Length];
+        for (var i = 0; i < textParts.Length; i++)
+        {
+            tasks[i] = ProcessRequestAsync(textParts[i], i, textParts.Length);
+        }
+
+        // Send requests and parse responses in parallel
+        var chunks = await Task.WhenAll(tasks).ConfigureAwait(false);
+
+        return chunks.AsReadOnlySequence().AsStream();
+
+        async Task<ReadOnlyMemory<byte>> ProcessRequestAsync(ReadOnlyMemory<char> textChunk, int index, int total)
+        {
+            var escapedText = Uri.EscapeDataString(textChunk.ToString());
+            var token = MakeToken(textChunk.Span);
+
+            string url = $"{_ttsApiEndpoint}?ie=UTF-8&q={escapedText}&tl={language.ISO6391}&ttsspeed={speed}&total={total}&idx={index}&client=tw-ob&textlen={textChunk.Length}&tk={token}";
+            return await _httpClient.GetByteArrayAsync(new Uri(url)).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
     /// Returns whether Google Translate supports the specified language.
     /// </summary>
     /// <param name="language">The language.</param>
@@ -228,6 +290,14 @@ public sealed class OldGoogleTranslator : ITranslator, IDisposable
         _disposed = true;
     }
 
+    private static void EnsureValidTTSLanguage(ILanguage language)
+    {
+        if (!_lazyTtsLanguages.Value.Contains(language))
+        {
+            throw new ArgumentException("Language not supported.", nameof(language));
+        }
+    }
+
     /// <summary>
     /// Hot-patches language codes to Google-specific ones.
     /// </summary>
@@ -242,7 +312,7 @@ public sealed class OldGoogleTranslator : ITranslator, IDisposable
         };
     }
 
-    private static string MakeToken(string text)
+    private static string MakeToken(ReadOnlySpan<char> text)
     {
         long a = DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 3600, b = a;
 
