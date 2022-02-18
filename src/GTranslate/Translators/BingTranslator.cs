@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -272,29 +270,9 @@ public sealed class BingTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(text);
         TranslatorGuards.NotNull(voice);
 
-        return await TextToSpeechAsync(text, voice.ShortName, voice.Locale, voice.Gender, speakRate).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// Converts text into synthesized speech.
-    /// </summary>
-    /// <remarks>No validation will be performed to the parameters. Make sure to get the correct voices from either <see cref="DefaultVoices"/> or <see cref="GetTTSVoicesAsync"/>.</remarks>
-    /// <param name="text">The text to convert.</param>
-    /// <param name="voiceName">The name (ShortName) of the voice.</param>
-    /// <param name="voiceLocale">The locale of the voice.</param>
-    /// <param name="voiceGender">The gender of the voice.</param>
-    /// <param name="speakRate">The speaking rate of the text, expressed as a number that acts as a multiplier of the default.</param>
-    /// <returns>A task that represents the asynchronous synthesis operation. The task contains the synthesized speech in a MP3 <see cref="Stream"/>.</returns>
-    public async Task<Stream> TextToSpeechAsync(string text, string voiceName, string voiceLocale, string voiceGender, float speakRate = 1)
-    {
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(voiceName);
-        TranslatorGuards.NotNull(voiceLocale);
-        TranslatorGuards.NotNull(voiceGender);
-
         var authInfo = await GetOrUpdateBingAuthTokenAsync();
 
-        string payload = $"<speak version='1.0' xml:lang='{voiceLocale}'><voice xml:lang='{voiceLocale}' xml:gender='{voiceGender}' name='{voiceName}'><prosody rate='{speakRate}'>{text}</prosody></voice></speak>";
+        string payload = $"<speak version='1.0' xml:lang='{voice.Locale}'><voice xml:lang='{voice.Locale}' xml:gender='{voice.Gender}' name='{voice.ShortName}'><prosody rate='{speakRate}'>{text}</prosody></voice></speak>";
 
         var request = new HttpRequestMessage
         {
@@ -511,58 +489,11 @@ public sealed class BingTranslator : ITranslator, IDisposable
             var errorMessage = element.GetPropertyOrDefault("errorMessage").GetStringOrDefault($"The API returned status code {code}.");
 
 #if NET5_0_OR_GREATER
-            throw new HttpRequestException(errorMessage, null, (HttpStatusCode)code);
+            throw new HttpRequestException(errorMessage, null, (System.Net.HttpStatusCode)code);
 #else
             throw new HttpRequestException(errorMessage);
 #endif
         }
-    }
-
-    /// <summary>
-    /// Represents a TTS voice in Bing Translator.
-    /// </summary>
-    [DebuggerDisplay($"{{{nameof(DebuggerDisplay)},nq}}")]
-    public class BingVoice
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BingVoice"/> class.
-        /// </summary>
-        /// <param name="displayName"></param>
-        /// <param name="shortName"></param>
-        /// <param name="gender"></param>
-        /// <param name="locale"></param>
-        public BingVoice(string displayName, string shortName, string gender, string locale)
-        {
-            DisplayName = displayName;
-            Gender = gender;
-            ShortName = shortName;
-            Locale = locale;
-        }
-
-        /// <summary>
-        /// Gets the display name of this voice.
-        /// </summary>
-        public string DisplayName { get; }
-
-        /// <summary>
-        /// Gets the short name of this voice.
-        /// </summary>
-        public string ShortName { get; }
-
-        /// <summary>
-        /// Gets the gender of this voice.
-        /// </summary>
-        public string Gender { get; }
-
-        /// <summary>
-        /// Gets the locale of this voice.
-        /// </summary>
-        public string Locale { get; }
-
-        /// <inheritdoc/>
-        public override string ToString() => $"{DisplayName} ({Locale})";
-
-        private string DebuggerDisplay => ToString();
     }
 
     private readonly struct BingCredentials
