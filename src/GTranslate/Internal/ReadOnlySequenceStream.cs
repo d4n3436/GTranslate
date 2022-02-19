@@ -155,7 +155,7 @@ internal class ReadOnlySequenceStream : Stream
     /// <inheritdoc/>
     public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) => throw ThrowDisposedOr(new NotSupportedException());
 
-#if NET6_0_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
     /// <inheritdoc/>
     public override async Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
     {
@@ -179,7 +179,7 @@ internal class ReadOnlySequenceStream : Stream
     public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return ValueTask.FromResult(Read(buffer.Span));
+        return new ValueTask<int>(Read(buffer.Span));
     }
 
     /// <inheritdoc/>

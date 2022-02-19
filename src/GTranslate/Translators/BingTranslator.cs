@@ -254,7 +254,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         }
 
         // Unix timestamp generated once the page is loaded. Valid for 3600000 milliseconds or 1 hour
-#if NET6_0_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
         if (!long.TryParse(content.AsSpan(keyStartIndex, keyEndIndex - keyStartIndex), out long key))
 #else
         if (!long.TryParse(content.AsSpan(keyStartIndex, keyEndIndex - keyStartIndex).ToString(), out long key))
