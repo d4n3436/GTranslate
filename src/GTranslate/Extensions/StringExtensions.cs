@@ -12,31 +12,32 @@ internal static class StringExtensions
     // Google prioritizes maintaining the structure of sentences rather than minimizing the number of requests
     public static IEnumerable<ReadOnlyMemory<char>> SplitWithoutWordBreaking(this string text, int maxLength = 200)
     {
-        int offset = 0;
         var split = text.Split(_separators, StringSplitOptions.RemoveEmptyEntries);
-        text = string.Join(" ", split);
+        var current = string.Join(" ", split).AsMemory();
 
-        while (offset < text.Length)
+        while (!current.IsEmpty)
         {
-            int length;
             int index = -1;
-            if (text.Length - 1 <= offset + maxLength)
+            int length;
+
+            if (current.Length <= maxLength)
             {
-                length = text.Length - offset;
+                length = current.Length;
             }
             else
             {
-                index = text.LastIndexOf(' ', offset + maxLength);
-                length = (index - offset <= 0 ? Math.Min(text.Length, maxLength) : index) - offset;
+                index = current.Slice(0, maxLength).Span.LastIndexOf(' ');
+                length = index == -1 ? maxLength : index;
             }
 
-            var line = text.AsMemory(offset, length);
-            offset += length;
+            var line = current.Slice(0, length);
+            // skip a single space if there's one
             if (index != -1)
             {
-                offset++;
+                length++;
             }
 
+            current = current.Slice(length, current.Length - length);
             yield return line;
         }
     }
