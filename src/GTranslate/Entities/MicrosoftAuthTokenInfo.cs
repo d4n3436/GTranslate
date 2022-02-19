@@ -20,4 +20,7 @@ public sealed class MicrosoftAuthTokenInfo
     /// Gets the region of this token.
     /// </summary>
     public string Region { get; }
+
+    /// <inheritdoc/>
+    public override string ToString() => Token;
 }

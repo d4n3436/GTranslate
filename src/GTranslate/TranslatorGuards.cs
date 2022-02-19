@@ -9,7 +9,8 @@ namespace GTranslate;
 
 internal static class TranslatorGuards
 {
-    public static void NotNull<T>(T? obj, [CallerArgumentExpression("obj")] string? parameterName = null) where T : class
+    public static void NotNull<T>(T? obj, [CallerArgumentExpression("obj")] string? parameterName = null)
+        where T : class
     {
         if (obj is null)
         {
@@ -76,7 +77,8 @@ internal static class TranslatorGuards
         }
     }
 
-    public static void ObjectNotDisposed<T>(T obj, [DoesNotReturnIf(true)] bool disposed, string? objectName = null) where T : IDisposable
+    public static void ObjectNotDisposed<T>(T obj, [DoesNotReturnIf(true)] bool disposed, string? objectName = null)
+        where T : IDisposable
     {
         if (disposed)
         {

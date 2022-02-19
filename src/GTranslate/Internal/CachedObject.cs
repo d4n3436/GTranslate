@@ -26,7 +26,8 @@ internal readonly struct CachedObject<T>
     /// </summary>
     /// <param name="value">The value.</param>
     /// <param name="expirationDate">The date this object will expire.</param>
-    public CachedObject(T value, DateTimeOffset expirationDate) : this(value)
+    public CachedObject(T value, DateTimeOffset expirationDate)
+        : this(value)
     {
         ExpirationDate = expirationDate;
     }
@@ -36,7 +37,8 @@ internal readonly struct CachedObject<T>
     /// </summary>
     /// <param name="value">The value.</param>
     /// <param name="duration">The duration this object will be valid.</param>
-    public CachedObject(T value, TimeSpan duration) : this(value)
+    public CachedObject(T value, TimeSpan duration)
+        : this(value)
     {
         ExpirationDate = CachedDate.Add(duration);
     }

@@ -20,13 +20,15 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="AggregateTranslator"/> class.
     /// </summary>
-    public AggregateTranslator() : this(new GoogleTranslator(), new GoogleTranslator2(), new MicrosoftTranslator(), new YandexTranslator(), new BingTranslator())
+    public AggregateTranslator()
+        : this(new GoogleTranslator(), new GoogleTranslator2(), new MicrosoftTranslator(), new YandexTranslator(), new BingTranslator())
     {
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AggregateTranslator"/> class with the specified translators.
     /// </summary>
+    /// <param name="translators">The translators to use.</param>
     public AggregateTranslator(IReadOnlyCollection<ITranslator> translators)
     {
         TranslatorGuards.NotNull(translators);
@@ -47,7 +49,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="AggregateTranslator"/> class with the specified translators.
     /// </summary>
-    ///  <param name="googleTranslator">The Google Translator.</param>
+    /// <param name="googleTranslator">The Google Translator.</param>
     /// <param name="googleTranslator2">The new Google Translator.</param>
     /// <param name="microsoftTranslator">The Microsoft translator.</param>
     /// <param name="yandexTranslator">The Yandex Translator.</param>
@@ -72,11 +74,10 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// <param name="fromLanguage">The source language.</param>
     /// <returns>A task containing the translation result.</returns>
     /// <remarks>This method will attempt to use all the translation services passed in the constructor, in the order they were provided.</remarks>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TranslatorException"/>
-    /// <exception cref="AggregateException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="toLanguage"/> are null.</exception>
+    /// <exception cref="TranslatorException">Thrown when no translator supports <paramref name="toLanguage"/> or <paramref name="fromLanguage"/>.</exception>
+    /// <exception cref="AggregateException">Thrown when all translators fail to provide a valid result.</exception>
     public async Task<ITranslationResult> TranslateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -144,11 +145,11 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// <param name="fromLanguage">The source language.</param>
     /// <returns>A task containing the transliteration result.</returns>
     /// <remarks>This method will attempt to use all the translation services passed in the constructor, in the order they were provided.</remarks>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TranslatorException"/>
-    /// <exception cref="AggregateException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="toLanguage"/> are null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a <see cref="Language"/> could not be obtained from <paramref name="toLanguage"/> or <paramref name="fromLanguage"/>.</exception>
+    /// <exception cref="TranslatorException">Thrown when no translator supports <paramref name="toLanguage"/> or <paramref name="fromLanguage"/>.</exception>
+    /// <exception cref="AggregateException">Thrown when all translators fail to provide a valid result.</exception>
     public async Task<ITransliterationResult> TransliterateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -196,9 +197,9 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// <param name="text">The text to detect its language.</param>
     /// <returns>A task that represents the asynchronous language detection operation. The task contains the detected language.</returns>
     /// <remarks>This method will attempt to use all the translation services passed in the constructor, in the order they were provided.</remarks>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="AggregateException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> is null.</exception>
+    /// <exception cref="AggregateException">Thrown when all translators fail to provide a valid result.</exception>
     public async Task<ILanguage> DetectLanguageAsync(string text)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -259,7 +260,10 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="Dispose()"/>
     private void Dispose(bool disposing)
     {
-        if (!disposing || _disposed) return;
+        if (!disposing || _disposed)
+        {
+            return;
+        }
 
         foreach (var translator in _translators)
         {

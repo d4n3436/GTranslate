@@ -8,7 +8,8 @@ namespace GTranslate;
 /// </summary>
 /// <typeparam name="TCode">The type of codes (or keys) associated with a language.</typeparam>
 /// <typeparam name="TLanguage">The type of values that implements <see cref="ILanguage"/>.</typeparam>
-public interface ILanguageDictionary<TCode, TLanguage> : IReadOnlyDictionary<TCode, TLanguage> where TLanguage : ILanguage
+public interface ILanguageDictionary<TCode, TLanguage> : IReadOnlyDictionary<TCode, TLanguage>
+    where TLanguage : ILanguage
 {
     /// <summary>
     /// Gets a language from a language code.

@@ -16,8 +16,8 @@ namespace GTranslate.Translators;
 public sealed class YandexTranslator : ITranslator, IDisposable
 {
     private const string _apiUrl = "https://translate.yandex.net/api/v1/tr.json";
-    private static readonly Uri _transliterationApiUri = new("https://translate.yandex.net/translit/translit");
     private const string _defaultUserAgent = "ru.yandex.translate/3.20.2024";
+    private static readonly Uri _transliterationApiUri = new("https://translate.yandex.net/translit/translit");
     private static readonly HashSet<ILanguage> _ttsLanguages = new()
     {
         Language.GetLanguage("ru"),
@@ -40,13 +40,15 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="YandexTranslator"/> class.
     /// </summary>
-    public YandexTranslator() : this(new HttpClient())
+    public YandexTranslator()
+        : this(new HttpClient())
     {
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="YandexTranslator"/> class with the provided <see cref="HttpClient"/>.
+    /// Initializes a new instance of the <see cref="YandexTranslator"/> class with the provided <see cref="HttpClient"/> instance.
     /// </summary>
+    /// <param name="httpClient">An <see cref="HttpClient"/> instance.</param>
     public YandexTranslator(HttpClient httpClient)
     {
         TranslatorGuards.NotNull(httpClient);
@@ -58,6 +60,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         _httpClient = httpClient;
     }
+
     /// <summary>
     /// Translates a text using Yandex.Translate.
     /// </summary>
@@ -65,10 +68,12 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <param name="toLanguage">The target language.</param>
     /// <param name="fromLanguage">The source language.</param>
     /// <returns>A task that represents the asynchronous translation operation. The task contains the translation result.</returns>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TranslatorException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="toLanguage"/> are null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a <see cref="Language"/> could not be obtained from <paramref name="toLanguage"/> or <paramref name="fromLanguage"/>.</exception>
+    /// <exception cref="TranslatorException">
+    /// Thrown when <paramref name="toLanguage"/> or <paramref name="fromLanguage"/> are not supported, or an error occurred during the operation.
+    /// </exception>
     public async Task<YandexTranslationResult> TranslateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -135,10 +140,12 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <param name="toLanguage">The target language.</param>
     /// <param name="fromLanguage">The source language.</param>
     /// <returns>A task that represents the asynchronous transliteration operation. The task contains the transliteration result.</returns>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TranslatorException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="toLanguage"/> are null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a <see cref="Language"/> could not be obtained from <paramref name="toLanguage"/> or <paramref name="fromLanguage"/>.</exception>
+    /// <exception cref="TranslatorException">
+    /// Thrown when <paramref name="toLanguage"/> or <paramref name="fromLanguage"/> are not supported, or an error occurred during the operation.
+    /// </exception>
     public async Task<YandexTransliterationResult> TransliterateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -189,9 +196,9 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// </summary>
     /// <param name="text">The text to detect its language.</param>
     /// <returns>A task that represents the asynchronous language detection operation. The task contains the detected language.</returns>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="TranslatorException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> is null.</exception>
+    /// <exception cref="TranslatorException">Thrown when an error occurred during the operation.</exception>
     public async Task<Language> DetectLanguageAsync(string text)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -208,7 +215,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         };
 
         using var content = new FormUrlEncodedContent(data);
-        var request = new HttpRequestMessage
+        using var request = new HttpRequestMessage
         {
             Method = HttpMethod.Get,
             RequestUri = new Uri($"{_apiUrl}/detect{query}"),
@@ -238,6 +245,10 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <param name="language">The voice language. Only the languages in <see cref="TextToSpeechLanguages"/> are supported.</param>
     /// <param name="speed">The rate (speed) of synthesized speech.</param>
     /// <returns>A task that represents the asynchronous synthesis operation. The task contains the synthesized speech in a MP3 <see cref="Stream"/>.</returns>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="language"/> are null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a <see cref="Language"/> could not be obtained from <paramref name="language"/>.</exception>
+    /// <exception cref="TranslatorException">Thrown when <paramref name="language"/> is not supported.</exception>
     public async Task<Stream> TextToSpeechAsync(string text, string language, float speed = 1)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -263,7 +274,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadAsStreamAsync();
+        return await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
     }
 
     /// <summary>
@@ -311,15 +322,6 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="IsLanguageSupported(Language)"/>
     bool ITranslator.IsLanguageSupported(ILanguage language) => language is Language lang && IsLanguageSupported(lang);
 
-    /// <inheritdoc cref="Dispose()"/>
-    private void Dispose(bool disposing)
-    {
-        if (!disposing || _disposed) return;
-
-        _httpClient.Dispose();
-        _disposed = true;
-    }
-
     /// <summary>
     /// Hot-patches language codes to Yandex-specific ones.
     /// </summary>
@@ -349,16 +351,6 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         };
     }
 
-    private Guid GetOrUpdateUcid()
-    {
-        if (_cachedUcid.IsExpired())
-        {
-            _cachedUcid = new CachedObject<Guid>(Guid.NewGuid(), TimeSpan.FromSeconds(360));
-        }
-
-        return _cachedUcid.Value;
-    }
-
     private static void ThrowIfStatusCodeIsPresent(JsonElement element)
     {
         if (element.TryGetInt32("code", out int code) && code != 200)
@@ -379,5 +371,27 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         {
             throw new ArgumentException("Language not supported.", nameof(language));
         }
+    }
+
+    /// <inheritdoc cref="Dispose()"/>
+    private void Dispose(bool disposing)
+    {
+        if (!disposing || _disposed)
+        {
+            return;
+        }
+
+        _httpClient.Dispose();
+        _disposed = true;
+    }
+
+    private Guid GetOrUpdateUcid()
+    {
+        if (_cachedUcid.IsExpired())
+        {
+            _cachedUcid = new CachedObject<Guid>(Guid.NewGuid(), TimeSpan.FromSeconds(360));
+        }
+
+        return _cachedUcid.Value;
     }
 }

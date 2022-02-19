@@ -4,7 +4,8 @@
 /// Represents a transliteration result.
 /// </summary>
 /// <typeparam name="TLanguage">The language type.</typeparam>
-public interface ITransliterationResult<out TLanguage> where TLanguage : ILanguage
+public interface ITransliterationResult<out TLanguage>
+    where TLanguage : ILanguage
 {
     /// <summary>
     /// Gets the transliteration.

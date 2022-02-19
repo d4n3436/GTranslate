@@ -27,7 +27,7 @@ public class MicrosoftTransliterationResult : ITransliterationResult<Language>, 
     public Language TargetLanguage => throw new NotSupportedException("Microsoft Translator does not provide the target language.");
 
     /// <inheritdoc/>
-    public Language SourceLanguage =>  throw new NotSupportedException("Microsoft Translator does not provide the source language.");
+    public Language SourceLanguage => throw new NotSupportedException("Microsoft Translator does not provide the source language.");
 
     /// <summary>
     /// Gets the language script.

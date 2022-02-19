@@ -29,6 +29,13 @@ public sealed class Language : ILanguage, IEquatable<Language>
         SupportedServices = language.SupportedServices;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Language"/> class, using the specified name, ISO codes and supported services.
+    /// </summary>
+    /// <param name="name">The name.</param>
+    /// <param name="iso6391">The ISO 639-1 code.</param>
+    /// <param name="iso6393">The ISO 639-3 code.</param>
+    /// <param name="supportedServices">The supported services.</param>
     internal Language(string name, string iso6391, string iso6393,
         TranslationServices supportedServices = TranslationServices.Google | TranslationServices.Bing | TranslationServices.Yandex | TranslationServices.Microsoft)
     {
@@ -37,6 +44,11 @@ public sealed class Language : ILanguage, IEquatable<Language>
         ISO6393 = iso6393;
         SupportedServices = supportedServices;
     }
+
+    /// <summary>
+    /// Gets the default language dictionary.
+    /// </summary>
+    public static LanguageDictionary LanguageDictionary { get; } = new();
 
     /// <inheritdoc/>
     public string Name { get; }
@@ -51,11 +63,6 @@ public sealed class Language : ILanguage, IEquatable<Language>
     /// Gets supported translation services of this language.
     /// </summary>
     public TranslationServices SupportedServices { get; }
-
-    /// <summary>
-    /// Gets the default language dictionary.
-    /// </summary>
-    public static LanguageDictionary LanguageDictionary { get; } = new();
 
     /// <summary>
     /// Gets a language from a language code, name or alias.

@@ -14,17 +14,18 @@ internal static class ReadOnlySequenceExtensions
         {
             throw new ArgumentException("Byte array is empty.", nameof(chunks));
         }
+
         if (chunks.Length == 1)
         {
             return new ReadOnlySequence<byte>(chunks[0]);
         }
 
         var start = new MemorySegment<byte>(chunks[0]);
-        MemorySegment<byte> end = null!;
+        var end = start.Append(chunks[1]);
 
-        for (int i = 1; i < chunks.Length; i++)
+        for (int i = 2; i < chunks.Length; i++)
         {
-            end = (end ?? start).Append(chunks[i]);
+            end = end.Append(chunks[i]);
         }
 
         return new ReadOnlySequence<byte>(start, 0, end, end.Memory.Length);

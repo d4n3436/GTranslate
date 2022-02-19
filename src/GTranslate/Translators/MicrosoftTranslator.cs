@@ -123,13 +123,15 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="MicrosoftTranslator"/> class.
     /// </summary>
-    public MicrosoftTranslator() : this(new HttpClient())
+    public MicrosoftTranslator()
+        : this(new HttpClient())
     {
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="MicrosoftTranslator"/> class with the provided <see cref="HttpClient"/>.
+    /// Initializes a new instance of the <see cref="MicrosoftTranslator"/> class with the provided <see cref="HttpClient"/> instance.
     /// </summary>
+    /// <param name="httpClient">An <see cref="HttpClient"/> instance.</param>
     public MicrosoftTranslator(HttpClient httpClient)
     {
         TranslatorGuards.NotNull(httpClient);
@@ -149,10 +151,12 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <param name="toLanguage">The target language.</param>
     /// <param name="fromLanguage">The source language.</param>
     /// <returns>A task that represents the asynchronous translation operation. The task contains the translation result.</returns>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TranslatorException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="toLanguage"/> are null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a <see cref="Language"/> could not be obtained from <paramref name="toLanguage"/> or <paramref name="fromLanguage"/>.</exception>
+    /// <exception cref="TranslatorException">
+    /// Thrown when <paramref name="toLanguage"/> or <paramref name="fromLanguage"/> are not supported, or an error occurred during the operation.
+    /// </exception>
     public async Task<MicrosoftTranslationResult> TranslateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -173,7 +177,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync();
+        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
         string url = $"{_apiEndpoint}/translate?api-version={_apiVersion}&to={MicrosoftHotPatch(toLanguage.ISO6391)}";
         if (fromLanguage is not null)
         {
@@ -192,8 +196,8 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        using var stream = await response.Content.ReadAsStreamAsync();
-        using var document = await JsonDocument.ParseAsync(stream);
+        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
 
         var root = document.RootElement[0];
 
@@ -216,10 +220,10 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <param name="fromScript">The source script.</param>
     /// <param name="toScript">The target script.</param>
     /// <returns>A task that represents the asynchronous transliteration operation. The task contains the transliteration result.</returns>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TranslatorException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when a parameter is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a <see cref="Language"/> could not be obtained from <paramref name="language"/>.</exception>
+    /// <exception cref="TranslatorException">Thrown when a parameter is not supported, or an error occurred during the operation.</exception>
     public async Task<MicrosoftTransliterationResult> TransliterateAsync(string text, string language, string fromScript, string toScript)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -230,21 +234,10 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.LanguageFound(language, out var lang);
         TranslatorGuards.LanguageSupported(this, lang);
 
-        return await TransliterateAsync(text, lang, fromScript, toScript);
+        return await TransliterateAsync(text, lang, fromScript, toScript).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// Transliterates a text using Microsoft Translator.
-    /// </summary>
-    /// <param name="text">The text to translate.</param>
-    /// <param name="language">The language of the text.</param>
-    /// <param name="fromScript">The source script.</param>
-    /// <param name="toScript">The target script.</param>
-    /// <returns>A task that represents the asynchronous transliteration operation. The task contains the transliteration result.</returns>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TranslatorException"/>
+    /// <inheritdoc cref="TransliterateAsync(string, string, string, string)"/>
     public async Task<MicrosoftTransliterationResult> TransliterateAsync(string text, ILanguage language, string fromScript, string toScript)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -254,7 +247,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toScript);
         EnsureValidScripts(language.ISO6391, fromScript, toScript);
 
-        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync();
+        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
 
         using var request = new HttpRequestMessage
         {
@@ -268,8 +261,8 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        using var stream = await response.Content.ReadAsStreamAsync();
-        using var document = await JsonDocument.ParseAsync(stream);
+        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
 
         var root = document.RootElement[0];
         string transliteration = root.GetProperty("text").GetString() ?? throw new TranslatorException("Failed to get the transliteration.", Name);
@@ -283,15 +276,15 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// </summary>
     /// <param name="text">The text to detect its language.</param>
     /// <returns>A task that represents the asynchronous language detection operation. The task contains the detected language.</returns>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="TranslatorException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> is null.</exception>
+    /// <exception cref="TranslatorException">Thrown when an error occurred during the operation.</exception>
     public async Task<Language> DetectLanguageAsync(string text)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
         TranslatorGuards.NotNull(text);
 
-        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync();
+        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
 
         using var request = new HttpRequestMessage
         {
@@ -305,8 +298,8 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        using var stream = await response.Content.ReadAsStreamAsync();
-        using var document = await JsonDocument.ParseAsync(stream);
+        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
 
         string language = document.RootElement[0].GetProperty("language").GetString() ?? throw new TranslatorException("Failed to get the detected language.", Name);
 
@@ -320,6 +313,10 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <param name="language">The language of the voice. Only the languages in <see cref="DefaultVoices"/> are supported.</param>
     /// <param name="speakRate">The speaking rate of the text, expressed as a number that acts as a multiplier of the default.</param>
     /// <returns>A task that represents the asynchronous synthesis operation. The task contains the synthesized speech in a MP3 <see cref="Stream"/>.</returns>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="language"/> are null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a <see cref="MicrosoftVoice"/> could not be obtained from <paramref name="language"/>.</exception>
+    /// <exception cref="TranslatorException">Thrown when <paramref name="language"/> is not supported, or an error occurred during the operation.</exception>
     public async Task<Stream> TextToSpeechAsync(string text, string language, float speakRate = 1)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -338,17 +335,20 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <param name="voice">The voice.</param>
     /// <param name="speakRate">The speaking rate of the text, expressed as a number that acts as a multiplier of the default.</param>
     /// <returns>A task that represents the asynchronous synthesis operation. The task contains the synthesized speech in a MP3 <see cref="Stream"/>.</returns>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="voice"/> are null.</exception>
+    /// <exception cref="TranslatorException">Thrown when an error occurred during the operation.</exception>
     public async Task<Stream> TextToSpeechAsync(string text, MicrosoftVoice voice, float speakRate = 1)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
         TranslatorGuards.NotNull(text);
         TranslatorGuards.NotNull(voice);
 
-        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync();
+        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
 
         string payload = $"<speak version='1.0' xml:lang='{voice.Locale}'><voice xml:lang='{voice.Locale}' xml:gender='{voice.Gender}' name='{voice.ShortName}'><prosody rate='{speakRate}'>{text}</prosody></voice></speak>";
 
-        var request = new HttpRequestMessage
+        using var request = new HttpRequestMessage
         {
             Method = HttpMethod.Post,
             RequestUri = new Uri($"https://{authInfo.Region}.tts.speech.microsoft.com/cognitiveservices/v1"),
@@ -380,7 +380,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
             return _voices;
         }
 
-        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync();
+        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, new Uri($"https://{authInfo.Region}.tts.speech.microsoft.com/cognitiveservices/voices/list"));
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authInfo.Token);
@@ -404,10 +404,10 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// This token can be used in the following services:<br/>
     /// - <see href="https://docs.microsoft.com/en-us/azure/cognitive-services/speech/">Bing Speech</see><br/>
     /// - <see href="https://docs.microsoft.com/en-us/azure/cognitive-services/translator/">Microsoft Translator</see><br/>
-    /// - <see href="https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/">Speech Services</see><br/>
+    /// - <see href="https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/">Speech Services</see>
     /// </remarks>
     /// <returns>A task that represents the asynchronous operation. The task contains the token.</returns>
-    /// <exception cref="TranslatorException"/>
+    /// <exception cref="TranslatorException">Thrown when the token could not be obtained from the response.</exception>
     public async ValueTask<MicrosoftAuthTokenInfo> GetOrUpdateMicrosoftAuthTokenAsync()
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -493,15 +493,6 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="IsLanguageSupported(Language)"/>
     bool ITranslator.IsLanguageSupported(ILanguage language) => language is Language lang && IsLanguageSupported(lang);
 
-    /// <inheritdoc cref="Dispose()"/>
-    private void Dispose(bool disposing)
-    {
-        if (!disposing || _disposed) return;
-
-        _httpClient.Dispose();
-        _disposed = true;
-    }
-
     /// <summary>
     /// Hot-patches language codes to Microsoft-specific ones.
     /// </summary>
@@ -554,6 +545,18 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         {
             throw new ArgumentException($"\"{nameof(fromScript)}\" and \"{nameof(toScript)}\" cannot be equal.");
         }
+    }
+
+    /// <inheritdoc cref="Dispose()"/>
+    private void Dispose(bool disposing)
+    {
+        if (!disposing || _disposed)
+        {
+            return;
+        }
+
+        _httpClient.Dispose();
+        _disposed = true;
     }
 
     private async ValueTask<BingCredentials> GetOrUpdateBingCredentialsAsync()

@@ -32,11 +32,8 @@ using System.Threading.Tasks;
 
 internal class ReadOnlySequenceStream : Stream
 {
-    private static readonly Task<int> _taskOfZero = Task.FromResult(0);
-
-    private bool _isDisposed;
-    private Task<int>? _lastReadTask;
     private readonly ReadOnlySequence<byte> _readOnlySequence;
+    private bool _isDisposed;
     private SequencePosition _position;
 
     internal ReadOnlySequenceStream(ReadOnlySequence<byte> readOnlySequence)
@@ -85,17 +82,8 @@ internal class ReadOnlySequenceStream : Stream
     {
         cancellationToken.ThrowIfCancellationRequested();
         int bytesRead = Read(buffer, offset, count);
-        if (bytesRead == 0)
-        {
-            return _taskOfZero;
-        }
 
-        if (_lastReadTask?.Result == bytesRead)
-        {
-            return _lastReadTask;
-        }
-
-        return _lastReadTask = Task.FromResult(bytesRead);
+        return Task.FromResult(bytesRead);
     }
 
     /// <inheritdoc/>

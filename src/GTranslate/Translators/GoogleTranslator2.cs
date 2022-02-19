@@ -22,18 +22,19 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     private static readonly string[] _ttsLanguages =
     {
         "af", "ar", "bg", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "fi", "fr", "gu", "hi", "hr", "hu",
-        "hy", "id", "is", "it","iw", "ja", "jv", "km", "kn", "ko", "la", "lv", "mk", "ml", "mr", "ms", "my", "ne", "nl", "no", "pl",
+        "hy", "id", "is", "it", "iw", "ja", "jv", "km", "kn", "ko", "la", "lv", "mk", "ml", "mr", "ms", "my", "ne", "nl", "no", "pl",
         "pt", "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh-CN", "zh-TW"
     };
-    private static readonly Lazy<HashSet<ILanguage>> _lazyTtsLanguages = new(() => new HashSet<ILanguage>(_ttsLanguages.Select(Language.GetLanguage)));
 
-    /// <inheritdoc/>
-    public string Name => "GoogleTranslator2";
+    private static readonly Lazy<HashSet<ILanguage>> _lazyTtsLanguages = new(() => new HashSet<ILanguage>(_ttsLanguages.Select(Language.GetLanguage)));
 
     /// <summary>
     /// Gets a read-only collection of languages that support text-to-speech.
     /// </summary>
     public static IReadOnlyCollection<ILanguage> TextToSpeechLanguages => _lazyTtsLanguages.Value;
+
+    /// <inheritdoc/>
+    public string Name => "GoogleTranslator2";
 
     private readonly HttpClient _httpClient;
     private bool _disposed;
@@ -41,13 +42,15 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="GoogleTranslator2"/> class.
     /// </summary>
-    public GoogleTranslator2() : this(new HttpClient())
+    public GoogleTranslator2()
+        : this(new HttpClient())
     {
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="GoogleTranslator2"/> class with the provided <see cref="HttpClient"/>.
+    /// Initializes a new instance of the <see cref="GoogleTranslator2"/> class with the provided <see cref="HttpClient"/> instance.
     /// </summary>
+    /// <param name="httpClient">An <see cref="HttpClient"/> instance.</param>
     public GoogleTranslator2(HttpClient httpClient)
     {
         TranslatorGuards.NotNull(httpClient);
@@ -69,10 +72,12 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     /// <param name="toLanguage">The target language.</param>
     /// <param name="fromLanguage">The source language.</param>
     /// <returns>A task that represents the asynchronous translation operation. The task contains the translation result.</returns>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TranslatorException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="toLanguage"/> are null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a <see cref="Language"/> could not be obtained from <paramref name="toLanguage"/> or <paramref name="fromLanguage"/>.</exception>
+    /// <exception cref="TranslatorException">
+    /// Thrown when <paramref name="toLanguage"/> or <paramref name="fromLanguage"/> are not supported, or an error occurred during the operation.
+    /// </exception>
     public async Task<GoogleTranslationResult> TranslateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -103,7 +108,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         var root = document.RootElement;
 
         string target = root[1][1].GetString() ?? toLanguage.ISO6391;
-        string source = root[1][3].GetString() ?? "";
+        string source = root[1][3].GetString() ?? string.Empty;
         string translation = root[1][0][0]
             .LastOrDefault()
             .FirstOrDefault()
@@ -114,7 +119,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
             .ElementAtOrDefault(1)
             .GetStringOrDefault();
 
-        return new GoogleTranslationResult(translation, text, Language.GetLanguage(target), Language.GetLanguage(source), transliteration);
+        return new GoogleTranslationResult(translation, text, Language.GetLanguage(target), Language.GetLanguage(source), transliteration, null, Name);
     }
 
     /// <summary>
@@ -124,10 +129,12 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     /// <param name="toLanguage">The target language.</param>
     /// <param name="fromLanguage">The source language.</param>
     /// <returns>A task that represents the asynchronous transliteration operation. The task contains the transliteration result.</returns>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TranslatorException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="toLanguage"/> are null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a <see cref="Language"/> could not be obtained from <paramref name="toLanguage"/> or <paramref name="fromLanguage"/>.</exception>
+    /// <exception cref="TranslatorException">
+    /// Thrown when <paramref name="toLanguage"/> or <paramref name="fromLanguage"/> are not supported, or an error occurred during the operation.
+    /// </exception>
     public async Task<GoogleTransliterationResult> TransliterateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -154,7 +161,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
             throw new TranslatorException("Failed to get the transliteration.", Name);
         }
 
-        return new GoogleTransliterationResult(result.Transliteration!, text, result.TargetLanguage, result.SourceLanguage);
+        return new GoogleTransliterationResult(result.Transliteration!, text, result.TargetLanguage, result.SourceLanguage, Name);
     }
 
     /// <summary>
@@ -162,9 +169,9 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     /// </summary>
     /// <param name="text">The text to detect its language.</param>
     /// <returns>A task that represents the asynchronous language detection operation. The task contains the detected language.</returns>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="TranslatorException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> is null.</exception>
+    /// <exception cref="TranslatorException">Thrown when an error occurred during the operation.</exception>
     public async Task<Language> DetectLanguageAsync(string text)
     {
         TranslatorGuards.NotNull(text);
@@ -185,6 +192,10 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     /// <param name="language">The voice language. Only the languages in <see cref="TextToSpeechLanguages"/> are supported.</param>
     /// <param name="slow">Whether to read the text slowly.</param>
     /// <returns>A task that represents the asynchronous synthesis operation. The task contains the synthesized speech in a MP3 <see cref="Stream"/>.</returns>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="language"/> are null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a <see cref="Language"/> could not be obtained from <paramref name="language"/>.</exception>
+    /// <exception cref="TranslatorException">Thrown when <paramref name="language"/> is not supported.</exception>
     public async Task<Stream> TextToSpeechAsync(string text, string language, bool slow = false)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -265,15 +276,6 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     /// <inheritdoc cref="IsLanguageSupported(Language)"/>
     bool ITranslator.IsLanguageSupported(ILanguage language) => language is Language lang && IsLanguageSupported(lang);
 
-    /// <inheritdoc cref="Dispose()"/>
-    private void Dispose(bool disposing)
-    {
-        if (!disposing || _disposed) return;
-
-        _httpClient.Dispose();
-        _disposed = true;
-    }
-
     private static void EnsureValidTTSLanguage(ILanguage language)
     {
         if (!_lazyTtsLanguages.Value.Contains(language))
@@ -288,6 +290,18 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         RequestUri = new Uri($"_/TranslateWebserverUi/data/batchexecute?rpcids={rpcId}", UriKind.Relative),
         Content = new FormUrlEncodedContent(new KeyValuePair<string, string>[] { new("f.req", $"[[[\"{rpcId}\",\"{JsonEncodedText.Encode(payload)}\",null,\"generic\"]]]") })
     };
+
+    /// <inheritdoc cref="Dispose()"/>
+    private void Dispose(bool disposing)
+    {
+        if (!disposing || _disposed)
+        {
+            return;
+        }
+
+        _httpClient.Dispose();
+        _disposed = true;
+    }
 
     private async Task<JsonDocument> SendAndParseResponseAsync(HttpRequestMessage request)
     {

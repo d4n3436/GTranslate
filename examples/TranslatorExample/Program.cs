@@ -14,14 +14,14 @@ internal static class Program
         while (true)
         {
             Console.Write("Enter a text to translate or enter 'e' to exit: ");
-            string text = Console.ReadLine() ?? "";
+            string text = Console.ReadLine() ?? string.Empty;
             if (text == "e")
             {
                 break;
             }
 
             Console.Write("Language to translate to: ");
-            string language = Console.ReadLine() ?? "";
+            string language = Console.ReadLine() ?? string.Empty;
 
             try
             {

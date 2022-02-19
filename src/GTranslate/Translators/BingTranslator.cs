@@ -26,13 +26,15 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="BingTranslator"/> class.
     /// </summary>
-    public BingTranslator() : this(new HttpClient())
+    public BingTranslator()
+        : this(new HttpClient())
     {
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="BingTranslator"/> class with the provided <see cref="HttpClient"/>.
+    /// Initializes a new instance of the <see cref="BingTranslator"/> class with the provided <see cref="HttpClient"/> instance.
     /// </summary>
+    /// <param name="httpClient">An <see cref="HttpClient"/> instance.</param>
     public BingTranslator(HttpClient httpClient)
     {
         TranslatorGuards.NotNull(httpClient);
@@ -52,10 +54,12 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <param name="toLanguage">The target language.</param>
     /// <param name="fromLanguage">The source language.</param>
     /// <returns>A task that represents the asynchronous translation operation. The task contains the translation result.</returns>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TranslatorException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="toLanguage"/> are null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a <see cref="Language"/> could not be obtained from <paramref name="toLanguage"/> or <paramref name="fromLanguage"/>.</exception>
+    /// <exception cref="TranslatorException">
+    /// Thrown when <paramref name="toLanguage"/> or <paramref name="fromLanguage"/> are not supported, or an error occurred during the operation.
+    /// </exception>
     public async Task<BingTranslationResult> TranslateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -88,6 +92,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         };
 
         using var content = new FormUrlEncodedContent(data);
+
         // For some reason the "isVertical" parameter allows you to translate up to 1000 characters instead of 500
         var uri = new Uri($"{HostUrl}/ttranslatev3?isVertical=1&IG={credentials.ImpressionGuid.ToString("N").ToUpperInvariant()}&IID={Iid}");
         var response = await _httpClient.PostAsync(uri, content).ConfigureAwait(false);
@@ -109,7 +114,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         }
 
         var langDetection = first.GetProperty("detectedLanguage");
-        string detectedLanguage = langDetection.GetProperty("language").GetString() ?? "";
+        string detectedLanguage = langDetection.GetProperty("language").GetString() ?? string.Empty;
         float score = langDetection.GetProperty("score").GetSingle();
         string translatedText = translation.GetProperty("text").GetString() ?? throw new TranslatorException("Failed to get the translated text.", Name);
         string targetLanguage = translation.GetProperty("to").GetString() ?? toLanguage.ISO6391;
@@ -127,10 +132,12 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <param name="toLanguage">The target language.</param>
     /// <param name="fromLanguage">The source language.</param>
     /// <returns>A task that represents the asynchronous transliteration operation. The task contains the transliteration result.</returns>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TranslatorException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="toLanguage"/> are null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a <see cref="Language"/> could not be obtained from <paramref name="toLanguage"/> or <paramref name="fromLanguage"/>.</exception>
+    /// <exception cref="TranslatorException">
+    /// Thrown when <paramref name="toLanguage"/> or <paramref name="fromLanguage"/> are not supported, or an error occurred during the operation.
+    /// </exception>
     public async Task<BingTransliterationResult> TransliterateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
@@ -165,9 +172,9 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// </summary>
     /// <param name="text">The text to detect its language.</param>
     /// <returns>A task that represents the asynchronous language detection operation. The task contains the detected language.</returns>
-    /// <exception cref="ObjectDisposedException"/>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="TranslatorException"/>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> is null.</exception>
+    /// <exception cref="TranslatorException">Thrown when an error occurred during the operation.</exception>
     public async Task<Language> DetectLanguageAsync(string text)
     {
         TranslatorGuards.NotNull(text);
@@ -226,47 +233,6 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="IsLanguageSupported(Language)"/>
     bool ITranslator.IsLanguageSupported(ILanguage language) => language is Language lang && IsLanguageSupported(lang);
 
-    /// <inheritdoc cref="Dispose()"/>
-    private void Dispose(bool disposing)
-    {
-        if (!disposing || _disposed) return;
-
-        _httpClient.Dispose();
-        _disposed = true;
-    }
-
-    /// <summary>
-    /// Hot-patches language codes to Bing-specific ones.
-    /// </summary>
-    /// <param name="languageCode">The language code.</param>
-    /// <returns>The hot-patched language code.</returns>
-    private static string BingHotPatch(string languageCode)
-    {
-        TranslatorGuards.NotNull(languageCode);
-
-        return languageCode switch
-        {
-            "no" => "nb",
-            "sr" => "sr-Cyrl",
-            "mn" => "mn-Cyrl",
-            "tlh" => "tlh-Latn",
-            "zh-CN" => "zh-Hans",
-            "zh-TW" => "zh-Hant",
-            _ => languageCode
-        };
-    }
-
-    private async ValueTask<BingCredentials> GetOrUpdateCredentialsAsync()
-    {
-        if (!_cachedCredentials.IsExpired())
-        {
-            return _cachedCredentials.Value;
-        }
-
-        _cachedCredentials = await GetCredentialsAsync(this, _httpClient).ConfigureAwait(false);
-        return _cachedCredentials.Value;
-    }
-
     // returns new credentials as a cached object
     internal static async Task<CachedObject<BingCredentials>> GetCredentialsAsync(ITranslator translator, HttpClient httpClient)
     {
@@ -309,5 +275,49 @@ public sealed class BingTranslator : ITranslator, IDisposable
         var credentials = new BingCredentials(token, key, Guid.NewGuid());
 
         return new CachedObject<BingCredentials>(credentials, DateTimeOffset.FromUnixTimeMilliseconds(key + 3600000));
+    }
+
+    /// <summary>
+    /// Hot-patches language codes to Bing-specific ones.
+    /// </summary>
+    /// <param name="languageCode">The language code.</param>
+    /// <returns>The hot-patched language code.</returns>
+    private static string BingHotPatch(string languageCode)
+    {
+        TranslatorGuards.NotNull(languageCode);
+
+        return languageCode switch
+        {
+            "no" => "nb",
+            "sr" => "sr-Cyrl",
+            "mn" => "mn-Cyrl",
+            "tlh" => "tlh-Latn",
+            "zh-CN" => "zh-Hans",
+            "zh-TW" => "zh-Hant",
+            _ => languageCode
+        };
+    }
+
+    /// <inheritdoc cref="Dispose()"/>
+    private void Dispose(bool disposing)
+    {
+        if (!disposing || _disposed)
+        {
+            return;
+        }
+
+        _httpClient.Dispose();
+        _disposed = true;
+    }
+
+    private async ValueTask<BingCredentials> GetOrUpdateCredentialsAsync()
+    {
+        if (!_cachedCredentials.IsExpired())
+        {
+            return _cachedCredentials.Value;
+        }
+
+        _cachedCredentials = await GetCredentialsAsync(this, _httpClient).ConfigureAwait(false);
+        return _cachedCredentials.Value;
     }
 }

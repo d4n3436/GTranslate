@@ -4,7 +4,8 @@
 /// Represents a translation result.
 /// </summary>
 /// <typeparam name="TLanguage">The language type.</typeparam>
-public interface ITranslationResult<out TLanguage> where TLanguage : ILanguage
+public interface ITranslationResult<out TLanguage>
+    where TLanguage : ILanguage
 {
     /// <summary>
     /// Gets the translation.

@@ -6,7 +6,7 @@
 public class GoogleTranslationResult : ITranslationResult<Language>, ITranslationResult
 {
     internal GoogleTranslationResult(string translation, string source, Language targetLanguage,
-        Language sourceLanguage, string? transliteration = null, float? confidence = null)
+        Language sourceLanguage, string? transliteration = null, float? confidence = null, string service = "GoogleTranslator")
     {
         Translation = translation;
         Source = source;
@@ -14,6 +14,7 @@ public class GoogleTranslationResult : ITranslationResult<Language>, ITranslatio
         SourceLanguage = sourceLanguage;
         Transliteration = transliteration;
         Confidence = confidence;
+        Service = service;
     }
 
     /// <inheritdoc/>
@@ -23,7 +24,7 @@ public class GoogleTranslationResult : ITranslationResult<Language>, ITranslatio
     public string Source { get; }
 
     /// <inheritdoc/>
-    public string Service => "GoogleTranslator";
+    public string Service { get; }
 
     /// <inheritdoc/>
     public Language TargetLanguage { get; }

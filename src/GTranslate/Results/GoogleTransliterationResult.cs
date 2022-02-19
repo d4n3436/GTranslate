@@ -5,12 +5,13 @@
 /// </summary>
 public class GoogleTransliterationResult : ITransliterationResult<Language>, ITransliterationResult
 {
-    internal GoogleTransliterationResult(string transliteration, string source, Language targetLanguage, Language sourceLanguage)
+    internal GoogleTransliterationResult(string transliteration, string source, Language targetLanguage, Language sourceLanguage, string service = "GoogleTranslator")
     {
         Transliteration = transliteration;
         Source = source;
         TargetLanguage = targetLanguage;
         SourceLanguage = sourceLanguage;
+        Service = service;
     }
 
     /// <inheritdoc/>
@@ -20,7 +21,7 @@ public class GoogleTransliterationResult : ITransliterationResult<Language>, ITr
     public string Source { get; }
 
     /// <inheritdoc/>
-    public string Service => "GoogleTranslator";
+    public string Service { get; }
 
     /// <inheritdoc/>
     public Language TargetLanguage { get; }

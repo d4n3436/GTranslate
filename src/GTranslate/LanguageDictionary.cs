@@ -50,8 +50,8 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
     /// </summary>
     /// <param name="code">The language name or code. It can be a ISO 639-1 code, a ISO 639-3 code, a language name or a language alias.</param>
     /// <returns>The language, or an exception if the language was not found.</returns>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="code"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when the language was not found.</exception>
     public Language GetLanguage(string code)
     {
         TranslatorGuards.NotNull(code);
