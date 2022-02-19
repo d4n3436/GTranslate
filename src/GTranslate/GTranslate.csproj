@@ -5,9 +5,9 @@
 	<LangVersion>10</LangVersion>
 	<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
     <Authors>d4n3436</Authors>
-    <Description>A collection of free translation APIs (Google Translate, Bing Translator and Yandex.Translate). Currently supports translation, transliteration and language detection.</Description>
+    <Description>A collection of free translation APIs (Google Translate, Bing Translator, Microsoft Translator and Yandex.Translate). Currently supports translation, transliteration, language detection and text-to-speech.</Description>
     <NeutralLanguage>en</NeutralLanguage>
-    <PackageTags>translator;translator-api;translation;translation-api</PackageTags>
+    <PackageTags>translator;translator-api;translation;translation-api;tts;text-to-speech</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/d4n3436/GTranslate</PackageProjectUrl>
     <RepositoryUrl>https://github.com/d4n3436/GTranslate</RepositoryUrl>

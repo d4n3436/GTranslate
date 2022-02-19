@@ -1,16 +1,17 @@
 # GTranslate
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) ![Nuget](https://img.shields.io/nuget/v/GTranslate)
 
-A collection of free translation APIs (Google Translate, Bing Translator and Yandex.Translate). Currently supports translation, transliteration and language detection.
+A collection of free translation APIs (Google Translate, Bing Translator, Microsoft Translator and Yandex.Translate). Currently supports translation, transliteration, language detection and text-to-speech.
 
 ## Features:
 
-- 3 translation services:
-  - Google Translate
+- 5 translation services:
+  - Google Translate (old and new APIs)
   - Bing Translator
+  - Microsoft Azure Translator
   - Yandex.Translate
 
-- Support for translation, transliteration and language detection in the included translators.
+- Support for translation, transliteration, language detection and text-to-speech in the included translators.
 
 - Support for all the languages of each translator.
 
@@ -18,8 +19,6 @@ A collection of free translation APIs (Google Translate, Bing Translator and Yan
 
 - Interfaces, allowing to write custom translators and languages.
 
-- A Translator class that groups the default translators for ease of use with the ability to add custom translators.
-
-- More translators coming soon:tm:...
+- An `AggregateTranslator` class that groups the default translators for ease of use with the ability to add custom translators.
 
 See the [examples](examples) folder for an example program.
