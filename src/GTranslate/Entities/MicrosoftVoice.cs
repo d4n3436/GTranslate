@@ -3,19 +3,19 @@
 namespace GTranslate;
 
 /// <summary>
-/// Represents a TTS voice in Bing Translator.
+/// Represents a TTS voice in Microsoft Translator.
 /// </summary>
 [DebuggerDisplay($"{{{nameof(DebuggerDisplay)},nq}}")]
-public class BingVoice
+public class MicrosoftVoice
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BingVoice"/> class.
+    /// Initializes a new instance of the <see cref="MicrosoftVoice"/> class.
     /// </summary>
     /// <param name="displayName">The display name of the voice.</param>
     /// <param name="shortName">The short name of the voice.</param>
     /// <param name="gender">The gender of the voice.</param>
     /// <param name="locale">The locale of the voice.</param>
-    public BingVoice(string displayName, string shortName, string gender, string locale)
+    public MicrosoftVoice(string displayName, string shortName, string gender, string locale)
     {
         DisplayName = displayName;
         Gender = gender;

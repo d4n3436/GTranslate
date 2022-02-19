@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace GTranslate;
 
-internal static class GScraperExtensions
+internal static class JsonElementExtensions
 {
     public static JsonElement FirstOrDefault(this JsonElement element)
         => element.ValueKind == JsonValueKind.Array ? element.EnumerateArray().FirstOrDefault() : default;

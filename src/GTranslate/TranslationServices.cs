@@ -21,5 +21,10 @@ public enum TranslationServices
     /// <summary>
     /// Yandex.Translate.
     /// </summary>
-    Yandex = 1 << 2
+    Yandex = 1 << 2,
+
+    /// <summary>
+    /// Microsoft Azure Translator.
+    /// </summary>
+    Microsoft = 1 << 3
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using GTranslate.Translators;
 
 namespace GTranslate;
@@ -25,6 +27,14 @@ internal static class TranslatorGuards
         }
 
         lang = temp;
+    }
+
+    public static void LanguageSupported(ITranslator translator, ILanguage language)
+    {
+        if (!translator.IsLanguageSupported(language))
+        {
+            throw new TranslatorException($"Language \"{language.ISO6391}\" not supported for this service.", translator.Name);
+        }
     }
 
     public static void LanguageSupported(ITranslator translator, ILanguage toLanguage, ILanguage? fromLanguage)
@@ -71,6 +81,21 @@ internal static class TranslatorGuards
         if (disposed)
         {
             throw new ObjectDisposedException(objectName ?? obj.GetType().Name);
+        }
+    }
+
+    public static void ThrowIfStatusCodeIsPresent(JsonElement element)
+    {
+        // If we get a "statusCode" property, this means the response is not successful
+        if (element.TryGetInt32("statusCode", out int code))
+        {
+            var errorMessage = element.GetPropertyOrDefault("errorMessage").GetStringOrDefault($"The API returned status code {code}.");
+
+#if NET5_0_OR_GREATER
+            throw new HttpRequestException(errorMessage, null, (System.Net.HttpStatusCode)code);
+#else
+            throw new HttpRequestException(errorMessage);
+#endif
         }
     }
 }

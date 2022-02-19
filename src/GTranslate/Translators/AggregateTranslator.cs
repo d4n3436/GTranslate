@@ -20,7 +20,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="AggregateTranslator"/> class.
     /// </summary>
-    public AggregateTranslator() : this(new GoogleTranslator(), new GoogleTranslator2(), new BingTranslator(), new YandexTranslator())
+    public AggregateTranslator() : this(new GoogleTranslator(), new GoogleTranslator2(), new MicrosoftTranslator(), new YandexTranslator(), new BingTranslator())
     {
     }
 
@@ -49,16 +49,19 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// </summary>
     ///  <param name="googleTranslator">The Google Translator.</param>
     /// <param name="googleTranslator2">The new Google Translator.</param>
-    /// <param name="bingTranslator">The Bing Translator.</param>
+    /// <param name="microsoftTranslator">The Microsoft translator.</param>
     /// <param name="yandexTranslator">The Yandex Translator.</param>
-    public AggregateTranslator(GoogleTranslator googleTranslator, GoogleTranslator2 googleTranslator2, BingTranslator bingTranslator, YandexTranslator yandexTranslator)
+    /// <param name="bingTranslator">The Bing Translator.</param>
+    public AggregateTranslator(GoogleTranslator googleTranslator, GoogleTranslator2 googleTranslator2,
+        MicrosoftTranslator microsoftTranslator, YandexTranslator yandexTranslator, BingTranslator bingTranslator)
     {
         TranslatorGuards.NotNull(googleTranslator);
         TranslatorGuards.NotNull(googleTranslator2);
-        TranslatorGuards.NotNull(bingTranslator);
+        TranslatorGuards.NotNull(microsoftTranslator);
         TranslatorGuards.NotNull(yandexTranslator);
+        TranslatorGuards.NotNull(bingTranslator);
 
-        _translators = new ITranslator[] { googleTranslator, googleTranslator2, bingTranslator, yandexTranslator };
+        _translators = new ITranslator[] { googleTranslator, googleTranslator2, microsoftTranslator, yandexTranslator, bingTranslator };
     }
 
     /// <summary>
@@ -68,7 +71,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// <param name="toLanguage">The target language.</param>
     /// <param name="fromLanguage">The source language.</param>
     /// <returns>A task containing the translation result.</returns>
-    /// <remarks>This method will attempt to use all the translation services passed in the constructor, one by one.</remarks>
+    /// <remarks>This method will attempt to use all the translation services passed in the constructor, in the order they were provided.</remarks>
     /// <exception cref="ObjectDisposedException"/>
     /// <exception cref="ArgumentNullException"/>
     /// <exception cref="ArgumentException"/>
@@ -140,7 +143,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// <param name="toLanguage">The target language.</param>
     /// <param name="fromLanguage">The source language.</param>
     /// <returns>A task containing the transliteration result.</returns>
-    /// <remarks>This method will attempt to use all the translation services passed in the constructor, one by one.</remarks>
+    /// <remarks>This method will attempt to use all the translation services passed in the constructor, in the order they were provided.</remarks>
     /// <exception cref="ObjectDisposedException"/>
     /// <exception cref="ArgumentNullException"/>
     /// <exception cref="ArgumentException"/>
@@ -192,6 +195,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// </summary>
     /// <param name="text">The text to detect its language.</param>
     /// <returns>A task that represents the asynchronous language detection operation. The task contains the detected language.</returns>
+    /// <remarks>This method will attempt to use all the translation services passed in the constructor, in the order they were provided.</remarks>
     /// <exception cref="ArgumentNullException"/>
     /// <exception cref="ObjectDisposedException"/>
     /// <exception cref="AggregateException"/>

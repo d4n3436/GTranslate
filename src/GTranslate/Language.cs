@@ -30,7 +30,7 @@ public sealed class Language : ILanguage, IEquatable<Language>
     }
 
     internal Language(string name, string iso6391, string iso6393,
-        TranslationServices supportedServices = TranslationServices.Google | TranslationServices.Bing | TranslationServices.Yandex)
+        TranslationServices supportedServices = TranslationServices.Google | TranslationServices.Bing | TranslationServices.Yandex | TranslationServices.Microsoft)
     {
         Name = name;
         ISO6391 = iso6391;
