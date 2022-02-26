@@ -109,11 +109,18 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
 
         string target = root[1][1].GetString() ?? toLanguage.ISO6391;
         string source = root[1][3].GetString() ?? string.Empty;
-        string translation = root[1][0][0]
-            .LastOrDefault()
-            .FirstOrDefault()
-            .FirstOrDefault()
-            .GetStringOrDefault() ?? throw new TranslatorException("Failed to get the translated text.", Name);
+        var translationChunks = root[1][0][0]
+            .EnumerateArray()
+            .FirstOrDefault(x => x.ValueKind == JsonValueKind.Array)
+            .EnumerateArray()
+            .Select(x => x.FirstOrDefault().GetString());
+
+        string translation = string.Concat(translationChunks);
+
+        if (string.IsNullOrEmpty(translation))
+        {
+            throw new TranslatorException("Failed to get the translated text.", Name);
+        }
 
         string? transliteration = root[1][0][0]
             .ElementAtOrDefault(1)
