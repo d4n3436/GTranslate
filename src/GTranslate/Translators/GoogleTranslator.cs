@@ -98,7 +98,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
         string query = "?client=gtx" +
-                       $"&sl={GoogleHotPatch(fromLanguage?.ISO6393 ?? "auto")}" +
+                       $"&sl={GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto")}" +
                        $"&tl={GoogleHotPatch(toLanguage.ISO6391)}" +
                        "&dt=t" +
                        "&dt=bd" +
