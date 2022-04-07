@@ -116,8 +116,8 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
 
         using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-        using var document = JsonDocument.Parse(bytes);
+        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
 
         var sentences = document.RootElement.GetProperty("sentences");
         if (sentences.ValueKind != JsonValueKind.Array)

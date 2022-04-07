@@ -95,12 +95,12 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
         // For some reason the "isVertical" parameter allows you to translate up to 1000 characters instead of 500
         var uri = new Uri($"{HostUrl}/ttranslatev3?isVertical=1&IG={credentials.ImpressionGuid.ToString("N").ToUpperInvariant()}&IID={Iid}");
-        var response = await _httpClient.PostAsync(uri, content).ConfigureAwait(false);
+        using var response = await _httpClient.PostAsync(uri, content).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
         // Bing Translator always return status code 200 regardless of the content
-        using var document = JsonDocument.Parse(bytes);
+        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
         var root = document.RootElement;
 
         TranslatorGuards.ThrowIfStatusCodeIsPresent(root);

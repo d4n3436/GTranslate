@@ -105,10 +105,10 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         };
 
         using var content = new FormUrlEncodedContent(data);
-        var response = await _httpClient.PostAsync(new Uri($"{_apiUrl}/translate{query}"), content).ConfigureAwait(false);
-        byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+        using var response = await _httpClient.PostAsync(new Uri($"{_apiUrl}/translate{query}"), content).ConfigureAwait(false);
+        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
-        using var document = JsonDocument.Parse(bytes);
+        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
 
         ThrowIfStatusCodeIsPresent(document.RootElement);
 
@@ -176,7 +176,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         };
 
         using var content = new FormUrlEncodedContent(data);
-        var response = await _httpClient.PostAsync(_transliterationApiUri, content).ConfigureAwait(false);
+        using var response = await _httpClient.PostAsync(_transliterationApiUri, content).ConfigureAwait(false);
         string result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
         if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -222,10 +222,10 @@ public sealed class YandexTranslator : ITranslator, IDisposable
             Content = content
         };
 
-        var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
-        byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+        using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+        var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
-        using var document = JsonDocument.Parse(bytes);
+        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
 
         ThrowIfStatusCodeIsPresent(document.RootElement);
 

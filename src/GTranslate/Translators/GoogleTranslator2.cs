@@ -314,7 +314,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     {
         using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
 
-        var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         JsonDocument document;
 
         // skip magic chars

@@ -427,12 +427,12 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
 
         using var content = new FormUrlEncodedContent(data);
         var uri = new Uri($"{BingTranslator.HostUrl}/tfetspktok?isVertical=1&IG={bingCredentials.ImpressionGuid.ToString("N").ToUpperInvariant()}&IID={BingTranslator.Iid}");
-        var response = await _httpClient.PostAsync(uri, content).ConfigureAwait(false);
+        using var response = await _httpClient.PostAsync(uri, content).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
         // Bing Translator always return status code 200 regardless of the content
-        using var document = JsonDocument.Parse(bytes);
+        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
         var root = document.RootElement;
 
         TranslatorGuards.ThrowIfStatusCodeIsPresent(root);
