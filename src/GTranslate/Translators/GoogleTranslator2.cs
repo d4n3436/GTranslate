@@ -124,6 +124,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
 
         string? transliteration = root[1][0][0]
             .ElementAtOrDefault(1)
+            .GetStringOrDefault() ?? root[0][0]
             .GetStringOrDefault();
 
         return new GoogleTranslationResult(translation, text, Language.GetLanguage(target), Language.GetLanguage(source), transliteration, null, Name);
