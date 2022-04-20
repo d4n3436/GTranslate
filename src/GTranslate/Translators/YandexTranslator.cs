@@ -204,7 +204,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
         TranslatorGuards.NotNull(text);
 
-        string query = $"?ucid={GetOrUpdateUcid()}" +
+        string query = $"?ucid={GetOrUpdateUcid():N}" +
                        "&srv=android" +
                        "&format=text";
 
