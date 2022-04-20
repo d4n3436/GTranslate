@@ -12,7 +12,7 @@ namespace GTranslate.Translators;
 public sealed class AggregateTranslator : ITranslator, IDisposable
 {
     /// <inheritdoc/>
-    public string Name => "Translator";
+    public string Name => "AggregateTranslator";
 
     private readonly IReadOnlyCollection<ITranslator> _translators;
     private bool _disposed;
