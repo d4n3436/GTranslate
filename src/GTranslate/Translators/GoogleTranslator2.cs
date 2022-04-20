@@ -34,7 +34,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     public static IReadOnlyCollection<ILanguage> TextToSpeechLanguages => _lazyTtsLanguages.Value;
 
     /// <inheritdoc/>
-    public string Name => "GoogleTranslator2";
+    public string Name => nameof(GoogleTranslator2);
 
     private readonly HttpClient _httpClient;
     private bool _disposed;
@@ -298,6 +298,12 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         RequestUri = new Uri($"_/TranslateWebserverUi/data/batchexecute?rpcids={rpcId}", UriKind.Relative),
         Content = new FormUrlEncodedContent(new KeyValuePair<string, string>[] { new("f.req", $"[[[\"{rpcId}\",\"{JsonEncodedText.Encode(payload)}\",null,\"generic\"]]]") })
     };
+
+    /// <summary>
+    /// Returns the name of this translator.
+    /// </summary>
+    /// <returns>The name of this translator.</returns>
+    public override string ToString() => $"Name = {Name}";
 
     /// <inheritdoc cref="Dispose()"/>
     private void Dispose(bool disposing)

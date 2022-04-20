@@ -31,7 +31,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     public static IReadOnlyCollection<ILanguage> TextToSpeechLanguages => _ttsLanguages;
 
     /// <inheritdoc/>
-    public string Name => "YandexTranslator";
+    public string Name => nameof(YandexTranslator);
 
     private readonly HttpClient _httpClient;
     private CachedObject<Guid> _cachedUcid;
@@ -372,6 +372,12 @@ public sealed class YandexTranslator : ITranslator, IDisposable
             throw new ArgumentException("Language not supported.", nameof(language));
         }
     }
+
+    /// <summary>
+    /// Returns the name of this translator.
+    /// </summary>
+    /// <returns>The name of this translator.</returns>
+    public override string ToString() => $"Name = {Name}";
 
     /// <inheritdoc cref="Dispose()"/>
     private void Dispose(bool disposing)

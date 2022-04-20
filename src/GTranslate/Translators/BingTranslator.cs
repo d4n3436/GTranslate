@@ -17,7 +17,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
     private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.81 Safari/537.36";
 
     /// <inheritdoc/>
-    public string Name => "BingTranslator";
+    public string Name => nameof(BingTranslator);
 
     private readonly HttpClient _httpClient;
     private CachedObject<BingCredentials> _cachedCredentials;
@@ -297,6 +297,12 @@ public sealed class BingTranslator : ITranslator, IDisposable
             _ => languageCode
         };
     }
+
+    /// <summary>
+    /// Returns the name of this translator.
+    /// </summary>
+    /// <returns>The name of this translator.</returns>
+    public override string ToString() => $"Name = {Name}";
 
     /// <inheritdoc cref="Dispose()"/>
     private void Dispose(bool disposing)
