@@ -188,7 +188,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         var target = Language.GetLanguage(toLanguage.ISO6391);
         var source = Language.GetLanguage(fromLanguage.ISO6391);
 
-        return new YandexTransliterationResult(result, text, target, source);
+        return new YandexTransliterationResult(JsonSerializer.Deserialize<string>(result)!, text, target, source);
     }
 
     /// <summary>
