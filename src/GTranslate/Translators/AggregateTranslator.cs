@@ -40,7 +40,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
 
         if (translators.Any(x => x is AggregateTranslator))
         {
-            throw new ArgumentException("Collection must not contain an instance of AggregateTranslator.", nameof(translators));
+            throw new ArgumentException($"Collection must not contain an instance of {nameof(AggregateTranslator)}.", nameof(translators));
         }
 
         _translators = translators;
@@ -258,7 +258,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
     /// Returns the name of this translator.
     /// </summary>
     /// <returns>The name of this translator.</returns>
-    public override string ToString() => $"Name = {Name}";
+    public override string ToString() => $"{nameof(Name)}: {Name}";
 
     /// <inheritdoc/>
     public void Dispose() => Dispose(true);

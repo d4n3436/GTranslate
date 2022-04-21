@@ -303,7 +303,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     /// Returns the name of this translator.
     /// </summary>
     /// <returns>The name of this translator.</returns>
-    public override string ToString() => $"Name = {Name}";
+    public override string ToString() => $"{nameof(Name)}: {Name}";
 
     /// <inheritdoc cref="Dispose()"/>
     private void Dispose(bool disposing)

@@ -1,4 +1,6 @@
-﻿namespace GTranslate.Results;
+﻿using GTranslate.Translators;
+
+namespace GTranslate.Results;
 
 /// <summary>
 /// Represents a transliteration result from Bing Translator.
@@ -21,7 +23,7 @@ public class BingTransliterationResult : ITransliterationResult<Language>, ITran
     public string Source { get; }
 
     /// <inheritdoc/>
-    public string Service => "BingTranslator";
+    public string Service => nameof(BingTranslator);
 
     /// <inheritdoc/>
     public Language TargetLanguage { get; }
@@ -39,4 +41,7 @@ public class BingTransliterationResult : ITransliterationResult<Language>, ITran
 
     /// <inheritdoc />
     ILanguage ITransliterationResult<ILanguage>.TargetLanguage => TargetLanguage;
+
+    /// <inheritdoc/>
+    public override string ToString() => $"{nameof(Transliteration)}: '{Transliteration}', {nameof(TargetLanguage)}: '{TargetLanguage.Name} ({TargetLanguage.ISO6391})', {nameof(SourceLanguage)}: '{SourceLanguage.Name} ({SourceLanguage.ISO6391})', {nameof(Service)}: {Service}";
 }

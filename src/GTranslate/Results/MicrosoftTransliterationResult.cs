@@ -1,4 +1,5 @@
 ﻿using System;
+using GTranslate.Translators;
 
 namespace GTranslate.Results;
 
@@ -21,7 +22,7 @@ public class MicrosoftTransliterationResult : ITransliterationResult<Language>, 
     public string Source { get; }
 
     /// <inheritdoc/>
-    public string Service => "MicrosoftTranslator";
+    public string Service => nameof(MicrosoftTranslator);
 
     /// <inheritdoc/>
     public Language TargetLanguage => throw new NotSupportedException("Microsoft Translator does not provide the target language.");
@@ -39,4 +40,7 @@ public class MicrosoftTransliterationResult : ITransliterationResult<Language>, 
 
     /// <inheritdoc />
     ILanguage ITransliterationResult<ILanguage>.TargetLanguage => TargetLanguage;
+
+    /// <inheritdoc/>
+    public override string ToString() => $"{nameof(Transliteration)}: '{Transliteration}', {nameof(Script)}: '{Script}', {nameof(Service)}: {Service}";
 }

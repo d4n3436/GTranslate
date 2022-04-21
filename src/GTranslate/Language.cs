@@ -96,7 +96,7 @@ public sealed class Language : ILanguage, IEquatable<Language>
     public override int GetHashCode() => ISO6391.GetHashCode();
 
     /// <inheritdoc/>
-    public override string ToString() => $"Name: {Name}, ISO 639-1: {ISO6391}, ISO 639-3: {ISO6393}";
+    public override string ToString() => $"{nameof(Name)}: {Name}, ISO 639-1: {ISO6391}, ISO 639-3: {ISO6393}";
 
     private string DebuggerDisplay => ToString();
 }

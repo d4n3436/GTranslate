@@ -65,7 +65,7 @@ internal readonly struct CachedObject<T>
     public bool IsExpired() => DateTimeOffset.UtcNow > ExpirationDate;
 
     /// <inheritdoc/>
-    public override string ToString() => $"Value: {Value}, Expired: {IsExpired()}";
+    public override string ToString() => $"{nameof(Value)}: {Value}, {nameof(IsExpired)}: {IsExpired()}";
 
     private string DebuggerDisplay => ToString();
 }

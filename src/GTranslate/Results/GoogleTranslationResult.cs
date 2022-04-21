@@ -1,4 +1,6 @@
-﻿namespace GTranslate.Results;
+﻿using GTranslate.Translators;
+
+namespace GTranslate.Results;
 
 /// <summary>
 /// Represents a translation result from Google Translate.
@@ -6,7 +8,7 @@
 public class GoogleTranslationResult : ITranslationResult<Language>, ITranslationResult
 {
     internal GoogleTranslationResult(string translation, string source, Language targetLanguage,
-        Language sourceLanguage, string? transliteration = null, float? confidence = null, string service = "GoogleTranslator")
+        Language sourceLanguage, string? transliteration = null, float? confidence = null, string service = nameof(GoogleTranslator))
     {
         Translation = translation;
         Source = source;
@@ -47,4 +49,7 @@ public class GoogleTranslationResult : ITranslationResult<Language>, ITranslatio
 
     /// <inheritdoc />
     ILanguage ITranslationResult<ILanguage>.TargetLanguage => TargetLanguage;
+
+    /// <inheritdoc/>
+    public override string ToString() => $"{nameof(Translation)}: '{Translation}', {nameof(TargetLanguage)}: '{TargetLanguage.Name} ({TargetLanguage.ISO6391})', {nameof(SourceLanguage)}: '{SourceLanguage.Name} ({SourceLanguage.ISO6391})', {nameof(Service)}: {Service}";
 }

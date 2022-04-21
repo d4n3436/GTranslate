@@ -1,4 +1,6 @@
-﻿namespace GTranslate.Results;
+﻿using GTranslate.Translators;
+
+namespace GTranslate.Results;
 
 /// <summary>
 /// Represents a transliteration result from Yandex.Translate.
@@ -20,7 +22,7 @@ public class YandexTransliterationResult : ITransliterationResult<Language>, ITr
     public string Source { get; }
 
     /// <inheritdoc/>
-    public string Service => "YandexTranslator";
+    public string Service => nameof(YandexTranslator);
 
     /// <inheritdoc/>
     public Language TargetLanguage { get; }
@@ -33,4 +35,7 @@ public class YandexTransliterationResult : ITransliterationResult<Language>, ITr
 
     /// <inheritdoc />
     ILanguage ITransliterationResult<ILanguage>.TargetLanguage => TargetLanguage;
+
+    /// <inheritdoc/>
+    public override string ToString() => $"{nameof(Transliteration)}: '{Transliteration}', {nameof(TargetLanguage)}: '{TargetLanguage.Name} ({TargetLanguage.ISO6391})', {nameof(SourceLanguage)}: '{SourceLanguage.Name} ({SourceLanguage.ISO6391})', {nameof(Service)}: {Service}";
 }

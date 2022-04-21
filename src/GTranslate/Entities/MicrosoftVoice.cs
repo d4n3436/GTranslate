@@ -44,7 +44,7 @@ public class MicrosoftVoice
     public string Locale { get; }
 
     /// <inheritdoc/>
-    public override string ToString() => $"{DisplayName} ({Locale})";
+    public override string ToString() => $"{nameof(DisplayName)}: '{DisplayName}', {nameof(Locale)}: '{Locale}'";
 
     private string DebuggerDisplay => ToString();
 }
