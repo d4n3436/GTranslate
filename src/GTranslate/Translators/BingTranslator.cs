@@ -13,8 +13,8 @@ namespace GTranslate.Translators;
 public sealed class BingTranslator : ITranslator, IDisposable
 {
     internal const string HostUrl = "https://www.bing.com";
-    internal const string Iid = "translator.5023.3";
-    private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.81 Safari/537.36";
+    internal const string Iid = "translator.5023.1";
+    private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36";
 
     /// <inheritdoc/>
     public string Name => nameof(BingTranslator);

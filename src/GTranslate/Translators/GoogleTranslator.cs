@@ -19,7 +19,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     private const string _salt2 = "+-3^+b+-f";
     private const string _apiEndpoint = "https://translate.googleapis.com/translate_a/single";
     private const string _ttsApiEndpoint = "https://translate.google.com/translate_tts";
-    private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.81 Safari/537.36";
+    private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36";
     private static readonly string[] _ttsLanguages =
     {
         "af", "ar", "bg", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "fi", "fr", "gu", "hi", "hr", "hu",

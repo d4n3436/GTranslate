@@ -17,7 +17,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
 {
     private const string _translateRpcId = "MkEWBc";
     private const string _ttsRpcId = "jQ1olc";
-    private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.81 Safari/537.36";
+    private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36";
     private static readonly Uri _defaultBaseAddress = new("https://translate.google.com/");
     private static readonly string[] _ttsLanguages =
     {

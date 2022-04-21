@@ -17,7 +17,7 @@ namespace GTranslate.Translators;
 /// </summary>
 public sealed class MicrosoftTranslator : ITranslator, IDisposable
 {
-    private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.81 Safari/537.36";
+    private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36";
     private const string _apiEndpoint = "https://api.cognitive.microsofttranslator.com";
     private const string _apiVersion = "3.0";
 
