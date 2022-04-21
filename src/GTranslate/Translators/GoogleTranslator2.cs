@@ -115,7 +115,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
             .EnumerateArray()
             .Select(x => x.FirstOrDefault().GetString());
 
-        string translation = string.Concat(translationChunks);
+        string translation = string.Join(" ", translationChunks);
 
         if (string.IsNullOrEmpty(translation))
         {
