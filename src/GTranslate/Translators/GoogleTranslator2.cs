@@ -109,13 +109,21 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
 
         string target = root[1][1].GetString() ?? toLanguage.ISO6391;
         string source = root[1][3].GetString() ?? string.Empty;
-        var translationChunks = root[1][0][0]
+        string translation;
+        var chunks = root[1][0][0]
             .EnumerateArray()
-            .FirstOrDefault(x => x.ValueKind == JsonValueKind.Array)
-            .EnumerateArray()
-            .Select(x => x.FirstOrDefault().GetString());
+            .FirstOrDefault(x => x.ValueKind == JsonValueKind.Array);
 
-        string translation = string.Join(" ", translationChunks);
+        if (chunks.ValueKind == JsonValueKind.Array)
+        {
+            translation = string.Join(" ", chunks.EnumerateArray().Select(x => x.FirstOrDefault().GetString()));
+        }
+        else
+        {
+            // no chunks found, could be a link or gender-specific translation
+            // should we provide the value of the link and the gender-specific translations in separate properties?
+            translation = root[1][0][0][0].GetString() ?? string.Empty;
+        }
 
         if (string.IsNullOrEmpty(translation))
         {
@@ -124,7 +132,9 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
 
         string? transliteration = root[1][0][0]
             .ElementAtOrDefault(1)
-            .GetStringOrDefault() ?? root[0][0]
+            .GetStringOrDefault() ?? root
+            .FirstOrDefault()
+            .FirstOrDefault()
             .GetStringOrDefault();
 
         return new GoogleTranslationResult(translation, text, Language.GetLanguage(target), Language.GetLanguage(source), transliteration, null, Name);
