@@ -109,6 +109,13 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
 
         string target = root[1][1].GetString() ?? toLanguage.ISO6391;
         string source = root[1][3].GetString() ?? string.Empty;
+        
+        if (source == "auto")
+        {
+            source = root.ElementAtOrDefault(2).GetStringOrDefault()
+                     ?? "en"; // Source language is not present, this happens when the text is a hyperlink and fromLanguage is null
+        }
+
         string translation;
         var chunks = root[1][0][0]
             .EnumerateArray()
