@@ -125,10 +125,10 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
             throw new TranslatorException("Failed to get the translated text.", Name);
         }
 
-        var translation = string.Concat(sentences.EnumerateArray().Select(x => x.GetProperty("trans").GetString()));
-        var transliteration = string.Concat(sentences.EnumerateArray().Select(x => x.GetPropertyOrDefault("translit").GetStringOrDefault()));
+        string translation = string.Concat(sentences.EnumerateArray().Select(x => x.GetProperty("trans").GetString()));
+        string transliteration = string.Concat(sentences.EnumerateArray().Select(x => x.GetPropertyOrDefault("translit").GetStringOrDefault()));
         string source = document.RootElement.GetProperty("src").GetString() ?? string.Empty;
-        float? confidence = document.RootElement.TryGetSingle("confidence", out var temp) ? temp : null;
+        float? confidence = document.RootElement.TryGetSingle("confidence", out float temp) ? temp : null;
 
         return new GoogleTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(source), transliteration, confidence);
     }
@@ -239,8 +239,8 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
 
         async Task<ReadOnlyMemory<byte>> ProcessRequestAsync(ReadOnlyMemory<char> textChunk, int index, int total)
         {
-            var escapedText = Uri.EscapeDataString(textChunk.ToString());
-            var token = MakeToken(textChunk.Span);
+            string escapedText = Uri.EscapeDataString(textChunk.ToString());
+            string token = MakeToken(textChunk.Span);
 
             string url = $"{_ttsApiEndpoint}?ie=UTF-8&q={escapedText}&tl={language.ISO6391}&ttsspeed={speed}&total={total}&idx={index}&client=tw-ob&textlen={textChunk.Length}&tk={token}";
             return await _httpClient.GetByteArrayAsync(new Uri(url)).ConfigureAwait(false);

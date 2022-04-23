@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using GTranslate.Extensions;
 using GTranslate.Translators;
 
 namespace GTranslate;
@@ -91,7 +92,7 @@ internal static class TranslatorGuards
         // If we get a "statusCode" property, this means the response is not successful
         if (element.TryGetInt32("statusCode", out int code))
         {
-            var errorMessage = element.GetPropertyOrDefault("errorMessage").GetStringOrDefault($"The API returned status code {code}.");
+            string errorMessage = element.GetPropertyOrDefault("errorMessage").GetStringOrDefault($"The API returned status code {code}.");
 
 #if NET5_0_OR_GREATER
             throw new HttpRequestException(errorMessage, null, (System.Net.HttpStatusCode)code);

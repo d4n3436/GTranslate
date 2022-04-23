@@ -84,7 +84,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
             return true;
         }
 
-        if (!Aliases.TryGetValue(code.ToLowerInvariant(), out var iso))
+        if (!Aliases.TryGetValue(code.ToLowerInvariant(), out string? iso))
         {
             return false;
         }

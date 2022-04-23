@@ -12,7 +12,7 @@ internal static class StringExtensions
     // Google prioritizes maintaining the structure of sentences rather than minimizing the number of requests
     public static IEnumerable<ReadOnlyMemory<char>> SplitWithoutWordBreaking(this string text, int maxLength = 200)
     {
-        var split = text.Split(_separators, StringSplitOptions.RemoveEmptyEntries);
+        string[] split = text.Split(_separators, StringSplitOptions.RemoveEmptyEntries);
         var current = string.Join(" ", split).AsMemory();
 
         while (!current.IsEmpty)

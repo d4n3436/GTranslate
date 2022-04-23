@@ -349,12 +349,12 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         }
         else
         {
-            var bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+            byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
             document = JsonDocument.Parse(bytes.AsMemory(6, bytes.Length - 6));
         }
 
         // get the actual data
-        var data = document.RootElement[0][2].GetString() ?? throw new TranslatorException("Unable to get the data from the response.", Name);
+        string data = document.RootElement[0][2].GetString() ?? throw new TranslatorException("Unable to get the data from the response.", Name);
         document.Dispose();
 
         return JsonDocument.Parse(data);

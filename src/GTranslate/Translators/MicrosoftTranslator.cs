@@ -8,6 +8,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using GTranslate.Extensions;
 using GTranslate.Results;
 
 namespace GTranslate.Translators;
@@ -202,11 +203,11 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         var root = document.RootElement[0];
 
         var detectedLanguage = root.GetPropertyOrDefault("detectedLanguage");
-        var sourceLanguage = detectedLanguage
+        string sourceLanguage = detectedLanguage
             .GetPropertyOrDefault("language")
             .GetStringOrDefault(fromLanguage?.ISO6391) ?? throw new TranslatorException("Failed to get the source language.", Name);
 
-        float? score = detectedLanguage.TryGetSingle("score", out var temp) ? temp : null;
+        float? score = detectedLanguage.TryGetSingle("score", out float temp) ? temp : null;
         string translation = root.GetProperty("translations")[0].GetProperty("text").GetString() ?? throw new TranslatorException("Failed to get the translation.", Name);
 
         return new MicrosoftTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(sourceLanguage), score);

@@ -1,7 +1,8 @@
-﻿using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text.Json;
 
-namespace GTranslate;
+namespace GTranslate.Extensions;
 
 internal static class JsonElementExtensions
 {
@@ -17,6 +18,7 @@ internal static class JsonElementExtensions
     public static JsonElement GetPropertyOrDefault(this JsonElement element, string propertyName)
         => element.ValueKind == JsonValueKind.Object && element.TryGetProperty(propertyName, out var value) ? value : default;
 
+    [return: NotNullIfNotNull("defaultValue")]
     public static string? GetStringOrDefault(this JsonElement element, string? defaultValue = null)
         => element.ValueKind is JsonValueKind.String or JsonValueKind.Null ? element.GetString() ?? defaultValue : defaultValue;
 
