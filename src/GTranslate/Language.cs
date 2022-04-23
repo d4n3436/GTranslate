@@ -24,6 +24,7 @@ public sealed class Language : ILanguage, IEquatable<Language>
         TranslatorGuards.LanguageFound(nameOrCode, out var language);
 
         Name = language.Name;
+        NativeName = language.NativeName;
         ISO6391 = language.ISO6391;
         ISO6393 = language.ISO6393;
         SupportedServices = language.SupportedServices;
@@ -33,13 +34,16 @@ public sealed class Language : ILanguage, IEquatable<Language>
     /// Initializes a new instance of the <see cref="Language"/> class, using the specified name, ISO codes and supported services.
     /// </summary>
     /// <param name="name">The name.</param>
+    /// <param name="nativeName">The native name.</param>
     /// <param name="iso6391">The ISO 639-1 code.</param>
     /// <param name="iso6393">The ISO 639-3 code.</param>
     /// <param name="supportedServices">The supported services.</param>
-    internal Language(string name, string iso6391, string iso6393,
-        TranslationServices supportedServices = TranslationServices.Google | TranslationServices.Bing | TranslationServices.Yandex | TranslationServices.Microsoft)
+    internal Language(string name, string nativeName, string iso6391, string iso6393,
+        TranslationServices supportedServices = TranslationServices.Google | TranslationServices.Bing |
+                                                TranslationServices.Yandex | TranslationServices.Microsoft)
     {
         Name = name;
+        NativeName = nativeName;
         ISO6391 = iso6391;
         ISO6393 = iso6393;
         SupportedServices = supportedServices;
@@ -52,6 +56,11 @@ public sealed class Language : ILanguage, IEquatable<Language>
 
     /// <inheritdoc/>
     public string Name { get; }
+
+    /// <summary>
+    /// Gets the native name of this language.
+    /// </summary>
+    public string NativeName { get; }
 
     /// <inheritdoc/>
     public string ISO6391 { get; }
@@ -96,7 +105,7 @@ public sealed class Language : ILanguage, IEquatable<Language>
     public override int GetHashCode() => ISO6391.GetHashCode();
 
     /// <inheritdoc/>
-    public override string ToString() => $"{nameof(Name)}: {Name}, ISO 639-1: {ISO6391}, ISO 639-3: {ISO6393}";
+    public override string ToString() => $"{nameof(Name)}: '{Name}', {nameof(NativeName)}: '{NativeName}', {nameof(ISO6391)}: {ISO6391}, {nameof(ISO6393)}: {ISO6393}";
 
     private string DebuggerDisplay => ToString();
 }
