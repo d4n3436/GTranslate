@@ -11,10 +11,7 @@ namespace GTranslate;
 /// </summary>
 public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
 {
-    internal LanguageDictionary()
-    {
-        Aliases = new ReadOnlyDictionary<string, string>(BuildLanguageAliases());
-    }
+    internal LanguageDictionary() => Aliases = new ReadOnlyDictionary<string, string>(BuildLanguageAliases());
 
     /// <inheritdoc />
     public IEnumerator<KeyValuePair<string, Language>> GetEnumerator()
@@ -61,7 +58,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
             return language;
         }
 
-        return Aliases.TryGetValue(code.ToLowerInvariant(), out var iso) ? _languages[iso] : throw new ArgumentException($"Unknown language \"{code}\".", nameof(code));
+        return Aliases.TryGetValue(code, out var iso) ? _languages[iso] : throw new ArgumentException($"Unknown language \"{code}\".", nameof(code));
     }
 
     /// <summary>
@@ -84,7 +81,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
             return true;
         }
 
-        if (!Aliases.TryGetValue(code.ToLowerInvariant(), out string? iso))
+        if (!Aliases.TryGetValue(code, out string? iso))
         {
             return false;
         }
@@ -100,44 +97,49 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
 
     private Dictionary<string, string> BuildLanguageAliases()
     {
-        var aliases = new Dictionary<string, string>(_languages.Count * 2);
+        var aliases = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
+        {
+            ["bangla"] = "bn",
+            ["myanmar"] = "my",
+            ["in"] = "id",
+            ["iw"] = "he",
+            ["ji"] = "yi",
+            ["jw"] = "jv",
+            ["mo"] = "ro",
+            ["nb"] = "no",
+            ["nn"] = "no",
+            ["portuguese"] = "pt",
+            ["sh"] = "sr",
+            ["sr"] = "sr",
+            ["srp"] = "sr",
+            ["serbian"] = "sr",
+            ["zh"] = "zh-CN",
+            ["zh-chs"] = "zh-CN",
+            ["zh-cht"] = "zh-TW",
+            ["zh-hans"] = "zh-CN",
+            ["zh-hant"] = "zh-TW",
+            ["zho"] = "zh-CN",
+            ["chinese"] = "zh-CN",
+            ["tlh-latn"] = "tlh",
+            ["sr-cyrl"] = "sr",
+            ["mn-Cyrl"] = "mn"
+        };
 
         foreach (var kvp in _languages)
         {
-            aliases[kvp.Value.ISO6393.ToLowerInvariant()] = kvp.Key;
-            aliases[kvp.Value.Name.ToLowerInvariant()] = kvp.Key;
-            aliases[kvp.Value.NativeName.ToLowerInvariant()] = kvp.Key;
+            aliases[kvp.Value.Name] = kvp.Key;
+            aliases[kvp.Value.NativeName] = kvp.Key;
+            aliases[kvp.Value.ISO6393] = kvp.Key;
         }
 
-        aliases["bangla"] = "bn";
-        aliases["myanmar"] = "my";
-        aliases["in"] = "id";
-        aliases["iw"] = "he";
-        aliases["ji"] = "yi";
-        aliases["jw"] = "jv";
-        aliases["mo"] = "ro";
-        aliases["nb"] = "no";
-        aliases["nn"] = "no";
-        aliases["portuguese"] = "pt";
-        aliases["sh"] = "sr";
-        aliases["sr"] = "sr";
-        aliases["srp"] = "sr";
-        aliases["serbian"] = "sr";
-        aliases["zh"] = "zh-CN";
-        aliases["zh-chs"] = "zh-CN";
-        aliases["zh-cht"] = "zh-TW";
-        aliases["zh-hans"] = "zh-CN";
-        aliases["zh-hant"] = "zh-TW";
-        aliases["zho"] = "zh-CN";
-        aliases["chinese"] = "zh-CN";
-        aliases["tlh-latn"] = "tlh";
-        aliases["sr-cyrl"] = "sr";
-        aliases["mn-Cyrl"] = "mn";
-
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
+        aliases.TrimExcess();
+#endif
+        
         return aliases;
     }
 
-    private readonly IReadOnlyDictionary<string, Language> _languages = new ReadOnlyDictionary<string, Language>(new Dictionary<string, Language>
+    private readonly IReadOnlyDictionary<string, Language> _languages = new ReadOnlyDictionary<string, Language>(new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
     {
         ["af"] = new("Afrikaans", "Afrikaans", "af", "afr"),
         ["sq"] = new("Albanian", "Shqip", "sq", "sqi"),
