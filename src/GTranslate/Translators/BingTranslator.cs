@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using GTranslate.Extensions;
 using GTranslate.Results;
@@ -22,6 +23,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
     private readonly HttpClient _httpClient;
     private CachedObject<BingCredentials> _cachedCredentials;
+    private readonly SemaphoreSlim _credentialsSemaphore = new(1, 1);
     private bool _disposed;
 
     /// <summary>
@@ -314,6 +316,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         }
 
         _httpClient.Dispose();
+        _credentialsSemaphore.Dispose();
         _disposed = true;
     }
 
@@ -324,7 +327,22 @@ public sealed class BingTranslator : ITranslator, IDisposable
             return _cachedCredentials.Value;
         }
 
-        _cachedCredentials = await GetCredentialsAsync(this, _httpClient).ConfigureAwait(false);
+        await _credentialsSemaphore.WaitAsync().ConfigureAwait(false);
+
+        try
+        {
+            if (!_cachedCredentials.IsExpired())
+            {
+                return _cachedCredentials.Value;
+            }
+
+            _cachedCredentials = await GetCredentialsAsync(this, _httpClient).ConfigureAwait(false);
+        }
+        finally
+        {
+            _credentialsSemaphore.Release();
+        }
+
         return _cachedCredentials.Value;
     }
 }

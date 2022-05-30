@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using GTranslate.Extensions;
 using GTranslate.Results;
@@ -28,6 +29,9 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     private readonly HttpClient _httpClient;
     private CachedObject<BingCredentials> _cachedCredentials;
     private CachedObject<MicrosoftAuthTokenInfo> _cachedAuthTokenInfo;
+    private readonly SemaphoreSlim _voicesSemaphore = new(1, 1);
+    private readonly SemaphoreSlim _credentialsSemaphore = new(1, 1);
+    private readonly SemaphoreSlim _authTokenInfoSemaphore = new(1, 1);
     private MicrosoftVoice[] _voices = Array.Empty<MicrosoftVoice>();
     private bool _disposed;
 
@@ -381,16 +385,30 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
             return _voices;
         }
 
-        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
+        await _voicesSemaphore.WaitAsync().ConfigureAwait(false);
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri($"https://{authInfo.Region}.tts.speech.microsoft.com/cognitiveservices/voices/list"));
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authInfo.Token);
+        try
+        {
+            if (_voices.Length != 0)
+            {
+                return _voices;
+            }
 
-        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+            var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
 
-        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-        _voices = await JsonSerializer.DeserializeAsync<MicrosoftVoice[]>(stream).ConfigureAwait(false) ?? throw new TranslatorException("Failed to deserialize voice list.", Name);
+            using var request = new HttpRequestMessage(HttpMethod.Get, new Uri($"https://{authInfo.Region}.tts.speech.microsoft.com/cognitiveservices/voices/list"));
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authInfo.Token);
+
+            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            _voices = await JsonSerializer.DeserializeAsync<MicrosoftVoice[]>(stream).ConfigureAwait(false) ?? throw new TranslatorException("Failed to deserialize voice list.", Name);
+        }
+        finally
+        {
+            _voicesSemaphore.Release();
+        }
 
         return _voices;
     }
@@ -418,37 +436,51 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
             return _cachedAuthTokenInfo.Value;
         }
 
-        var bingCredentials = await GetOrUpdateBingCredentialsAsync().ConfigureAwait(false);
+        await _authTokenInfoSemaphore.WaitAsync().ConfigureAwait(false);
 
-        var data = new Dictionary<string, string>
+        try
         {
-            { "token", bingCredentials.Token },
-            { "key", bingCredentials.Key.ToString() }
-        };
+            if (!_cachedAuthTokenInfo.IsExpired())
+            {
+                return _cachedAuthTokenInfo.Value;
+            }
 
-        using var content = new FormUrlEncodedContent(data);
-        var uri = new Uri($"{BingTranslator.HostUrl}/tfetspktok?isVertical=1&IG={bingCredentials.ImpressionGuid.ToString("N").ToUpperInvariant()}&IID={BingTranslator.Iid}");
-        using var response = await _httpClient.PostAsync(uri, content).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
-        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            var bingCredentials = await GetOrUpdateBingCredentialsAsync().ConfigureAwait(false);
 
-        // Bing Translator always return status code 200 regardless of the content
-        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
-        var root = document.RootElement;
+            var data = new Dictionary<string, string>
+            {
+                { "token", bingCredentials.Token },
+                { "key", bingCredentials.Key.ToString() }
+            };
 
-        TranslatorGuards.ThrowIfStatusCodeIsPresent(root);
+            using var content = new FormUrlEncodedContent(data);
+            var uri = new Uri($"{BingTranslator.HostUrl}/tfetspktok?isVertical=1&IG={bingCredentials.ImpressionGuid.ToString("N").ToUpperInvariant()}&IID={BingTranslator.Iid}");
+            using var response = await _httpClient.PostAsync(uri, content).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+            using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
-        // Authentication tokens seem to be always valid for 10 minutes
-        // https://docs.microsoft.com/en-us/azure/cognitive-services/authentication?tabs=powershell#authenticate-with-an-authentication-token
-        int expiryDurationInMs = root.GetProperty("expiryDurationInMS").GetInt32OrDefault(600000);
-        string token = root.GetProperty("token").GetString() ?? throw new TranslatorException("Unable to get the Microsoft Azure Auth token.", Name);
-        string region = root.GetProperty("region").GetString() ?? throw new TranslatorException("Unable to get the Microsoft Azure API region.", Name);
+            // Bing Translator always return status code 200 regardless of the content
+            using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
+            var root = document.RootElement;
 
-        var authInfo = new MicrosoftAuthTokenInfo(token, region);
+            TranslatorGuards.ThrowIfStatusCodeIsPresent(root);
 
-        _cachedAuthTokenInfo = new CachedObject<MicrosoftAuthTokenInfo>(authInfo, TimeSpan.FromMilliseconds(expiryDurationInMs));
+            // Authentication tokens seem to be always valid for 10 minutes
+            // https://docs.microsoft.com/en-us/azure/cognitive-services/authentication?tabs=powershell#authenticate-with-an-authentication-token
+            int expiryDurationInMs = root.GetProperty("expiryDurationInMS").GetInt32OrDefault(600000);
+            string token = root.GetProperty("token").GetString() ?? throw new TranslatorException("Unable to get the Microsoft Azure Auth token.", Name);
+            string region = root.GetProperty("region").GetString() ?? throw new TranslatorException("Unable to get the Microsoft Azure API region.", Name);
 
-        return authInfo;
+            var authInfo = new MicrosoftAuthTokenInfo(token, region);
+
+            _cachedAuthTokenInfo = new CachedObject<MicrosoftAuthTokenInfo>(authInfo, TimeSpan.FromMilliseconds(expiryDurationInMs));
+        }
+        finally
+        {
+            _authTokenInfoSemaphore.Release();
+        }
+
+        return _cachedAuthTokenInfo.Value;
     }
 
     /// <summary>
@@ -563,6 +595,9 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         }
 
         _httpClient.Dispose();
+        _voicesSemaphore.Dispose();
+        _credentialsSemaphore.Dispose();
+        _authTokenInfoSemaphore.Dispose();
         _disposed = true;
     }
 
@@ -573,7 +608,22 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
             return _cachedCredentials.Value;
         }
 
-        _cachedCredentials = await BingTranslator.GetCredentialsAsync(this, _httpClient).ConfigureAwait(false);
+        await _credentialsSemaphore.WaitAsync().ConfigureAwait(false);
+
+        try
+        {
+            if (!_cachedCredentials.IsExpired())
+            {
+                return _cachedCredentials.Value;
+            }
+
+            _cachedCredentials = await BingTranslator.GetCredentialsAsync(this, _httpClient).ConfigureAwait(false);
+        }
+        finally
+        {
+            _credentialsSemaphore.Release();
+        }
+
         return _cachedCredentials.Value;
     }
 }
