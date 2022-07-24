@@ -196,7 +196,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         };
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authInfo.Token);
-        request.Content = new StringContent($"[{{\"Text\":\"{JsonEncodedText.Encode(text)}\"}}]", Encoding.UTF8, "application/json");
+        request.Content = new StringContent($"[{{\"Text\":\"{text.AsSpan().SafeJsonTextEncode()}\"}}]", Encoding.UTF8, "application/json");
 
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
@@ -261,7 +261,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         };
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authInfo.Token);
-        request.Content = new StringContent($"[{{\"Text\":\"{JsonEncodedText.Encode(text)}\"}}]", Encoding.UTF8, "application/json");
+        request.Content = new StringContent($"[{{\"Text\":\"{text.AsSpan().SafeJsonTextEncode()}\"}}]", Encoding.UTF8, "application/json");
 
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
@@ -298,7 +298,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         };
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authInfo.Token);
-        request.Content = new StringContent($"[{{\"Text\":\"{JsonEncodedText.Encode(text)}\"}}]", Encoding.UTF8, "application/json");
+        request.Content = new StringContent($"[{{\"Text\":\"{text.AsSpan().SafeJsonTextEncode()}\"}}]", Encoding.UTF8, "application/json");
 
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();

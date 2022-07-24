@@ -100,7 +100,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        string payload = $"[[\"{JsonEncodedText.Encode(text)}\",\"{fromLanguage?.ISO6391 ?? "auto"}\",\"{toLanguage.ISO6391}\",true],[null]]";
+        string payload = $"[[\"{text.AsSpan().SafeJsonTextEncode()}\",\"{fromLanguage?.ISO6391 ?? "auto"}\",\"{toLanguage.ISO6391}\",true],[null]]";
 
         using var request = BuildRequest(_translateRpcId, payload);
         using var document = await SendAndParseResponseAsync(request).ConfigureAwait(false);
@@ -243,12 +243,13 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
 
         // Send requests and parse responses in parallel
         var chunks = await Task.WhenAll(tasks).ConfigureAwait(false);
-
+        
         return chunks.AsReadOnlySequence().AsStream();
-
+        
         async Task<ReadOnlyMemory<byte>> ProcessRequestAsync(ReadOnlyMemory<char> textChunk)
         {
-            string payload = $"[\"{JsonEncodedText.Encode(textChunk.Span)}\",\"{language.ISO6391}\",{(slow ? "true" : "null")},\"null\"]";
+            string payload = $"[\"{textChunk.Span.SafeJsonTextEncode()}\",\"{language.ISO6391}\",{(slow ? "true" : "null")},\"null\"]";
+
             using var request = BuildRequest(_ttsRpcId, payload);
             using var document = await SendAndParseResponseAsync(request).ConfigureAwait(false);
 
