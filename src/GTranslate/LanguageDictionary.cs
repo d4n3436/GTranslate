@@ -194,7 +194,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["rw"] = new("Kinyarwanda", "Kinyarwanda", "rw", "kin", TranslationServices.Google),
         ["ko"] = new("Korean", "한국어", "ko", "kor"),
         ["ku"] = new("Kurdish", "Kurdî", "ku", "kur", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
-        ["ky"] = new("Kyrgyz", "Kyrgyz", "ky", "kir", TranslationServices.Google | TranslationServices.Yandex | TranslationServices.Microsoft),
+        ["ky"] = new("Kyrgyz", "Kyrgyz", "ky", "kir"),
         ["lo"] = new("Lao", "ລາວ", "lo", "lao"),
         ["la"] = new("Latin", "Latina", "la", "lat", TranslationServices.Google | TranslationServices.Yandex),
         ["lv"] = new("Latvian", "Latviešu", "lv", "lav"),
@@ -227,7 +227,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["si"] = new("Sinhala", "සිංහල", "si", "sin", TranslationServices.Google | TranslationServices.Yandex),
         ["sk"] = new("Slovak", "Slovenčina", "sk", "slk"),
         ["sl"] = new("Slovenian", "Slovenščina", "sl", "slv"),
-        ["so"] = new("Somali", "Af Soomaali", "so", "som", TranslationServices.Google),
+        ["so"] = new("Somali", "Af Soomaali", "so", "som", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["es"] = new("Spanish", "Español", "es", "spa"),
         ["su"] = new("Sundanese", "Basa Sunda", "su", "sun", TranslationServices.Google | TranslationServices.Yandex),
         ["sw"] = new("Swahili", "Kiswahili", "sw", "swa"),
@@ -259,6 +259,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["fj"] = new("Fijian", "Na Vosa Vakaviti", "fj", "fij", TranslationServices.Bing | TranslationServices.Microsoft),
         ["fil"] = new("Filipino", "Filipino", "fil", "fil", TranslationServices.Bing | TranslationServices.Microsoft),
         ["fr-CA"] = new("French (Canada)", "Français (Canada)", "fr-CA", "fr-CA", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["fo"] = new("Faroese", "føroyskt mál", "fo", "fao", TranslationServices.Bing | TranslationServices.Microsoft),
         ["mww"] = new("Hmong Daw", "Hmong Daw", "mww", "mww", TranslationServices.Bing | TranslationServices.Microsoft),
         ["ikt"] = new("Inuinnaqtun", "Inuinnaqtun", "ikt", "ikt", TranslationServices.Bing | TranslationServices.Microsoft),
         ["iu"] = new("Inuktitut", "ᐃᓄᒃᑎᑐᑦ", "iu", "iku", TranslationServices.Bing | TranslationServices.Microsoft),
@@ -288,6 +289,6 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["mrj"] = new("Western Mari", "Мары йӹлмӹ", "mrj", "mrj", TranslationServices.Yandex),
         ["sah"] = new("Yakut", "Саха тыла", "sah", "sah", TranslationServices.Yandex),
 
-        ["tlh-Piqd"] = new("Klingon (pIqaD)", "Klingon (pIqaD)", "tlh-Piqd", "tlh-Piqd", TranslationServices.Bing | TranslationServices.Microsoft), // For some reason Bing stopped supporting this language, ty Microsoft
+        ["tlh-Piqd"] = new("Klingon (pIqaD)", "Klingon (pIqaD)", "tlh-Piqd", "tlh-Piqd", TranslationServices.Microsoft), // For some reason Bing stopped supporting this language, ty Microsoft
     });
 }
