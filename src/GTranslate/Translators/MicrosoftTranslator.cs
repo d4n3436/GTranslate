@@ -6,7 +6,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
 using GTranslate.Extensions;
@@ -22,6 +24,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36";
     private const string _apiEndpoint = "https://api.cognitive.microsofttranslator.com";
     private const string _apiVersion = "3.0";
+    private static readonly HtmlEncoder _ssmlEncoder = HtmlEncoder.Create(UnicodeRanges.All); // Like the default encoder but only encodes required characters
 
     /// <inheritdoc/>
     public string Name => nameof(MicrosoftTranslator);
@@ -34,7 +37,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     private readonly SemaphoreSlim _authTokenInfoSemaphore = new(1, 1);
     private MicrosoftVoice[] _voices = Array.Empty<MicrosoftVoice>();
     private bool _disposed;
-
+    
     /// <summary>
     /// Gets a read-only dictionary containing the hardcoded TTS voices used internally in Bing Translator.
     /// </summary>
@@ -348,10 +351,10 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
         TranslatorGuards.NotNull(text);
         TranslatorGuards.NotNull(voice);
-
+        
         var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
 
-        string payload = $"<speak version='1.0' xml:lang='{voice.Locale}'><voice xml:lang='{voice.Locale}' xml:gender='{voice.Gender}' name='{voice.ShortName}'><prosody rate='{speakRate}'>{text}</prosody></voice></speak>";
+        string payload = $"<speak version='1.0' xml:lang='{voice.Locale}'><voice xml:lang='{voice.Locale}' xml:gender='{voice.Gender}' name='{voice.ShortName}'><prosody rate='{speakRate}'>{_ssmlEncoder.Encode(text)}</prosody></voice></speak>";
 
         using var request = new HttpRequestMessage
         {
