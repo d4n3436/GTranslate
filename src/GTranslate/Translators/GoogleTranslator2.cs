@@ -354,9 +354,17 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
             document = JsonDocument.Parse(bytes.AsMemory(6, bytes.Length - 6));
         }
 
-        // get the actual data
-        string data = document.RootElement[0][2].GetString() ?? throw new TranslatorException("Unable to get the data from the response.", Name);
-        document.Dispose();
+        string data;
+
+        try
+        {
+            // get the actual data
+            data = document.RootElement[0][2].GetString() ?? throw new TranslatorException("Unable to get the data from the response.", Name);
+        }
+        finally
+        {
+            document.Dispose();
+        }
 
         return JsonDocument.Parse(data);
     }

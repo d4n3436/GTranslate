@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +17,9 @@ namespace GTranslate.Translators;
 public sealed class BingTranslator : ITranslator, IDisposable
 {
     internal const string HostUrl = "https://www.bing.com";
+    private static readonly Uri _translatorPageUri = new($"{HostUrl}/translator");
     internal const string Iid = "translator.5023.1";
+    private static readonly byte[] _credentialsStart = Encoding.UTF8.GetBytes("var params_RichTranslateHelper = [");
     private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36";
 
     /// <inheritdoc/>
@@ -239,42 +243,44 @@ public sealed class BingTranslator : ITranslator, IDisposable
     // returns new credentials as a cached object
     internal static async Task<CachedObject<BingCredentials>> GetCredentialsAsync(ITranslator translator, HttpClient httpClient)
     {
-        const string credentialsStart = "var params_RichTranslateHelper = [";
+        byte[] bytes = await httpClient.GetByteArrayAsync(_translatorPageUri).ConfigureAwait(false);
+        return GetCredentials(bytes, translator);
+    }
 
-        string content = await httpClient.GetStringAsync(new Uri($"{HostUrl}/translator")).ConfigureAwait(false);
-
-        int credentialsStartIndex = content.IndexOf(credentialsStart, StringComparison.Ordinal);
+    internal static CachedObject<BingCredentials> GetCredentials(ReadOnlySpan<byte> bytes, ITranslator translator)
+    {
+        int credentialsStartIndex = bytes.IndexOf(_credentialsStart);
         if (credentialsStartIndex == -1)
         {
             throw new TranslatorException("Unable to find the Bing credentials.", translator.Name);
         }
 
-        int keyStartIndex = credentialsStartIndex + credentialsStart.Length;
-        int keyEndIndex = content.IndexOf(',', keyStartIndex);
-        if (keyEndIndex == -1)
+        int keyStartIndex = credentialsStartIndex + _credentialsStart.Length;
+        int keyLength = bytes.Slice(keyStartIndex).IndexOf((byte)',');
+        if (keyLength == -1)
         {
             throw new TranslatorException("Unable to find the Bing key.", translator.Name);
         }
 
         // Unix timestamp generated once the page is loaded. Valid for 3600000 milliseconds or 1 hour
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
-        if (!long.TryParse(content.AsSpan(keyStartIndex, keyEndIndex - keyStartIndex), out long key))
-#else
-        if (!long.TryParse(content.AsSpan(keyStartIndex, keyEndIndex - keyStartIndex).ToString(), out long key))
-#endif
+        if (!Utf8Parser.TryParse(bytes.Slice(keyStartIndex, keyLength), out long key, out _))
         {
             // This shouldn't happen but we'll handle this case anyways
             key = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
 
-        int tokenStartIndex = keyEndIndex + 2;
-        int tokenEndIndex = content.IndexOf('"', tokenStartIndex);
-        if (tokenEndIndex == -1)
+        int tokenStartIndex = keyStartIndex + keyLength + 2;
+        int tokenLength = bytes.Slice(tokenStartIndex).IndexOf((byte)'"');
+        if (tokenLength == -1)
         {
             throw new TranslatorException("Unable to find the Bing token.", translator.Name);
         }
 
-        string token = content.Substring(tokenStartIndex, tokenEndIndex - tokenStartIndex);
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
+        string token = Encoding.UTF8.GetString(bytes.Slice(tokenStartIndex, tokenLength));
+#else
+        string token = Encoding.UTF8.GetString(bytes.Slice(tokenStartIndex, tokenLength).ToArray());
+#endif
         var credentials = new BingCredentials(token, key, Guid.NewGuid());
 
         return new CachedObject<BingCredentials>(credentials, DateTimeOffset.FromUnixTimeMilliseconds(key + 3600000));
