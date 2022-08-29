@@ -3,8 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.ConstrainedExecution;
 
 namespace GTranslate;
+
+public class LanguageServiceDetails
+{
+    private LanguageDictionary languagedictionary = new();
+    public IReadOnlyDictionary<string, Language> Languages { get { return languagedictionary._languages; } } // Allow other classes to access the language pool
+
+}
 
 /// <summary>
 /// Represents the default language dictionary used in GTranslate. It contains all the supported languages across all the included translators.
@@ -99,30 +107,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
     {
         var aliases = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
         {
-            ["bangla"] = "bn",
-            ["myanmar"] = "my",
-            ["in"] = "id",
-            ["iw"] = "he",
-            ["ji"] = "yi",
-            ["jw"] = "jv",
-            ["mo"] = "ro",
-            ["nb"] = "no",
-            ["nn"] = "no",
-            ["portuguese"] = "pt",
-            ["sh"] = "sr",
-            ["sr"] = "sr",
-            ["srp"] = "sr",
-            ["serbian"] = "sr",
-            ["zh"] = "zh-CN",
-            ["zh-chs"] = "zh-CN",
-            ["zh-cht"] = "zh-TW",
-            ["zh-hans"] = "zh-CN",
-            ["zh-hant"] = "zh-TW",
-            ["zho"] = "zh-CN",
             ["chinese"] = "zh-CN",
-            ["tlh-latn"] = "tlh",
-            ["sr-cyrl"] = "sr",
-            ["mn-Cyrl"] = "mn"
         };
 
         foreach (var kvp in _languages)
@@ -139,156 +124,179 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         return aliases;
     }
 
-    private readonly IReadOnlyDictionary<string, Language> _languages = new ReadOnlyDictionary<string, Language>(new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
+    public readonly IReadOnlyDictionary<string, Language> _languages = new ReadOnlyDictionary<string, Language>(new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
     {
         ["af"] = new("Afrikaans", "Afrikaans", "af", "afr"),
-        ["sq"] = new("Albanian", "Shqip", "sq", "sqi"),
         ["am"] = new("Amharic", "አማርኛ", "am", "amh"),
         ["ar"] = new("Arabic", "العربية", "ar", "ara"),
-        ["hy"] = new("Armenian", "Հայերեն", "hy", "hye"),
+        ["as"] = new("Assamese", "অসমীয়া", "as", "asm", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["ay"] = new("Aymara", "Aymara", "ay", "aym", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
         ["az"] = new("Azerbaijani", "Azərbaycan", "az", "aze"),
-        ["eu"] = new("Basque", "Euskara", "eu", "eus"),
+        ["ba"] = new("Bashkir", "Bashkir", "ba", "bak", TranslationServices.Bing | TranslationServices.Microsoft | TranslationServices.Yandex),
         ["be"] = new("Belarusian", "беларуская", "be", "bel", TranslationServices.Google | TranslationServices.Yandex),
-        ["bn"] = new("Bengali", "বাংলা", "bn", "ben"),
-        ["bs"] = new("Bosnian", "bosanski", "bs", "bos"),
         ["bg"] = new("Bulgarian", "Български", "bg", "bul"),
-        ["my"] = new("Burmese", "မြန်မာ", "my", "mya"),
+        ["bho"] = new("Bhojpuri", "Bhojpuri", "bho", "bho", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
+        ["bm"] = new("Bambara", "Bambara", "bm", "bam", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
+        ["bn"] = new("Bengali", "বাংলা", "bn", "ben"),
+        ["bo"] = new("Tibetan", "བོད་སྐད་", "bo", "bod", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["bs"] = new("Bosnian", "bosanski", "bs", "bos"),
         ["ca"] = new("Catalan", "Català", "ca", "cat"),
         ["ceb"] = new("Cebuano", "Binisaya", "ceb", "ceb", TranslationServices.Google | TranslationServices.Yandex),
-        ["ny"] = new("Chichewa", "Nyanja", "ny", "nya", TranslationServices.Google),
-        ["zh-CN"] = new("Chinese (Simplified)", "中文 (简体)", "zh-CN", "zho-CN"),
-        ["zh-TW"] = new("Chinese (Traditional)", "繁體中文 (繁體)", "zh-TW", "zho-TW", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["co"] = new("Corsican", "Corsu", "co", "cos", TranslationServices.Google),
-        ["hr"] = new("Croatian", "Hrvatski", "hr", "hrv"),
         ["cs"] = new("Czech", "Čeština", "cs", "ces"),
+        ["cv"] = new("Chuvash", "Чӑвашла", "cv", "chv", TranslationServices.Yandex),
+        ["cy"] = new("Welsh", "Cymraeg", "cy", "cym"),
         ["da"] = new("Danish", "Dansk", "da", "dan"),
-        ["nl"] = new("Dutch", "Nederlands", "nl", "nld"),
-        ["en"] = new("English", "English", "en", "eng"),
-        ["eo"] = new("Esperanto", "Esperanto", "eo", "epo", TranslationServices.Google | TranslationServices.Yandex),
-        ["et"] = new("Estonian", "Eesti", "et", "est"),
-        ["fi"] = new("Finnish", "Suomi", "fi", "fin"),
-        ["fr"] = new("French", "Français", "fr", "fra"),
-        ["fy"] = new("Frisian", "Frysk", "fy", "fry", TranslationServices.Google),
-        ["gl"] = new("Galician", "Galego", "gl", "glg"),
-        ["ka"] = new("Georgian", "ქართული", "ka", "kat"),
         ["de"] = new("German", "Deutsch", "de", "deu"),
+        ["dgo"] = new("Dogri", "Dogri", "dgo", "dgo", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
+        ["dv"] = new("Divehi", "ދިވެހިބަސް", "dv", "div", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["ee"] = new("Ewe", "Ewe", "ee", "ewe", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
         ["el"] = new("Greek", "Ελληνικά", "el", "ell"),
+        ["emj"] = new("Emoji", "Emoji", "emj", "emj", TranslationServices.Yandex), // Not present in Yandex.Cloud
+        ["en"] = new("English", "English", "en", "eng"),
+        ["en-GB"] = new("English (UK)", "English (UK)", "en-GB", "en-GB", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
+        ["eo"] = new("Esperanto", "Esperanto", "eo", "epo", TranslationServices.Google | TranslationServices.Yandex),
+        ["es"] = new("Spanish", "Español", "es", "spa"),
+        ["es-MX"] = new("Spanish (Mexico)", "Spanish (Mexico)", "es-MX", "es-MX", TranslationServices.Bing | TranslationServices.Microsoft),                     // Newly added by David Maisonave aka Axter (www.axter.com)
+        ["et"] = new("Estonian", "Eesti", "et", "est"),
+        ["eu"] = new("Basque", "Euskara", "eu", "eus"),
+        ["fa"] = new("Persian", "فارسی", "fa", "fas"),
+        ["fi"] = new("Finnish", "Suomi", "fi", "fin"),
+        ["fil"] = new("Filipino", "Tagalog", "fil", "fil", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["fj"] = new("Fijian", "Na Vosa Vakaviti", "fj", "fij", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["fo"] = new("Faroese", "føroyskt mál", "fo", "fao", TranslationServices.Bing | TranslationServices.Microsoft),                     // Newly added by David Maisonave aka Axter (www.axter.com)
+        ["fr"] = new("French", "Français", "fr", "fra"),
+        ["fr-CA"] = new("French (Canada)", "Français (Canada)", "fr-CA", "fr-CA", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["fy"] = new("Frisian", "Frysk", "fy", "fry", TranslationServices.Google),
+        ["ga"] = new("Irish", "Gaeilge", "ga", "gle"),
+        ["gd"] = new("Gaelic", "Gàidhlig", "gd", "gla", TranslationServices.Google | TranslationServices.Yandex),
+        ["gl"] = new("Galician", "Galego", "gl", "glg"),
+        ["gn"] = new("Guarani", "Guarani", "gn", "grn", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
         ["gu"] = new("Gujarati", "ગુજરાતી", "gu", "guj"),
-        ["ht"] = new("Haitian Creole", "Kreyòl ayisyen", "ht", "hat"),
         ["ha"] = new("Hausa", "Hausa", "ha", "hau", TranslationServices.Google),
         ["haw"] = new("Hawaiian", "ʻŌlelo Hawaiʻi", "haw", "haw", TranslationServices.Google),
         ["he"] = new("Hebrew", "עברית", "he", "heb"),
         ["hi"] = new("Hindi", "हिन्दी", "hi", "hin"),
         ["hmn"] = new("Hmong", "Hmong", "hmn", "hmn", TranslationServices.Google),
+        ["hr"] = new("Croatian", "Hrvatski", "hr", "hrv"),
+        ["hsb"] = new("Upper Sorbian", "Hornjoserbšćina", "hsb", "hsb", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["ht"] = new("Haitian Creole", "Kreyòl ayisyen", "ht", "hat"),
         ["hu"] = new("Hungarian", "Magyar", "hu", "hun"),
-        ["is"] = new("Icelandic", "Íslenska", "is", "isl"),
-        ["ig"] = new("Igbo", "Igbo", "ig", "ibo", TranslationServices.Google),
+        ["hy"] = new("Armenian", "Հայերեն", "hy", "hye"),
         ["id"] = new("Indonesian", "Indonesia", "id", "ind"),
-        ["ga"] = new("Irish", "Gaeilge", "ga", "gle"),
+        ["ig"] = new("Igbo", "Igbo", "ig", "ibo", TranslationServices.Google),
+        ["ikt"] = new("Inuinnaqtun", "Inuinnaqtun", "ikt", "ikt", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["ilo"] = new("Ilocano", "Iloko", "ilo", "ilo", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
+        ["is"] = new("Icelandic", "Íslenska", "is", "isl"),
         ["it"] = new("Italian", "Italiano", "it", "ita"),
+        ["iu"] = new("Inuktitut", "ᐃᓄᒃᑎᑐᑦ", "iu", "iku", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["iu-Latn"] = new("Inuktitut (Latin)", "Inuktitut (Latin)", "iu-Latn", "iu-Latn", TranslationServices.Bing | TranslationServices.Microsoft),
         ["ja"] = new("Japanese", "日本語", "ja", "jpn"),
         ["jv"] = new("Javanese", "Jawa", "jv", "jav", TranslationServices.Google | TranslationServices.Yandex),
-        ["kn"] = new("Kannada", "ಕನ್ನಡ", "kn", "kan"),
+        ["ka"] = new("Georgian", "ქართული", "ka", "kat"),
+        ["kazlat"] = new("Kazakh (Latin)", "qazaqşa", "kazlat", "kazlat", TranslationServices.Yandex),
         ["kk"] = new("Kazakh", "Қазақ Тілі", "kk", "kaz"),
         ["km"] = new("Khmer", "ខ្មែរ", "km", "khm"),
-        ["rw"] = new("Kinyarwanda", "Kinyarwanda", "rw", "kin", TranslationServices.Google),
+        ["kmr"] = new("Kurdish (Northern)", "Kurdî (Bakur)", "kmr", "kmr", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["kn"] = new("Kannada", "ಕನ್ನಡ", "kn", "kan"),
         ["ko"] = new("Korean", "한국어", "ko", "kor"),
         ["ku"] = new("Kurdish", "Kurdî", "ku", "kur", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
-        ["ky"] = new("Kyrgyz", "Kyrgyz", "ky", "kir"),
-        ["lo"] = new("Lao", "ລາວ", "lo", "lao"),
+        ["ky"] = new("Kyrgyz", "Kyrgyz", "ky", "kir", TranslationServices.Google | TranslationServices.Yandex | TranslationServices.Microsoft),
         ["la"] = new("Latin", "Latina", "la", "lat", TranslationServices.Google | TranslationServices.Yandex),
-        ["lv"] = new("Latvian", "Latviešu", "lv", "lav"),
-        ["lt"] = new("Lithuanian", "Lietuvių", "lt", "lit"),
         ["lb"] = new("Luxembourgish", "Lëtzebuergesch", "lb", "ltz", TranslationServices.Google | TranslationServices.Yandex),
-        ["mk"] = new("Macedonian", "Македонски", "mk", "mkd"),
+        ["ln"] = new("Lingala", "Lingala", "ln", "lin", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
+        ["lo"] = new("Lao", "ລາວ", "lo", "lao"),
+        ["lt"] = new("Lithuanian", "Lietuvių", "lt", "lit"),
+        ["lv"] = new("Latvian", "Latviešu", "lv", "lav"),
+        ["lzh"] = new("Chinese (Literary)", "中文 (文言文)", "lzh", "lzh", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["mai"] = new("Maithili", "Maithili", "mai", "mai", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
         ["mg"] = new("Malagasy", "Malagasy", "mg", "mlg"),
-        ["ms"] = new("Malay", "Melayu", "ms", "msa"),
-        ["ml"] = new("Malayalam", "മലയാളം", "ml", "mal"),
-        ["mt"] = new("Maltese", "Malti", "mt", "mlt"),
+        ["mhr"] = new("Eastern Mari", "олык марий", "mhr", "mhr", TranslationServices.Yandex),
         ["mi"] = new("Maori", "Te Reo Māori", "mi", "mri"),
-        ["mr"] = new("Marathi", "मराठी", "mr", "mar"),
+        ["mk"] = new("Macedonian", "Македонски", "mk", "mkd"),
+        ["ml"] = new("Malayalam", "മലയാളം", "ml", "mal"),
         ["mn"] = new("Mongolian", "Монгол хэл", "mn", "mon"),
+        ["mn-Mong"] = new("Mongolian (Traditional)", "ᠮᠣᠩᠭᠣᠯ ᠬᠡᠯᠡ", "mn-Mong", "mn-Mong", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["mr"] = new("Marathi", "मराठी", "mr", "mar"),
+        ["mrj"] = new("Western Mari", "Мары йӹлмӹ", "mrj", "mrj", TranslationServices.Yandex),
+        ["ms"] = new("Malay", "Melayu", "ms", "msa"),
+        ["mt"] = new("Maltese", "Malti", "mt", "mlt"),
+        ["mww"] = new("Hmong Daw", "Hmong Daw", "mww", "mww", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["my"] = new("Burmese", "မြန်မာ", "my", "mya"),
         ["ne"] = new("Nepali", "नेपाली", "ne", "nep"),
+        ["nl"] = new("Dutch", "Nederlands", "nl", "nld"),
         ["no"] = new("Norwegian", "Norsk", "no", "nor"),
+        ["nso"] = new("Sepedi", "Sepedi", "nso", "nso", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
+        ["ny"] = new("Chichewa", "Nyanja", "ny", "nya", TranslationServices.Google),
+        ["om"] = new("Oromo", "Oromo", "om", "orm", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
         ["or"] = new("Odia", "ଓଡ଼ିଆ", "or", "ori", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
-        ["ps"] = new("Pashto", "پښتو", "ps", "pus", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
-        ["fa"] = new("Persian", "فارسی", "fa", "fas"),
-        ["pl"] = new("Polish", "Polski", "pl", "pol"),
-        ["pt"] = new("Portuguese", "Português", "pt", "por"),
+        ["otq"] = new("Querétaro Otomi", "Hñähñu", "otq", "otq", TranslationServices.Bing | TranslationServices.Microsoft),
         ["pa"] = new("Punjabi", "ਪੰਜਾਬੀ", "pa", "pan"),
+        ["pap"] = new("Papiamento", "Papiamento", "pap", "pap", TranslationServices.Yandex),
+        ["pl"] = new("Polish", "Polski", "pl", "pol"),
+        ["prs"] = new("Dari", "دری", "prs", "prs", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["ps"] = new("Pashto", "پښتو", "ps", "pus", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
+        ["pt"] = new("Portuguese", "Português (Portugal)", "pt", "por"),
+        ["pt-BR"] = new("Portuguese (Brazil)", "Portuguese (Brazil)", "pt-BR", "pt-BR", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
+        ["qu"] = new("Quechua", "Quechua", "qu", "que", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
         ["ro"] = new("Romanian", "Română", "ro", "ron"),
         ["ru"] = new("Russian", "Русский", "ru", "rus"),
-        ["sm"] = new("Samoan", "Gagana Sāmoa", "sm", "smo", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
-        ["gd"] = new("Scottish Gaelic", "Gàidhlig", "gd", "gla", TranslationServices.Google | TranslationServices.Yandex),
-        ["sr"] = new("Serbian (Cyrillic)", "Српски", "sr", "srp"),
-        ["st"] = new("Sotho", "Sotho", "st", "sot", TranslationServices.Google),
-        ["sn"] = new("Shona", "chiShona", "sn", "sna", TranslationServices.Google),
+        ["rw"] = new("Kinyarwanda", "Kinyarwanda", "rw", "kin", TranslationServices.Google),
+        ["sa"] = new("Sanskrit", "Sanskrit", "sa", "san", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
+        ["sah"] = new("Yakut", "Саха тыла", "sah", "sah", TranslationServices.Yandex),
         ["sd"] = new("Sindhi", "سنڌي", "sd", "snd", TranslationServices.Google),
         ["si"] = new("Sinhala", "සිංහල", "si", "sin", TranslationServices.Google | TranslationServices.Yandex),
+        ["sjn"] = new("Sindarin", "Eledhrim", "sjn", "sjn", TranslationServices.Yandex), // Not present in Yandex.Cloud
         ["sk"] = new("Slovak", "Slovenčina", "sk", "slk"),
         ["sl"] = new("Slovenian", "Slovenščina", "sl", "slv"),
-        ["so"] = new("Somali", "Af Soomaali", "so", "som", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
-        ["es"] = new("Spanish", "Español", "es", "spa"),
+        ["sm"] = new("Samoan", "Gagana Sāmoa", "sm", "smo", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
+        ["sn"] = new("Shona", "chiShona", "sn", "sna", TranslationServices.Google),
+        ["so"] = new("Somali", "Af Soomaali", "so", "som", TranslationServices.Google),
+        ["sq"] = new("Albanian", "Shqip", "sq", "sqi"),
+        ["sr"] = new("Serbian (Cyrillic)", "Српски", "sr", "srp"),
+        ["sr-Latn"] = new("Serbian (Latin)", "Srpski (latinica)", "sr-Latn", "srp-Latn", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["st"] = new("Sotho", "Sotho", "st", "sot", TranslationServices.Google),
         ["su"] = new("Sundanese", "Basa Sunda", "su", "sun", TranslationServices.Google | TranslationServices.Yandex),
-        ["sw"] = new("Swahili", "Kiswahili", "sw", "swa"),
         ["sv"] = new("Swedish", "Svenska", "sv", "swe"),
-        ["tl"] = new("Tagalog", "Tagalog", "tl", "tgl", TranslationServices.Google | TranslationServices.Yandex),
-        ["tg"] = new("Tajik", "тоҷикӣ", "tg", "tgk", TranslationServices.Google | TranslationServices.Yandex),
+        ["sw"] = new("Swahili", "Kiswahili", "sw", "swa"),
         ["ta"] = new("Tamil", "தமிழ்", "ta", "tam"),
-        ["tt"] = new("Tatar", "Татар", "tt", "tat"),
         ["te"] = new("Telugu", "తెలుగు", "te", "tel"),
+        ["tg"] = new("Tajik", "тоҷикӣ", "tg", "tgk", TranslationServices.Google | TranslationServices.Yandex),
         ["th"] = new("Thai", "ไทย", "th", "tha"),
-        ["tr"] = new("Turkish", "Türkçe", "tr", "tur"),
+        ["ti"] = new("Tigrinya", "ትግር", "ti", "tir", TranslationServices.Bing | TranslationServices.Microsoft),
         ["tk"] = new("Turkmen", "Türkmen Dili", "tk", "tuk", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
+        ["tl"] = new("Tagalog", "Filipino", "tl", "tgl", TranslationServices.Google | TranslationServices.Yandex),
+        ["tlh"] = new("Klingon", "tlhIngan Hol", "tlh", "tlh", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["tlh-Piqd"] = new("Klingon (pIqaD)", "Klingon (pIqaD)", "tlh-Piqd", "tlh-Piqd", TranslationServices.Bing | TranslationServices.Microsoft), // Bing stopped supporting this language, ty Microsoft
+        ["to"] = new("Tongan", "Lea Fakatonga", "to", "ton", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["tr"] = new("Turkish", "Türkçe", "tr", "tur"),
+        ["ts"] = new("Tsonga", "Tsonga", "ts", "tso", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
+        ["tt"] = new("Tatar", "Татар", "tt", "tat"),
+        ["tw"] = new("Twi", "Twi", "tw", "twi", TranslationServices.Google),                     // Newly added by David Maisonave aka Axter (www.axter.com)
+        ["ty"] = new("Tahitian", "Reo Tahiti", "ty", "tah", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["udm"] = new("Udmurt", "Удмурт кыл", "udm", "udm", TranslationServices.Yandex),
+        ["ug"] = new("Uighur", "ئۇيغۇرچە", "ug", "uig", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["uk"] = new("Ukrainian", "Українська", "uk", "ukr"),
         ["ur"] = new("Urdu", "اردو", "ur", "urd"),
-        ["ug"] = new("Uyghur", "ئۇيغۇرچە", "ug", "uig", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["uz"] = new("Uzbek", "Uzbek", "uz", "uzb"),
+        ["uzbcyr"] = new("Uzbek (Cyrillic)", "Ўзбекча", "uzbcyr", "uzbcyr", TranslationServices.Yandex),
         ["vi"] = new("Vietnamese", "Tiếng Việt", "vi", "vie"),
-        ["cy"] = new("Welsh", "Cymraeg", "cy", "cym"),
         ["xh"] = new("Xhosa", "isiXhosa", "xh", "xho", TranslationServices.Google | TranslationServices.Yandex),
         ["yi"] = new("Yiddish", "ייִדיש", "yi", "yid", TranslationServices.Google | TranslationServices.Yandex),
         ["yo"] = new("Yoruba", "Èdè Yorùbá", "yo", "yor", TranslationServices.Google),
+        ["yua"] = new("Yucatec Maya", "Yucatec Maya", "yua", "yua", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["yue"] = new("Cantonese", "粵語", "yue", "yue", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["zh-CN"] = new("Chinese (Simplified)", "中文 (简体)", "zh-CN", "zho-CN"),
+        ["zh-TW"] = new("Chinese (Traditional)", "繁體中文 (繁體)", "zh-TW", "zho-TW", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["zu"] = new("Zulu", "Isi-Zulu", "zu", "zul"),
 
-        ["as"] = new("Assamese", "অসমীয়া", "as", "asm", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["yue"] = new("Cantonese", "粵語", "yue", "yue", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["lzh"] = new("Chinese (Literary)", "中文 (文言文)", "lzh", "lzh", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["prs"] = new("Dari", "دری", "prs", "prs", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["dv"] = new("Divehi", "ދިވެހިބަސް", "dv", "div", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["fj"] = new("Fijian", "Na Vosa Vakaviti", "fj", "fij", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["fil"] = new("Filipino", "Filipino", "fil", "fil", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["fr-CA"] = new("French (Canada)", "Français (Canada)", "fr-CA", "fr-CA", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["fo"] = new("Faroese", "føroyskt mál", "fo", "fao", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["mww"] = new("Hmong Daw", "Hmong Daw", "mww", "mww", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["ikt"] = new("Inuinnaqtun", "Inuinnaqtun", "ikt", "ikt", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["iu"] = new("Inuktitut", "ᐃᓄᒃᑎᑐᑦ", "iu", "iku", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["iu-Latn"] = new("Inuktitut (Latin)", "Inuktitut (Latin)", "iu-Latn", "iu-Latn", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["mn-Mong"] = new("Mongolian (Traditional)", "ᠮᠣᠩᠭᠣᠯ ᠬᠡᠯᠡ", "mn-Mong", "mn-Mong", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["pt-PT"] = new("Portuguese (Portugal)", "Português (Portugal)", "pt-PT", "pt-PT", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["otq"] = new("Querétaro Otomi", "Hñähñu", "otq", "otq", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["sr-Latn"] = new("Serbian (Latin)", "Srpski (latinica)", "sr-Latn", "srp-Latn", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["ty"] = new("Tahitian", "Reo Tahiti", "ty", "tah", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["bo"] = new("Tibetan", "བོད་སྐད་", "bo", "bod", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["ti"] = new("Tigrinya", "ትግር", "ti", "tir", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["to"] = new("Tongan", "Lea Fakatonga", "to", "ton", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["tlh"] = new("Klingon", "tlhIngan Hol", "tlh", "tlh", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["kmr"] = new("Kurdish (Northern)", "Kurdî (Bakur)", "kmr", "kmr", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["hsb"] = new("Upper Sorbian", "Hornjoserbšćina", "hsb", "hsb", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["yua"] = new("Yucatec Maya", "Yucatec Maya", "yua", "yua", TranslationServices.Bing | TranslationServices.Microsoft),
-
-        ["ba"] = new("Bashkir", "Bashkir", "ba", "bak", TranslationServices.Bing | TranslationServices.Microsoft | TranslationServices.Yandex),
-        ["cv"] = new("Chuvash", "Чӑвашла", "cv", "chv", TranslationServices.Yandex),
-        ["mhr"] = new("Eastern Mari", "олык марий", "mhr", "mhr", TranslationServices.Yandex),
-        ["emj"] = new("Emoji", "Emoji", "emj", "emj", TranslationServices.Yandex), // Not present in Yandex.Cloud
-        ["kazlat"] = new("Kazakh (Latin)", "qazaqşa", "kazlat", "kazlat", TranslationServices.Yandex),
-        ["pap"] = new("Papiamento", "Papiamento", "pap", "pap", TranslationServices.Yandex),
-        ["sjn"] = new("Sindarin", "Eledhrim", "sjn", "sjn", TranslationServices.Yandex), // Not present in Yandex.Cloud
-        ["udm"] = new("Udmurt", "Удмурт кыл", "udm", "udm", TranslationServices.Yandex),
-        ["uzbcyr"] = new("Uzbek (Cyrillic)", "Ўзбекча", "uzbcyr", "uzbcyr", TranslationServices.Yandex),
-        ["mrj"] = new("Western Mari", "Мары йӹлмӹ", "mrj", "mrj", TranslationServices.Yandex),
-        ["sah"] = new("Yakut", "Саха тыла", "sah", "sah", TranslationServices.Yandex),
-
-        ["tlh-Piqd"] = new("Klingon (pIqaD)", "Klingon (pIqaD)", "tlh-Piqd", "tlh-Piqd", TranslationServices.Microsoft), // For some reason Bing stopped supporting this language, ty Microsoft
-    });
+    // ToDo: Delete or move the below entries after testing
+    //["chr-CHER-US"] = new("Cherokee", "Cherokee", "chr-CHER-US", "chr-CHER-US",                                 TranslationServices.Google),
+    //["chr"] = new("Cherokee", "Cherokee", "chr", "chr", TranslationServices.Bing | TranslationServices.Microsoft),
+    //["kok"] = new("Konkani (India)", "Konkani (India)", "kok", "kok",           TranslationServices.Yandex),
+    //["kok-IN"] = new("Konkani (India)", "Konkani (India)", "kok-IN", "kok-IN",          TranslationServices.Google),
+    //["nn-NO"] = new("Norwegian Nynorsk", "Norwegian Nynorsk", "nn-NO", "nn-NO",         TranslationServices.Google),
+    //["nn"] = new("Norwegian Nynorsk", "Norwegian Nynorsk", "nn", "nno",         TranslationServices.Google),
+    //["xx"] = new("xxxx", "xxxx", "xx", "xxx",                                 TranslationServices.Google),
+    }); // Allow other classes to access the language pool
 }

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Version>2.1.1</Version>
 	<LangVersion>10</LangVersion>
-	<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
+	<TargetFrameworks>net6.0</TargetFrameworks>
     <Authors>d4n3436</Authors>
     <Description>A collection of free translation APIs (Google Translate, Bing Translator, Microsoft Translator and Yandex.Translate). Currently supports translation, transliteration, language detection and text-to-speech.</Description>
     <NeutralLanguage>en</NeutralLanguage>
@@ -18,13 +18,16 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)'!='net6.0' ">
-    <PackageReference Include="System.Text.Json" Version="6.0.0" />
-    <PackageReference Include="Nullable" Version="1.3.1">
-	  <PrivateAssets>all</PrivateAssets>
-	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
+  <PropertyGroup>
+  	<SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+  	<RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
+  	<ImplicitUsings>enable</ImplicitUsings>
+  	<Company>d4n3436</Company>
+  </PropertyGroup>	
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-windows|AnyCPU'">
+    <NoWarn>1701;1702;</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-windows|AnyCPU'">
+    <NoWarn>1701;1702;</NoWarn>
+  </PropertyGroup>
 </Project>
