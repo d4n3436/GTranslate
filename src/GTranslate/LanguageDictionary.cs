@@ -2,25 +2,69 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.ConstrainedExecution;
 
 namespace GTranslate;
 
-public class LanguageServiceDetails
+public class LanguageServiceDetails : LanguageDictionary
 {
-    private LanguageDictionary languagedictionary = new();
-    public IReadOnlyDictionary<string, Language> Languages { get { return languagedictionary._languages; } } // Allow other classes to access the language pool
-
+    public IReadOnlyDictionary<string, Language> Languages { get { return _languages; } } // Allow other classes to access the language pool
 }
 
 /// <summary>
 /// Represents the default language dictionary used in GTranslate. It contains all the supported languages across all the included translators.
 /// </summary>
-public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
+public class LanguageDictionary : ILanguageDictionary<string, Language>
 {
-    internal LanguageDictionary() => Aliases = new ReadOnlyDictionary<string, string>(BuildLanguageAliases());
+    internal LanguageDictionary()
+    {
+        Aliases = new ReadOnlyDictionary<string, string>(BuildLanguageAliases());
+        ValidateLanguageSets(); // The implementation is only called in Debug mode.
+    }
+    [ConditionalAttribute("DEBUG")]
+    private void ValidateLanguageSets() // Implementation is only called in Debug mode
+    {   // Validate that the language set all have unique keys, Names, and ISO6391
+        System.Collections.Generic.SortedList<string, GTranslate.Language> SortedLanguageKeys = new();
+        System.Collections.Generic.SortedList<string, GTranslate.Language> SortedLanguageLangNames = new();
+        System.Collections.Generic.SortedList<string, GTranslate.Language> SortedLanguageISO6391s = new();
+        foreach ( var language in _languages )
+        {
+            try
+{
+                SortedLanguageKeys.Add(language.Key, language.Value); // This will fail if there's a duplicate key
+            }
+            catch(Exception e)
+            {
+                string Msg = $"Error: Duplicate key found in language list. See {language.Key} - {language.Value.Name} - {language.Value.ISO6391} ; ExceptionMsg={e.Message}";
+                Debug.WriteLine(Msg);
+                throw new Exception(Msg);
+            }
 
+            try
+            {
+                SortedLanguageLangNames.Add(language.Value.Name, language.Value); // This will fail if there's a duplicate language name
+            }
+            catch ( Exception e )
+            {
+                string Msg = $"Error: Duplicate language name found in language list. See {language.Key} - {language.Value.Name} - {language.Value.ISO6391} ; ExceptionMsg={e.Message}";
+                Debug.WriteLine(Msg);
+                throw new Exception(Msg);
+            }
+
+            try
+            {
+                SortedLanguageISO6391s.Add(language.Value.ISO6391, language.Value); // This will fail if there's a duplicate ISO6391
+            }
+            catch ( Exception e )
+            {
+                string Msg = $"Error: Duplicate language ISO6391 found in language list. See {language.Key} - {language.Value.Name} - {language.Value.ISO6391} ; ExceptionMsg={e.Message}";
+                Debug.WriteLine(Msg);
+                throw new Exception(Msg);
+            }
+        }
+    }
     /// <inheritdoc />
     public IEnumerator<KeyValuePair<string, Language>> GetEnumerator()
         => _languages.GetEnumerator();
@@ -124,7 +168,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         return aliases;
     }
 
-    public readonly IReadOnlyDictionary<string, Language> _languages = new ReadOnlyDictionary<string, Language>(new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
+    protected readonly IReadOnlyDictionary<string, Language> _languages = new ReadOnlyDictionary<string, Language>(new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
     {
         ["af"] = new("Afrikaans", "Afrikaans", "af", "afr"),
         ["am"] = new("Amharic", "አማርኛ", "am", "amh"),
@@ -290,13 +334,31 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["zh-TW"] = new("Chinese (Traditional)", "繁體中文 (繁體)", "zh-TW", "zho-TW", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["zu"] = new("Zulu", "Isi-Zulu", "zu", "zul"),
 
-    // ToDo: Delete or move the below entries after testing
-    //["chr-CHER-US"] = new("Cherokee", "Cherokee", "chr-CHER-US", "chr-CHER-US",                                 TranslationServices.Google),
-    //["chr"] = new("Cherokee", "Cherokee", "chr", "chr", TranslationServices.Bing | TranslationServices.Microsoft),
-    //["kok"] = new("Konkani (India)", "Konkani (India)", "kok", "kok",           TranslationServices.Yandex),
-    //["kok-IN"] = new("Konkani (India)", "Konkani (India)", "kok-IN", "kok-IN",          TranslationServices.Google),
-    //["nn-NO"] = new("Norwegian Nynorsk", "Norwegian Nynorsk", "nn-NO", "nn-NO",         TranslationServices.Google),
-    //["nn"] = new("Norwegian Nynorsk", "Norwegian Nynorsk", "nn", "nno",         TranslationServices.Google),
+        // Templates for adding new languages
+        //["xx"] = new("xxxx", "xxxx", "xx", "xxx"),
     //["xx"] = new("xxxx", "xxxx", "xx", "xxx",                                 TranslationServices.Google),
-    }); // Allow other classes to access the language pool
+        //["xx"] = new("xxxx", "xxxx", "xx", "xxx",                                 TranslationServices.Bing | TranslationServices.Microsoft),
+        //["xx"] = new("xxxx", "xxxx", "xx", "xxx",                                 TranslationServices.Yandex),
+    });
 }
+
+/*      **** Keeping a list of failed language tags, so as to avoid repeating attempt to include them again. ****
+        ["chr"] = new("Cherokee", "Cherokee", "chr", "chr", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["chr-CHER-US"] = new("Cherokee", "Cherokee", "chr-CHER-US", "chr-CHER-US",                                 TranslationServices.Google),
+        ["doi-Deva"] = new("Dogri doi-Deva TestEntry", "Dogri", "doi-Deva", "doi-Deva",                                 TranslationServices.Google),
+        ["doi-Deva-IN"] = new("Dogri India TestEntry", "doi-Deva-IN", "doi-Deva-IN", "doi-Deva-IN",                                 TranslationServices.Google),
+        ["kk-KZ"] = new("Kazakh kk-KZ TestEntry", "kk-KZ", "kk-KZ", "kk-KZ",                                 TranslationServices.Google),
+        ["kok"] = new("Konkani (India)", "Konkani (India)", "kok", "kok",           TranslationServices.Yandex),
+        ["kok-IN"] = new("Konkani (India)", "Konkani (India)", "kok-IN", "kok-IN",          TranslationServices.Google),
+        ["ku-Arab"] = new("ku-Arab TestEntry", "ku-Arab", "ku-Arab", "ku-Arab",                                 TranslationServices.Google),
+        ["ku-Arab-IQ"] = new("ku-Arab-IQ TestEntry", "ku-Arab-IQ", "ku-Arab-IQ", "ku-Arab-IQ",                                 TranslationServices.Google),
+        ["ku-Arab-IR"] = new("ku-Arab-IR TestEntry", "ku-Arab-IR", "ku-Arab-IR", "ku-Arab-IR",                                 TranslationServices.Google),
+        ["nn"] = new("Norwegian Nynorsk", "Norwegian Nynorsk", "nn", "nno",         TranslationServices.Google),
+        ["nn-NO"] = new("Norwegian Nynorsk", "Norwegian Nynorsk", "nn-NO", "nn-NO",         TranslationServices.Google),
+        ["quz"] = new("Quechua quz TestEntry", "Quechua", "quz", "quz",                                 TranslationServices.Google),
+        ["syr"] = new("Syriac", "leššānā Suryāyā", "syr", "syr",                                 TranslationServices.Google),
+        ["uz-Arab"] = new("Uzbek uz-Arab TestEntry", "Uzbek", "uz-Arab", "uz-Arab",                                 TranslationServices.Google),
+        ["uz-Cyrl"] = new("Uzbek uz-Cyrl TestEntry", "Uzbek", "uz-Cyrl", "uz-Cyrl",                                 TranslationServices.Google),
+        ["uz-Cyrl-UZ"] = new("Uzbek uz-Cyrl-UZ TestEntry", "Uzbek", "uz-Cyrl-UZ", "uz-Cyrl-UZ",                                 TranslationServices.Google),
+        ["uz-Latn"] = new("Uzbek uz-Latn TestEntry", "Uzbek", "uz-Latn", "uz-Latn",                                 TranslationServices.Google),
+*/
