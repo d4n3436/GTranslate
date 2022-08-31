@@ -2,69 +2,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.ConstrainedExecution;
 
 namespace GTranslate;
-
-public class LanguageServiceDetails : LanguageDictionary
-{
-    public IReadOnlyDictionary<string, Language> Languages { get { return _languages; } } // Allow other classes to access the language pool
-}
 
 /// <summary>
 /// Represents the default language dictionary used in GTranslate. It contains all the supported languages across all the included translators.
 /// </summary>
-public class LanguageDictionary : ILanguageDictionary<string, Language>
+public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
 {
-    internal LanguageDictionary()
-    {
-        Aliases = new ReadOnlyDictionary<string, string>(BuildLanguageAliases());
-        ValidateLanguageSets(); // The implementation is only called in Debug mode.
-    }
-    [ConditionalAttribute("DEBUG")]
-    private void ValidateLanguageSets() // Implementation is only called in Debug mode
-    {   // Validate that the language set all have unique keys, Names, and ISO6391
-        System.Collections.Generic.SortedList<string, GTranslate.Language> SortedLanguageKeys = new();
-        System.Collections.Generic.SortedList<string, GTranslate.Language> SortedLanguageLangNames = new();
-        System.Collections.Generic.SortedList<string, GTranslate.Language> SortedLanguageISO6391s = new();
-        foreach ( var language in _languages )
-        {
-            try
-{
-                SortedLanguageKeys.Add(language.Key, language.Value); // This will fail if there's a duplicate key
-            }
-            catch(Exception e)
-            {
-                string Msg = $"Error: Duplicate key found in language list. See {language.Key} - {language.Value.Name} - {language.Value.ISO6391} ; ExceptionMsg={e.Message}";
-                Debug.WriteLine(Msg);
-                throw new Exception(Msg);
-            }
+    internal LanguageDictionary() => Aliases = new ReadOnlyDictionary<string, string>(BuildLanguageAliases());
 
-            try
-            {
-                SortedLanguageLangNames.Add(language.Value.Name, language.Value); // This will fail if there's a duplicate language name
-            }
-            catch ( Exception e )
-            {
-                string Msg = $"Error: Duplicate language name found in language list. See {language.Key} - {language.Value.Name} - {language.Value.ISO6391} ; ExceptionMsg={e.Message}";
-                Debug.WriteLine(Msg);
-                throw new Exception(Msg);
-            }
-
-            try
-            {
-                SortedLanguageISO6391s.Add(language.Value.ISO6391, language.Value); // This will fail if there's a duplicate ISO6391
-            }
-            catch ( Exception e )
-            {
-                string Msg = $"Error: Duplicate language ISO6391 found in language list. See {language.Key} - {language.Value.Name} - {language.Value.ISO6391} ; ExceptionMsg={e.Message}";
-                Debug.WriteLine(Msg);
-                throw new Exception(Msg);
-            }
-        }
-    }
     /// <inheritdoc />
     public IEnumerator<KeyValuePair<string, Language>> GetEnumerator()
         => _languages.GetEnumerator();
@@ -168,7 +116,7 @@ public class LanguageDictionary : ILanguageDictionary<string, Language>
         return aliases;
     }
 
-    protected readonly IReadOnlyDictionary<string, Language> _languages = new ReadOnlyDictionary<string, Language>(new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
+    private readonly IReadOnlyDictionary<string, Language> _languages = new ReadOnlyDictionary<string, Language>(new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
     {
         ["af"] = new("Afrikaans", "Afrikaans", "af", "afr"),
         ["am"] = new("Amharic", "አማርኛ", "am", "amh"),
