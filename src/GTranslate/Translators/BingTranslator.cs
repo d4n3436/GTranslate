@@ -20,7 +20,6 @@ public sealed class BingTranslator : ITranslator, IDisposable
     private static readonly Uri _translatorPageUri = new($"{HostUrl}/translator");
     internal const string Iid = "translator.5023.1";
     private static readonly byte[] _credentialsStart = Encoding.UTF8.GetBytes("var params_RichTranslateHelper = [");
-    private const string _defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36";
 
     /// <inheritdoc/>
     public string Name => nameof(BingTranslator);
@@ -48,7 +47,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
         if (httpClient.DefaultRequestHeaders.UserAgent.Count == 0)
         {
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_defaultUserAgent);
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(Constants.DefaultUserAgent);
         }
 
         _httpClient = httpClient;
