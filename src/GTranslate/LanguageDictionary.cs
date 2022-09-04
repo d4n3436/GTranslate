@@ -176,7 +176,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["eu"] = new("Basque", "Euskara", "eu", "eus"),
         ["fa"] = new("Persian", "فارسی", "fa", "fas"),
         ["fi"] = new("Finnish", "Suomi", "fi", "fin"),
-        ["fil"] = new("Filipino", "Tagalog", "fil", "fil", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["fil"] = new("Filipino", "Pilipino", "fil", "fil", TranslationServices.Bing | TranslationServices.Microsoft),
         ["fj"] = new("Fijian", "Na Vosa Vakaviti", "fj", "fij", TranslationServices.Bing | TranslationServices.Microsoft),
         ["fo"] = new("Faroese", "føroyskt mál", "fo", "fao", TranslationServices.Bing | TranslationServices.Microsoft),
         ["fr"] = new("French", "Français", "fr", "fra"),
