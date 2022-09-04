@@ -183,7 +183,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["fr-CA"] = new("French (Canada)", "Français (Canada)", "fr-CA", "fr-CA", TranslationServices.Bing | TranslationServices.Microsoft),
         ["fy"] = new("Frisian", "Frysk", "fy", "fry", TranslationServices.Google),
         ["ga"] = new("Irish", "Gaeilge", "ga", "gle"),
-        ["gd"] = new("Gaelic", "Gàidhlig", "gd", "gla", TranslationServices.Google | TranslationServices.Yandex),
+        ["gd"] = new("Scottish Gaelic", "Gàidhlig", "gd", "gla", TranslationServices.Google | TranslationServices.Yandex),
         ["gl"] = new("Galician", "Galego", "gl", "glg"),
         ["gn"] = new("Guarani", "avañeʼẽ", "gn", "grn", TranslationServices.Google),
         ["gu"] = new("Gujarati", "ગુજરાતી", "gu", "guj"),
