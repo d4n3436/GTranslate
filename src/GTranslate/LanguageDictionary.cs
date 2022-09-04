@@ -169,7 +169,6 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["el"] = new("Greek", "Ελληνικά", "el", "ell"),
         ["emj"] = new("Emoji", "Emoji", "emj", "emj", TranslationServices.Yandex), // Not present in Yandex.Cloud
         ["en"] = new("English", "English", "en", "eng"),
-        ["en-GB"] = new("English (UK)", "English (UK)", "en-GB", "en-GB", TranslationServices.Google),
         ["eo"] = new("Esperanto", "Esperanto", "eo", "epo", TranslationServices.Google | TranslationServices.Yandex),
         ["es"] = new("Spanish", "Español", "es", "spa"),
         ["es-MX"] = new("Spanish (Mexico)", "español (México)", "es-MX", "es-MX", TranslationServices.Bing | TranslationServices.Microsoft),
