@@ -289,7 +289,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["tw"] = new("Twi", "Twi", "tw", "twi", TranslationServices.Google),
         ["ty"] = new("Tahitian", "Reo Tahiti", "ty", "tah", TranslationServices.Bing | TranslationServices.Microsoft),
         ["udm"] = new("Udmurt", "Удмурт кыл", "udm", "udm", TranslationServices.Yandex),
-        ["ug"] = new("Uighur", "ئۇيغۇرچە", "ug", "uig", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
+        ["ug"] = new("Uyghur", "ئۇيغۇرچە", "ug", "uig", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["uk"] = new("Ukrainian", "Українська", "uk", "ukr"),
         ["ur"] = new("Urdu", "اردو", "ur", "urd"),
         ["uz"] = new("Uzbek", "Uzbek", "uz", "uzb"),
