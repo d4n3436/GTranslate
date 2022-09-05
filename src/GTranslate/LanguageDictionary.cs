@@ -251,7 +251,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["prs"] = new("Dari", "دری", "prs", "prs", TranslationServices.Bing | TranslationServices.Microsoft),
         ["ps"] = new("Pashto", "پښتو", "ps", "pus", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["pt"] = new("Portuguese", "Português", "pt", "por"),
-        ["pt-BR"] = new("Portuguese (Brazil)", "Português (Brazil)", "pt-BR", "pt-BR", TranslationServices.Google),
+        ["pt-PT"] = new("Portuguese (Portugal)", "Português (Portugal)", "pt-PT", "pt-PT", TranslationServices.Bing | TranslationServices.Microsoft),
         ["qu"] = new("Quechua", "Runa simi", "qu", "que", TranslationServices.Google),
         ["ro"] = new("Romanian", "Română", "ro", "ron"),
         ["ru"] = new("Russian", "Русский", "ru", "rus"),
