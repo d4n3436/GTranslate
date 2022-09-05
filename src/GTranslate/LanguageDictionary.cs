@@ -176,7 +176,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["eu"] = new("Basque", "Euskara", "eu", "eus"),
         ["fa"] = new("Persian", "فارسی", "fa", "fas"),
         ["fi"] = new("Finnish", "Suomi", "fi", "fin"),
-        ["fil"] = new("Filipino", "Pilipino", "fil", "fil", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["fil"] = new("Filipino", "Filipino", "fil", "fil", TranslationServices.Bing | TranslationServices.Microsoft),
         ["fj"] = new("Fijian", "Na Vosa Vakaviti", "fj", "fij", TranslationServices.Bing | TranslationServices.Microsoft),
         ["fo"] = new("Faroese", "føroyskt mál", "fo", "fao", TranslationServices.Bing | TranslationServices.Microsoft),
         ["fr"] = new("French", "Français", "fr", "fra"),
@@ -279,7 +279,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["th"] = new("Thai", "ไทย", "th", "tha"),
         ["ti"] = new("Tigrinya", "ትግር", "ti", "tir", TranslationServices.Bing | TranslationServices.Microsoft),
         ["tk"] = new("Turkmen", "Türkmen Dili", "tk", "tuk", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
-        ["tl"] = new("Tagalog", "Pilipino", "tl", "tgl", TranslationServices.Google | TranslationServices.Yandex),
+        ["tl"] = new("Tagalog", "Tagalog", "tl", "tgl", TranslationServices.Google | TranslationServices.Yandex),
         ["tlh"] = new("Klingon", "tlhIngan Hol", "tlh", "tlh", TranslationServices.Bing | TranslationServices.Microsoft),
         ["tlh-Piqd"] = new("Klingon (pIqaD)", "Klingon (pIqaD)", "tlh-Piqd", "tlh-Piqd", TranslationServices.Microsoft), // For some reason Bing stopped supporting this language, ty Microsoft
         ["to"] = new("Tongan", "Lea Fakatonga", "to", "ton", TranslationServices.Bing | TranslationServices.Microsoft),
