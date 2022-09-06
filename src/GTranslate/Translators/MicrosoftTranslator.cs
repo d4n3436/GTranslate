@@ -213,10 +213,12 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
             .GetPropertyOrDefault("language")
             .GetStringOrDefault(fromLanguage?.ISO6391) ?? throw new TranslatorException("Failed to get the source language.", Name);
 
+        string targetLanguage = root.GetProperty("translations")[0].GetProperty("to").GetString() ?? toLanguage.ISO6391;
+
         float? score = detectedLanguage.TryGetSingle("score", out float temp) ? temp : null;
         string translation = root.GetProperty("translations")[0].GetProperty("text").GetString() ?? throw new TranslatorException("Failed to get the translation.", Name);
 
-        return new MicrosoftTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(sourceLanguage), score);
+        return new MicrosoftTranslationResult(translation, text, Language.GetLanguage(targetLanguage), Language.GetLanguage(sourceLanguage), score);
     }
 
     /// <summary>
