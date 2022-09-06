@@ -99,7 +99,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        string payload = $"[[\"{text.AsSpan().SafeJsonTextEncode()}\",\"{fromLanguage?.ISO6391 ?? "auto"}\",\"{toLanguage.ISO6391}\",true],[null]]";
+        string payload = $"[[\"{text.AsSpan().SafeJsonTextEncode()}\",\"{GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto")}\",\"{GoogleHotPatch(toLanguage.ISO6391)}\",true],[null]]";
 
         using var request = BuildRequest(_translateRpcId, payload);
         using var document = await SendAndParseResponseAsync(request).ConfigureAwait(false);
@@ -315,6 +315,20 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         RequestUri = new Uri($"_/TranslateWebserverUi/data/batchexecute?rpcids={rpcId}", UriKind.Relative),
         Content = new FormUrlEncodedContent(new KeyValuePair<string, string>[] { new("f.req", $"[[[\"{rpcId}\",\"{JsonEncodedText.Encode(payload)}\",null,\"generic\"]]]") })
     };
+
+    /// <summary>
+    /// Hot-patches language codes to Google-specific ones.
+    /// </summary>
+    /// <param name="languageCode">The language code.</param>
+    /// <returns>The hot-patched language code.</returns>
+    private static string GoogleHotPatch(string languageCode)
+    {
+        return languageCode switch
+        {
+            "mni" => "mni-Mtei",
+            _ => languageCode
+        };
+    }
 
     /// <summary>
     /// Returns the name of this translator.

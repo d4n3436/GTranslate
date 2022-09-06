@@ -308,7 +308,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     {
         return languageCode switch
         {
-            "jv" => "jw",
+            "mni" => "mni-Mtei",
             _ => languageCode
         };
     }
