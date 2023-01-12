@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using GTranslate.Extensions;
@@ -178,18 +179,18 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         using var content = new FormUrlEncodedContent(data);
         using var response = await _httpClient.PostAsync(_transliterationApiUri, content).ConfigureAwait(false);
-        string result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
         if (response.StatusCode == HttpStatusCode.BadRequest)
         {
-            throw new TranslatorException(result, Name);
+            throw new TranslatorException(Encoding.UTF8.GetString(bytes), Name);
         }
 
         response.EnsureSuccessStatusCode();
         var target = Language.GetLanguage(toLanguage.ISO6391);
         var source = Language.GetLanguage(fromLanguage.ISO6391);
 
-        return new YandexTransliterationResult(JsonSerializer.Deserialize<string>(result)!, text, target, source);
+        return new YandexTransliterationResult(JsonSerializer.Deserialize(bytes, StringContext.Default.String)!, text, target, source);
     }
 
     /// <summary>

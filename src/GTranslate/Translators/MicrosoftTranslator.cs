@@ -407,7 +407,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
             response.EnsureSuccessStatusCode();
 
             using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-            _voices = await JsonSerializer.DeserializeAsync<MicrosoftVoice[]>(stream).ConfigureAwait(false) ?? throw new TranslatorException("Failed to deserialize voice list.", Name);
+            _voices = await JsonSerializer.DeserializeAsync(stream, MicrosoftVoiceContext.Default.MicrosoftVoiceArray).ConfigureAwait(false) ?? throw new TranslatorException("Failed to deserialize voice list.", Name);
         }
         finally
         {
