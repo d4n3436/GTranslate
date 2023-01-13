@@ -18,8 +18,8 @@ public sealed class BingTranslator : ITranslator, IDisposable
 {
     internal const string HostUrl = "https://www.bing.com";
     private static readonly Uri _translatorPageUri = new($"{HostUrl}/translator");
-    internal const string Iid = "translator.5023.1";
-    private static ReadOnlySpan<byte> CredentialsStart => "var params_RichTranslateHelper = ["u8;
+    internal const string Iid = "translator.5024.1";
+    private static ReadOnlySpan<byte> CredentialsStart => "var params_AbusePreventionHelper = ["u8;
 
     /// <inheritdoc/>
     public string Name => nameof(BingTranslator);
