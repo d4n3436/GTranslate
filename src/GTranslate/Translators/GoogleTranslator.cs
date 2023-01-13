@@ -118,16 +118,16 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
 
-        var sentences = document.RootElement.GetProperty("sentences");
+        var sentences = document.RootElement.GetProperty("sentences"u8);
         if (sentences.ValueKind != JsonValueKind.Array)
         {
             throw new TranslatorException("Failed to get the translated text.", Name);
         }
 
-        string translation = string.Concat(sentences.EnumerateArray().Select(x => x.GetProperty("trans").GetString()));
-        string transliteration = string.Concat(sentences.EnumerateArray().Select(x => x.GetPropertyOrDefault("translit").GetStringOrDefault()));
-        string source = document.RootElement.GetProperty("src").GetString() ?? string.Empty;
-        float? confidence = document.RootElement.TryGetSingle("confidence", out float temp) ? temp : null;
+        string translation = string.Concat(sentences.EnumerateArray().Select(x => x.GetProperty("trans"u8).GetString()));
+        string transliteration = string.Concat(sentences.EnumerateArray().Select(x => x.GetPropertyOrDefault("translit"u8).GetStringOrDefault()));
+        string source = document.RootElement.GetProperty("src"u8).GetString() ?? string.Empty;
+        float? confidence = document.RootElement.TryGetSingle("confidence"u8, out float temp) ? temp : null;
 
         return new GoogleTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(source), transliteration, confidence);
     }
@@ -226,7 +226,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
 
         var textParts = text.SplitWithoutWordBreaking().ToArray();
         var tasks = new Task<ReadOnlyMemory<byte>>[textParts.Length];
-        for (var i = 0; i < textParts.Length; i++)
+        for (int i = 0; i < textParts.Length; i++)
         {
             tasks[i] = ProcessRequestAsync(textParts[i], i, textParts.Length);
         }
@@ -234,7 +234,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         // Send requests and parse responses in parallel
         var chunks = await Task.WhenAll(tasks).ConfigureAwait(false);
 
-        return chunks.AsReadOnlySequence().AsStream();
+        return chunks.AsSpan().AsReadOnlySequence().AsStream();
 
         async Task<ReadOnlyMemory<byte>> ProcessRequestAsync(ReadOnlyMemory<char> textChunk, int index, int total)
         {

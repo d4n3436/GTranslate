@@ -26,18 +26,18 @@ internal static class StringExtensions
             }
             else
             {
-                index = current.Slice(0, maxLength).Span.LastIndexOf(' ');
+                index = current[..maxLength].Span.LastIndexOf(' ');
                 length = index == -1 ? maxLength : index;
             }
 
-            var line = current.Slice(0, length);
+            var line = current[..length];
             // skip a single space if there's one
             if (index != -1)
             {
                 length++;
             }
 
-            current = current.Slice(length, current.Length - length);
+            current = current[length..];
             yield return line;
         }
     }

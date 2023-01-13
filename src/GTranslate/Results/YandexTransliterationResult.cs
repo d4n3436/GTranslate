@@ -1,4 +1,5 @@
 ﻿using GTranslate.Translators;
+using System.Diagnostics;
 
 namespace GTranslate.Results;
 
@@ -15,13 +16,13 @@ public class YandexTransliterationResult : ITransliterationResult<Language>, ITr
         SourceLanguage = sourceLanguage;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc cref="ITransliterationResult{TLanguage}.Transliteration"/>
     public string Transliteration { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc cref="ITransliterationResult{TLanguage}.Source"/>
     public string Source { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc cref="ITransliterationResult{TLanguage}.Service"/>
     public string Service => nameof(YandexTranslator);
 
     /// <inheritdoc/>
@@ -31,9 +32,11 @@ public class YandexTransliterationResult : ITransliterationResult<Language>, ITr
     public Language SourceLanguage { get; }
 
     /// <inheritdoc />
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     ILanguage ITransliterationResult<ILanguage>.SourceLanguage => SourceLanguage;
 
     /// <inheritdoc />
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     ILanguage ITransliterationResult<ILanguage>.TargetLanguage => TargetLanguage;
 
     /// <inheritdoc/>

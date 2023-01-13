@@ -243,7 +243,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         // Send requests and parse responses in parallel
         var chunks = await Task.WhenAll(tasks).ConfigureAwait(false);
         
-        return chunks.AsReadOnlySequence().AsStream();
+        return chunks.AsSpan().AsReadOnlySequence().AsStream();
         
         async Task<ReadOnlyMemory<byte>> ProcessRequestAsync(ReadOnlyMemory<char> textChunk)
         {

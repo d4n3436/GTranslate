@@ -19,7 +19,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
     internal const string HostUrl = "https://www.bing.com";
     private static readonly Uri _translatorPageUri = new($"{HostUrl}/translator");
     internal const string Iid = "translator.5023.1";
-    private static readonly byte[] _credentialsStart = Encoding.UTF8.GetBytes("var params_RichTranslateHelper = [");
+    private static ReadOnlySpan<byte> CredentialsStart => "var params_RichTranslateHelper = ["u8;
 
     /// <inheritdoc/>
     public string Name => nameof(BingTranslator);
@@ -112,21 +112,21 @@ public sealed class BingTranslator : ITranslator, IDisposable
         TranslatorGuards.ThrowIfStatusCodeIsPresent(root);
 
         var first = root.FirstOrDefault();
-        var translation = first.GetPropertyOrDefault("translations").FirstOrDefault();
+        var translation = first.GetPropertyOrDefault("translations"u8).FirstOrDefault();
 
         if (first.ValueKind == JsonValueKind.Undefined || translation.ValueKind == JsonValueKind.Undefined)
         {
             throw new TranslatorException("The API returned an empty response.", Name);
         }
 
-        var langDetection = first.GetProperty("detectedLanguage");
-        string detectedLanguage = langDetection.GetProperty("language").GetString() ?? string.Empty;
-        float score = langDetection.GetProperty("score").GetSingle();
-        string translatedText = translation.GetProperty("text").GetString() ?? throw new TranslatorException("Failed to get the translated text.", Name);
-        string targetLanguage = translation.GetProperty("to").GetString() ?? toLanguage.ISO6391;
-        string? script = translation.GetPropertyOrDefault("transliteration").GetPropertyOrDefault("script").GetStringOrDefault();
-        string? transliteration = translation.GetPropertyOrDefault("transliteration").GetPropertyOrDefault("text").GetStringOrDefault()
-                                  ?? root.ElementAtOrDefault(1).GetPropertyOrDefault("inputTransliteration").GetStringOrDefault();
+        var langDetection = first.GetProperty("detectedLanguage"u8);
+        string detectedLanguage = langDetection.GetProperty("language"u8).GetString() ?? string.Empty;
+        float score = langDetection.GetProperty("score"u8).GetSingle();
+        string translatedText = translation.GetProperty("text"u8).GetString() ?? throw new TranslatorException("Failed to get the translated text.", Name);
+        string targetLanguage = translation.GetProperty("to"u8).GetString() ?? toLanguage.ISO6391;
+        string? script = translation.GetPropertyOrDefault("transliteration"u8).GetPropertyOrDefault("script"u8).GetStringOrDefault();
+        string? transliteration = translation.GetPropertyOrDefault("transliteration"u8).GetPropertyOrDefault("text"u8).GetStringOrDefault()
+                                  ?? root.ElementAtOrDefault(1).GetPropertyOrDefault("inputTransliteration"u8).GetStringOrDefault();
 
         return new BingTranslationResult(translatedText, text, Language.GetLanguage(targetLanguage), Language.GetLanguage(detectedLanguage), transliteration, script, score);
     }
@@ -248,14 +248,14 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
     internal static CachedObject<BingCredentials> GetCredentials(ReadOnlySpan<byte> bytes, ITranslator translator)
     {
-        int credentialsStartIndex = bytes.IndexOf(_credentialsStart);
+        int credentialsStartIndex = bytes.IndexOf(CredentialsStart);
         if (credentialsStartIndex == -1)
         {
             throw new TranslatorException("Unable to find the Bing credentials.", translator.Name);
         }
 
-        int keyStartIndex = credentialsStartIndex + _credentialsStart.Length;
-        int keyLength = bytes.Slice(keyStartIndex).IndexOf((byte)',');
+        int keyStartIndex = credentialsStartIndex + CredentialsStart.Length;
+        int keyLength = bytes[keyStartIndex..].IndexOf((byte)',');
         if (keyLength == -1)
         {
             throw new TranslatorException("Unable to find the Bing key.", translator.Name);
@@ -269,7 +269,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         }
 
         int tokenStartIndex = keyStartIndex + keyLength + 2;
-        int tokenLength = bytes.Slice(tokenStartIndex).IndexOf((byte)'"');
+        int tokenLength = bytes[tokenStartIndex..].IndexOf((byte)'"');
         if (tokenLength == -1)
         {
             throw new TranslatorException("Unable to find the Bing token.", translator.Name);

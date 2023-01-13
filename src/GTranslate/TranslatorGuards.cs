@@ -10,7 +10,7 @@ namespace GTranslate;
 
 internal static class TranslatorGuards
 {
-    public static void NotNull<T>(T? obj, [CallerArgumentExpression("obj")] string? parameterName = null)
+    public static void NotNull<T>(T? obj, [CallerArgumentExpression(nameof(obj))] string? parameterName = null)
         where T : class
     {
         if (obj is null)
@@ -20,7 +20,7 @@ internal static class TranslatorGuards
     }
 
     public static void LanguageFound(string? language, out Language lang, string message = "Unknown language.",
-        [CallerArgumentExpression("language")] string? parameterName = null)
+        [CallerArgumentExpression(nameof(language))] string? parameterName = null)
     {
         Language temp = null!;
         if (language is not null && !Language.TryGetLanguage(language, out temp!))
@@ -90,9 +90,9 @@ internal static class TranslatorGuards
     public static void ThrowIfStatusCodeIsPresent(JsonElement element)
     {
         // If we get a "statusCode" property, this means the response is not successful
-        if (element.TryGetInt32("statusCode", out int code))
+        if (element.TryGetInt32("statusCode"u8, out int code))
         {
-            string errorMessage = element.GetPropertyOrDefault("errorMessage").GetStringOrDefault($"The API returned status code {code}.");
+            string errorMessage = element.GetPropertyOrDefault("errorMessage"u8).GetStringOrDefault($"The API returned status code {code}.");
 
 #if NET5_0_OR_GREATER
             throw new HttpRequestException(errorMessage, null, (System.Net.HttpStatusCode)code);

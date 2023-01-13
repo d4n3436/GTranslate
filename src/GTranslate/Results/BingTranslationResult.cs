@@ -1,4 +1,5 @@
 ﻿using GTranslate.Translators;
+using System.Diagnostics;
 
 namespace GTranslate.Results;
 
@@ -19,13 +20,13 @@ public class BingTranslationResult : ITranslationResult<Language>, ITranslationR
         Score = score;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc cref="ITranslationResult{TLanguage}.Translation"/>
     public string Translation { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc cref="ITranslationResult{TLanguage}.Source"/>
     public string Source { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc cref="ITranslationResult{TLanguage}.Service"/>
     public string Service => nameof(BingTranslator);
 
     /// <inheritdoc/>
@@ -50,9 +51,11 @@ public class BingTranslationResult : ITranslationResult<Language>, ITranslationR
     public float Score { get; }
 
     /// <inheritdoc />
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     ILanguage ITranslationResult<ILanguage>.SourceLanguage => SourceLanguage;
 
     /// <inheritdoc />
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     ILanguage ITranslationResult<ILanguage>.TargetLanguage => TargetLanguage;
 
     /// <inheritdoc/>

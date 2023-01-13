@@ -208,15 +208,15 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
 
         var root = document.RootElement[0];
 
-        var detectedLanguage = root.GetPropertyOrDefault("detectedLanguage");
+        var detectedLanguage = root.GetPropertyOrDefault("detectedLanguage"u8);
         string sourceLanguage = detectedLanguage
-            .GetPropertyOrDefault("language")
+            .GetPropertyOrDefault("language"u8)
             .GetStringOrDefault(fromLanguage?.ISO6391) ?? throw new TranslatorException("Failed to get the source language.", Name);
 
-        string targetLanguage = root.GetProperty("translations")[0].GetProperty("to").GetString() ?? toLanguage.ISO6391;
+        string targetLanguage = root.GetProperty("translations"u8)[0].GetProperty("to"u8).GetString() ?? toLanguage.ISO6391;
 
-        float? score = detectedLanguage.TryGetSingle("score", out float temp) ? temp : null;
-        string translation = root.GetProperty("translations")[0].GetProperty("text").GetString() ?? throw new TranslatorException("Failed to get the translation.", Name);
+        float? score = detectedLanguage.TryGetSingle("score"u8, out float temp) ? temp : null;
+        string translation = root.GetProperty("translations"u8)[0].GetProperty("text"u8).GetString() ?? throw new TranslatorException("Failed to get the translation.", Name);
 
         return new MicrosoftTranslationResult(translation, text, Language.GetLanguage(targetLanguage), Language.GetLanguage(sourceLanguage), score);
     }
@@ -274,8 +274,8 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
 
         var root = document.RootElement[0];
-        string transliteration = root.GetProperty("text").GetString() ?? throw new TranslatorException("Failed to get the transliteration.", Name);
-        string script = root.GetProperty("script").GetString() ?? throw new TranslatorException("Failed to get the output script", Name);
+        string transliteration = root.GetProperty("text"u8).GetString() ?? throw new TranslatorException("Failed to get the transliteration.", Name);
+        string script = root.GetProperty("script"u8).GetString() ?? throw new TranslatorException("Failed to get the output script", Name);
 
         return new MicrosoftTransliterationResult(transliteration, text, script);
     }
@@ -310,7 +310,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
 
-        string language = document.RootElement[0].GetProperty("language").GetString() ?? throw new TranslatorException("Failed to get the detected language.", Name);
+        string language = document.RootElement[0].GetProperty("language"u8).GetString() ?? throw new TranslatorException("Failed to get the detected language.", Name);
 
         return Language.GetLanguage(language);
     }
@@ -471,9 +471,9 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
 
             // Authentication tokens seem to be always valid for 10 minutes
             // https://docs.microsoft.com/en-us/azure/cognitive-services/authentication?tabs=powershell#authenticate-with-an-authentication-token
-            int expiryDurationInMs = root.GetProperty("expiryDurationInMS").GetInt32OrDefault(600000);
-            string token = root.GetProperty("token").GetString() ?? throw new TranslatorException("Unable to get the Microsoft Azure Auth token.", Name);
-            string region = root.GetProperty("region").GetString() ?? throw new TranslatorException("Unable to get the Microsoft Azure API region.", Name);
+            int expiryDurationInMs = root.GetProperty("expiryDurationInMS"u8).GetInt32OrDefault(600000);
+            string token = root.GetProperty("token"u8).GetString() ?? throw new TranslatorException("Unable to get the Microsoft Azure Auth token.", Name);
+            string region = root.GetProperty("region"u8).GetString() ?? throw new TranslatorException("Unable to get the Microsoft Azure API region.", Name);
 
             var authInfo = new MicrosoftAuthTokenInfo(token, region);
 

@@ -114,7 +114,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         ThrowIfStatusCodeIsPresent(document.RootElement);
 
-        var textProp = document.RootElement.GetProperty("text");
+        var textProp = document.RootElement.GetProperty("text"u8);
         if (textProp.ValueKind != JsonValueKind.Array)
         {
             throw new TranslatorException("Failed to get the translated text.", Name);
@@ -122,15 +122,15 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         string translation = string.Concat(textProp.EnumerateArray().Select(x => x.GetString()));
 
-        string language = document.RootElement.GetProperty("lang").GetString() ?? throw new TranslatorException("Failed to get the source language.", Name);
+        string language = document.RootElement.GetProperty("lang"u8).GetString() ?? throw new TranslatorException("Failed to get the source language.", Name);
         int index = language.IndexOf('-');
         if (index == -1)
         {
             throw new TranslatorException("Failed to get the source language.", Name);
         }
 
-        string source = language.Substring(0, index);
-        string target = language.Substring(index + 1, language.Length - index - 1);
+        string source = language[..index];
+        string target = language[++index..];
 
         return new YandexTranslationResult(translation, text, Language.GetLanguage(target), Language.GetLanguage(source));
     }
@@ -231,7 +231,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         ThrowIfStatusCodeIsPresent(document.RootElement);
 
-        string? language = document.RootElement.GetProperty("lang").GetString();
+        string? language = document.RootElement.GetProperty("lang"u8).GetString();
         if (language is null || !Language.TryGetLanguage(language, out var lang))
         {
             throw new TranslatorException("Failed to get the detected language.", Name);
@@ -355,9 +355,9 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
     private static void ThrowIfStatusCodeIsPresent(JsonElement element)
     {
-        if (element.TryGetInt32("code", out int code) && code != 200)
+        if (element.TryGetInt32("code"u8, out int code) && code != 200)
         {
-            string message = element.GetPropertyOrDefault("message").GetStringOrDefault($"The API returned status code {code}.");
+            string message = element.GetPropertyOrDefault("message"u8).GetStringOrDefault($"The API returned status code {code}.");
 
 #if NET5_0_OR_GREATER
             throw new HttpRequestException(message, null, (HttpStatusCode)code);

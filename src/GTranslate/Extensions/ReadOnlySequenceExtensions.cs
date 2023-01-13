@@ -6,13 +6,14 @@ namespace GTranslate.Extensions;
 
 internal static class ReadOnlySequenceExtensions
 {
-    public static ReadOnlySequence<byte> AsReadOnlySequence(this ReadOnlyMemory<byte>[] chunks) => AsReadOnlySequence(chunks.AsSpan());
+    public static ReadOnlySequence<byte> AsReadOnlySequence(this Span<ReadOnlyMemory<byte>> chunks)
+        => AsReadOnlySequence((ReadOnlySpan<ReadOnlyMemory<byte>>)chunks);
 
     public static ReadOnlySequence<byte> AsReadOnlySequence(this ReadOnlySpan<ReadOnlyMemory<byte>> chunks)
     {
         if (chunks.Length == 0)
         {
-            throw new ArgumentException("Byte array is empty.", nameof(chunks));
+            return ReadOnlySequence<byte>.Empty;
         }
 
         if (chunks.Length == 1)
