@@ -129,8 +129,8 @@ public sealed class YandexTranslator : ITranslator, IDisposable
             throw new TranslatorException("Failed to get the source language.", Name);
         }
 
-        string source = language[..index];
-        string target = language[++index..];
+        string source = ReversePatch(language[..index]);
+        string target = ReversePatch(language[++index..]);
 
         return new YandexTranslationResult(translation, text, Language.GetLanguage(target), Language.GetLanguage(source));
     }
@@ -335,7 +335,20 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         return languageCode switch
         {
+            "pt-PT" => "pt",
+            "pt" => "pt-BR",
             "zh-CN" => "zh",
+            _ => languageCode
+        };
+    }
+
+    private static string ReversePatch(string languageCode)
+    {
+        TranslatorGuards.NotNull(languageCode);
+
+        return languageCode switch
+        {
+            "pt" => "pt-PT", // pt-BR is already covered by the aliases list
             _ => languageCode
         };
     }
