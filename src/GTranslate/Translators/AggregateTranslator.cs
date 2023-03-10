@@ -104,6 +104,11 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
             }
         }
 
+        if (exceptions is null)
+        {
+            throw new TranslatorException($"No available translator supports the translation of the provided text from \"{fromLanguage}\" to \"{toLanguage}\".");
+        }
+
         throw new AggregateException("No translator provided a valid result.", exceptions);
     }
 
@@ -132,6 +137,11 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
                 exceptions ??= new List<Exception>();
                 exceptions.Add(e);
             }
+        }
+
+        if (exceptions is null)
+        {
+            throw new TranslatorException($"No available translator supports the translation of the provided text from \"{fromLanguage!.ISO6391}\" to \"{toLanguage.ISO6391}\".");
         }
 
         throw new AggregateException("No translator provided a valid result.", exceptions);
@@ -186,6 +196,11 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
                 exceptions ??= new List<Exception>();
                 exceptions.Add(e);
             }
+        }
+
+        if (exceptions is null)
+        {
+            throw new TranslatorException($"No available translator supports the transliteration of the provided text from \"{fromLanguage!.ISO6391}\" to \"{toLanguage.ISO6391}\".");
         }
 
         throw new AggregateException("No translator provided a valid result.", exceptions);
