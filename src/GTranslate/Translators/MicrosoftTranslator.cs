@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -21,18 +23,37 @@ namespace GTranslate.Translators;
 /// </summary>
 public sealed class MicrosoftTranslator : ITranslator, IDisposable
 {
-    private const string _apiEndpoint = "https://api.cognitive.microsofttranslator.com";
+    private const string _apiEndpoint = "api.cognitive.microsofttranslator.com";
     private const string _apiVersion = "3.0";
+    private const string _detectUrl = $"{_apiEndpoint}/detect?api-version={_apiVersion}";
+    private const string _speechTokenUrl = "dev.microsofttranslator.com/apps/endpoint?api-version=1.0";
+    // test base domain: dev-sn2-test1.microsofttranslator-int.com
+    // end point co4: https://dev-co4-test1.microsofttranslator-int.com/
+    // end point int: https://dev.microsofttranslator-int.com/
+
+    private static readonly Uri _detectUri = new($"https://{_detectUrl}");
+    private static readonly Uri _speechTokenUri = new($"https://{_speechTokenUrl}");
     private static readonly HtmlEncoder _ssmlEncoder = HtmlEncoder.Create(UnicodeRanges.All); // Like the default encoder but only encodes required characters
+
+    // From Microsoft Translator Android app
+    private static readonly byte[] _privateKey =
+    {
+        0xa2, 0x29, 0x3a, 0x3d, 0xd0, 0xdd, 0x32, 0x73,
+        0x97, 0x7a, 0x64, 0xdb, 0xc2, 0xf3, 0x27, 0xf5,
+        0xd7, 0xbf, 0x87, 0xd9, 0x45, 0x9d, 0xf0, 0x5a,
+        0x09, 0x66, 0xc6, 0x30, 0xc6, 0x6a, 0xaa, 0x84,
+        0x9a, 0x41, 0xaa, 0x94, 0x3a, 0xa8, 0xd5, 0x1a,
+        0x6e, 0x4d, 0xaa, 0xc9, 0xa3, 0x70, 0x12, 0x35,
+        0xc7, 0xeb, 0x12, 0xf6, 0xe8, 0x23, 0x07, 0x9e,
+        0x47, 0x10, 0x95, 0x91, 0x88, 0x55, 0xd8, 0x17
+    };
 
     /// <inheritdoc/>
     public string Name => nameof(MicrosoftTranslator);
 
     private readonly HttpClient _httpClient;
-    private CachedObject<BingCredentials> _cachedCredentials;
     private CachedObject<MicrosoftAuthTokenInfo> _cachedAuthTokenInfo;
     private readonly SemaphoreSlim _voicesSemaphore = new(1, 1);
-    private readonly SemaphoreSlim _credentialsSemaphore = new(1, 1);
     private readonly SemaphoreSlim _authTokenInfoSemaphore = new(1, 1);
     private MicrosoftVoice[] _voices = Array.Empty<MicrosoftVoice>();
     private bool _disposed;
@@ -184,7 +205,6 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
         string url = $"{_apiEndpoint}/translate?api-version={_apiVersion}&to={MicrosoftHotPatch(toLanguage.ISO6391)}";
         if (fromLanguage is not null)
         {
@@ -194,10 +214,10 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         using var request = new HttpRequestMessage
         {
             Method = HttpMethod.Post,
-            RequestUri = new Uri(url)
+            RequestUri = new Uri($"https://{url}")
         };
 
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authInfo.Token);
+        request.Headers.Add("X-MT-Signature", GetSignature(url));
         request.Content = new StringContent($"[{{\"Text\":\"{text.AsSpan().SafeJsonTextEncode()}\"}}]", Encoding.UTF8, "application/json");
 
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
@@ -224,7 +244,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <summary>
     /// Transliterates a text using Microsoft Translator.
     /// </summary>
-    /// <param name="text">The text to translate.</param>
+    /// <param name="text">The text to transliterate.</param>
     /// <param name="language">The language of the text.</param>
     /// <param name="fromScript">The source script.</param>
     /// <param name="toScript">The target script.</param>
@@ -256,15 +276,14 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toScript);
         EnsureValidScripts(language.ISO6391, fromScript, toScript);
 
-        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
-
+        string url = $"{_apiEndpoint}/transliterate?api-version={_apiVersion}&language={MicrosoftHotPatch(language.ISO6391)}&fromScript={fromScript}&toScript={toScript}";
         using var request = new HttpRequestMessage
         {
             Method = HttpMethod.Post,
-            RequestUri = new Uri($"{_apiEndpoint}/transliterate?api-version={_apiVersion}&language={MicrosoftHotPatch(language.ISO6391)}&fromScript={fromScript}&toScript={toScript}")
+            RequestUri = new Uri($"https://{url}")
         };
 
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authInfo.Token);
+        request.Headers.Add("X-MT-Signature", GetSignature(url));
         request.Content = new StringContent($"[{{\"Text\":\"{text.AsSpan().SafeJsonTextEncode()}\"}}]", Encoding.UTF8, "application/json");
 
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
@@ -293,15 +312,14 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
         TranslatorGuards.NotNull(text);
 
-        var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
-
+        
         using var request = new HttpRequestMessage
         {
             Method = HttpMethod.Post,
-            RequestUri = new Uri($"{_apiEndpoint}/detect?api-version={_apiVersion}")
+            RequestUri = _detectUri
         };
 
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authInfo.Token);
+        request.Headers.Add("X-MT-Signature", GetSignature(_detectUrl));
         request.Content = new StringContent($"[{{\"Text\":\"{text.AsSpan().SafeJsonTextEncode()}\"}}]", Encoding.UTF8, "application/json");
 
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
@@ -417,16 +435,11 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         return _voices;
     }
 
-    // "urn:ms.vision.eastus" and "urn:ms.luis.eastus" are listed in the "Audience" field of the JWT we receive,
-    // but the former returns status code 401 on all endpoints, and the latter doesn't seem to be accessible with just the token.
-
     /// <summary>
     /// Gets or updates the Microsoft Azure Authentication Token.
     /// </summary>
     /// <remarks>
     /// This token can be used in the following services:<br/>
-    /// - <see href="https://docs.microsoft.com/en-us/azure/cognitive-services/speech/">Bing Speech</see><br/>
-    /// - <see href="https://docs.microsoft.com/en-us/azure/cognitive-services/translator/">Microsoft Translator</see><br/>
     /// - <see href="https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/">Speech Services</see>
     /// </remarks>
     /// <returns>A task that represents the asynchronous operation. The task contains the token.</returns>
@@ -449,35 +462,40 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
                 return _cachedAuthTokenInfo.Value;
             }
 
-            var bingCredentials = await GetOrUpdateBingCredentialsAsync().ConfigureAwait(false);
-
-            var data = new Dictionary<string, string>
+            using var request = new HttpRequestMessage
             {
-                { "token", bingCredentials.Token },
-                { "key", bingCredentials.Key.ToString() }
+                Method = HttpMethod.Post,
+                RequestUri = _speechTokenUri
             };
 
-            using var content = new FormUrlEncodedContent(data);
-            var uri = new Uri($"{BingTranslator.HostUrl}/tfetspktok?isVertical=1&IG={bingCredentials.ImpressionGuid.ToString("N").ToUpperInvariant()}&IID={BingTranslator.Iid}");
-            using var response = await _httpClient.PostAsync(uri, content).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-            using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
-            // Bing Translator always return status code 200 regardless of the content
+            request.Headers.Add("X-ClientVersion", "N/A");
+            request.Headers.Add("X-MT-Signature", GetSignature(_speechTokenUrl));
+            request.Headers.Add("X-UserId", "0");
+
+            using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
             using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
             var root = document.RootElement;
 
-            TranslatorGuards.ThrowIfStatusCodeIsPresent(root);
+            // Tokens are valid for 30 minutes. The exp. date might be closer
+            // if another API request is made while the token is still valid.
 
-            // Authentication tokens seem to be always valid for 10 minutes
             // https://docs.microsoft.com/en-us/azure/cognitive-services/authentication?tabs=powershell#authenticate-with-an-authentication-token
-            int expiryDurationInMs = root.GetProperty("expiryDurationInMS"u8).GetInt32OrDefault(600000);
-            string token = root.GetProperty("token"u8).GetString() ?? throw new TranslatorException("Unable to get the Microsoft Azure Auth token.", Name);
-            string region = root.GetProperty("region"u8).GetString() ?? throw new TranslatorException("Unable to get the Microsoft Azure API region.", Name);
+            var tokenProp = root.GetProperty("t"u8);
+            if (!TryGetExpirationDate(tokenProp, out var expirationDate))
+            {
+                throw new TranslatorException("Unable to obtain the expiration date from the auth token.", Name);
+            }
+
+            string token = tokenProp.GetString() ?? throw new TranslatorException("Unable to get the Microsoft Azure Auth token.", Name);
+            string region = root.GetProperty("r"u8).GetString() ?? throw new TranslatorException("Unable to get the Microsoft Azure API region.", Name);
 
             var authInfo = new MicrosoftAuthTokenInfo(token, region);
 
-            _cachedAuthTokenInfo = new CachedObject<MicrosoftAuthTokenInfo>(authInfo, TimeSpan.FromMilliseconds(expiryDurationInMs));
+            _cachedAuthTokenInfo = new CachedObject<MicrosoftAuthTokenInfo>(authInfo, expirationDate);
         }
         finally
         {
@@ -600,34 +618,59 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
 
         _httpClient.Dispose();
         _voicesSemaphore.Dispose();
-        _credentialsSemaphore.Dispose();
         _authTokenInfoSemaphore.Dispose();
         _disposed = true;
     }
 
-    private async ValueTask<BingCredentials> GetOrUpdateBingCredentialsAsync()
+    private static string GetSignature(string url)
     {
-        if (!_cachedCredentials.IsExpired())
-        {
-            return _cachedCredentials.Value;
-        }
+        string guid = Guid.NewGuid().ToString("N");
+        string escapedUrl = Uri.EscapeDataString(url);
+        string dateTime = DateTimeOffset.UtcNow.ToString("ddd, dd MMM yyyy HH:mm:ssG\\MT", CultureInfo.InvariantCulture);
 
-        await _credentialsSemaphore.WaitAsync().ConfigureAwait(false);
+        byte[] bytes = Encoding.UTF8.GetBytes($"MSTranslatorAndroidApp{escapedUrl}{dateTime}{guid}".ToLowerInvariant());
 
-        try
+#if NET6_0_OR_GREATER
+        byte[] hash = HMACSHA256.HashData(_privateKey, bytes);
+#else
+        var hmac = new HMACSHA256(_privateKey);
+        byte[] hash = hmac.ComputeHash(bytes);
+#endif
+        return $"MSTranslatorAndroidApp::{Convert.ToBase64String(hash)}::{dateTime}::{guid}";
+    }
+
+    private static bool TryGetExpirationDate(in JsonElement element, out DateTimeOffset expirationDate)
+    {
+        string? token = element.GetString();
+        var span = token.AsSpan();
+        int index = span.IndexOf('.');
+        int lastIndex = span.LastIndexOf('.');
+
+        if (index != -1 && index < lastIndex)
         {
-            if (!_cachedCredentials.IsExpired())
+            var encodedPayload = token.AsSpan()[++index..lastIndex];
+            byte[] payload = Base64UrlDecode(encodedPayload.ToString());
+
+            var document = JsonDocument.Parse(payload);
+            if (document.RootElement.TryGetProperty("exp"u8, out var exp) && exp.TryGetInt64(out long unixSeconds))
             {
-                return _cachedCredentials.Value;
+                expirationDate = DateTimeOffset.FromUnixTimeSeconds(unixSeconds);
+                return true;
             }
-
-            _cachedCredentials = await BingTranslator.GetCredentialsAsync(this, _httpClient).ConfigureAwait(false);
         }
-        finally
+
+        expirationDate = default;
+        return false;
+    }
+
+    private static byte[] Base64UrlDecode(string text)
+    {
+        int padding = 3 - (text.Length + 3) % 4;
+        if (padding > 0)
         {
-            _credentialsSemaphore.Release();
+            text = $"{text}{new string('=', padding)}";
         }
 
-        return _cachedCredentials.Value;
+        return Convert.FromBase64String(text.Replace('-', '+').Replace('_', '/'));
     }
 }

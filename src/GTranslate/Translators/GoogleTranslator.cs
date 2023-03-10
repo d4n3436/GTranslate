@@ -135,7 +135,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// <summary>
     /// Transliterates a text using Google Translate.
     /// </summary>
-    /// <param name="text">The text to translate.</param>
+    /// <param name="text">The text to transliterate.</param>
     /// <param name="toLanguage">The target language.</param>
     /// <param name="fromLanguage">The source language.</param>
     /// <returns>A task that represents the asynchronous transliteration operation. The task contains the transliteration result.</returns>

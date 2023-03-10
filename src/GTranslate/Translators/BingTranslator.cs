@@ -16,9 +16,9 @@ namespace GTranslate.Translators;
 /// </summary>
 public sealed class BingTranslator : ITranslator, IDisposable
 {
-    internal const string HostUrl = "https://www.bing.com";
+    private const string HostUrl = "https://www.bing.com";
     private static readonly Uri _translatorPageUri = new($"{HostUrl}/translator");
-    internal const string Iid = "translator.5024.1";
+    private const string Iid = "translator.5024.1";
     private static ReadOnlySpan<byte> CredentialsStart => "var params_AbusePreventionHelper = ["u8;
 
     /// <inheritdoc/>
@@ -134,7 +134,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <summary>
     /// Transliterates a text using Bing Translator.
     /// </summary>
-    /// <param name="text">The text to translate.</param>
+    /// <param name="text">The text to transliterate.</param>
     /// <param name="toLanguage">The target language.</param>
     /// <param name="fromLanguage">The source language.</param>
     /// <returns>A task that represents the asynchronous transliteration operation. The task contains the transliteration result.</returns>
@@ -240,13 +240,13 @@ public sealed class BingTranslator : ITranslator, IDisposable
     bool ITranslator.IsLanguageSupported(ILanguage language) => language is Language lang && IsLanguageSupported(lang);
 
     // returns new credentials as a cached object
-    internal static async Task<CachedObject<BingCredentials>> GetCredentialsAsync(ITranslator translator, HttpClient httpClient)
+    private static async Task<CachedObject<BingCredentials>> GetCredentialsAsync(ITranslator translator, HttpClient httpClient)
     {
         byte[] bytes = await httpClient.GetByteArrayAsync(_translatorPageUri).ConfigureAwait(false);
         return GetCredentials(bytes, translator);
     }
 
-    internal static CachedObject<BingCredentials> GetCredentials(ReadOnlySpan<byte> bytes, ITranslator translator)
+    private static CachedObject<BingCredentials> GetCredentials(ReadOnlySpan<byte> bytes, ITranslator translator)
     {
         int credentialsStartIndex = bytes.IndexOf(CredentialsStart);
         if (credentialsStartIndex == -1)
