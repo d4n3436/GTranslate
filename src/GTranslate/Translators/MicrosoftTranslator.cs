@@ -559,7 +559,9 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
 
         return languageCode switch
         {
+            "lg" => "lug",
             "no" => "nb",
+            "ny" => "nya",
             "sr" => "sr-Cyrl",
             "mn" => "mn-Cyrl",
             "tlh" => "tlh-Latn",
