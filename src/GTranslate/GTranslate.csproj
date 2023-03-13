@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>2.1.5</Version>
-	<LangVersion>11</LangVersion>
-	<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
+    <Version>2.1.6</Version>
+    <LangVersion>11</LangVersion>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
     <Authors>d4n3436</Authors>
     <Description>A collection of free translation APIs (Google Translate, Bing Translator, Microsoft Translator and Yandex.Translate). Currently supports translation, transliteration, language detection and text-to-speech.</Description>
     <NeutralLanguage>en</NeutralLanguage>
