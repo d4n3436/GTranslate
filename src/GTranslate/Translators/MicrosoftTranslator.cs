@@ -23,13 +23,13 @@ namespace GTranslate.Translators;
 /// </summary>
 public sealed class MicrosoftTranslator : ITranslator, IDisposable
 {
-    private const string _apiEndpoint = "api.cognitive.microsofttranslator.com";
+    private const string _apiEndpoint = "dev.microsofttranslator-int.com";
     private const string _apiVersion = "3.0";
     private const string _detectUrl = $"{_apiEndpoint}/detect?api-version={_apiVersion}";
     private const string _speechTokenUrl = "dev.microsofttranslator.com/apps/endpoint?api-version=1.0";
     // test base domain: dev-sn2-test1.microsofttranslator-int.com
-    // end point co4: https://dev-co4-test1.microsofttranslator-int.com/
-    // end point int: https://dev.microsofttranslator-int.com/
+    // end point co4: https://dev-co4-test1.microsofttranslator-int.com/ // works
+    // end point int: https://dev.microsofttranslator-int.com/ // works
 
     private static readonly Uri _detectUri = new($"https://{_detectUrl}");
     private static readonly Uri _speechTokenUri = new($"https://{_speechTokenUrl}");
