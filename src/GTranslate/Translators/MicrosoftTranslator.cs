@@ -33,7 +33,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
 
     private static readonly Uri _detectUri = new($"https://{_detectUrl}");
     private static readonly Uri _speechTokenUri = new($"https://{_speechTokenUrl}");
-    private static readonly HtmlEncoder _ssmlEncoder = HtmlEncoder.Create(UnicodeRanges.All); // Like the default encoder but only encodes required characters
+    internal static readonly HtmlEncoder _ssmlEncoder = HtmlEncoder.Create(UnicodeRanges.All); // Like the default encoder but only encodes required characters
 
     // From Microsoft Translator Android app
     private static readonly byte[] _privateKey =

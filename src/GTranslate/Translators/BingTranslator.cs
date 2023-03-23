@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers.Text;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -17,7 +18,8 @@ namespace GTranslate.Translators;
 public sealed class BingTranslator : ITranslator, IDisposable
 {
     private const string HostUrl = "https://www.bing.com";
-    private static readonly Uri _translatorPageUri = new($"{HostUrl}/translator");
+    private const string TtsEndpoint = $"{HostUrl}/tfettts";
+    private static readonly Uri _translatorPageUri = new($"{HostUrl}/translator");  
     private const string Iid = "translator.5024.1";
     private static ReadOnlySpan<byte> CredentialsStart => "var params_AbusePreventionHelper = ["u8;
 
@@ -195,6 +197,71 @@ public sealed class BingTranslator : ITranslator, IDisposable
     }
 
     /// <summary>
+    /// Converts text into synthesized speech.
+    /// </summary>
+    /// <param name="text">The text to convert.</param>
+    /// <param name="language">The language of the voice. Only the languages in <see cref="MicrosoftTranslator.DefaultVoices"/> are supported.</param>
+    /// <param name="speakRate">The speaking rate of the text, expressed as a number that acts as a multiplier of the default.</param>
+    /// <returns>A task that represents the asynchronous synthesis operation. The task contains the synthesized speech in a MP3 <see cref="Stream"/>.</returns>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="language"/> are null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a <see cref="MicrosoftVoice"/> could not be obtained from <paramref name="language"/>.</exception>
+    /// <exception cref="TranslatorException">Thrown when <paramref name="language"/> is not supported, or an error occurred during the operation.</exception>
+    public async Task<Stream> TextToSpeechAsync(string text, string language, float speakRate = 1)
+    {
+        TranslatorGuards.ObjectNotDisposed(this, _disposed);
+        TranslatorGuards.NotNull(text);
+        TranslatorGuards.NotNull(language);
+        EnsureValidTTSLanguage(language, out var voice);
+
+        return await TextToSpeechAsync(text, voice, speakRate).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Converts text into synthesized speech.
+    /// </summary>
+    /// <remarks>No validation will be performed to the <paramref name="voice"/> parameter. Make sure to get the correct voices from either <see cref="MicrosoftTranslator.DefaultVoices"/> or <see cref="MicrosoftTranslator.GetTTSVoicesAsync"/>.</remarks>
+    /// <param name="text">The text to convert.</param>
+    /// <param name="voice">The voice.</param>
+    /// <param name="speakRate">The speaking rate of the text, expressed as a number that acts as a multiplier of the default.</param>
+    /// <returns>A task that represents the asynchronous synthesis operation. The task contains the synthesized speech in a MP3 <see cref="Stream"/>.</returns>
+    /// <exception cref="ObjectDisposedException">Thrown when this translator has been disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text"/> or <paramref name="voice"/> are null.</exception>
+    /// <exception cref="TranslatorException">Thrown when an error occurred during the operation.</exception>
+    public async Task<Stream> TextToSpeechAsync(string text, MicrosoftVoice voice, float speakRate = 1)
+    {
+        TranslatorGuards.ObjectNotDisposed(this, _disposed);
+        TranslatorGuards.NotNull(text);
+        TranslatorGuards.NotNull(voice);
+
+        var credentials = await GetOrUpdateCredentialsAsync().ConfigureAwait(false);
+
+        string ssml = $"<speak version='1.0' xml:lang='{voice.Locale}'><voice xml:lang='{voice.Locale}' xml:gender='{voice.Gender}' name='{voice.ShortName}'><prosody rate='{speakRate}'>{MicrosoftTranslator._ssmlEncoder.Encode(text)}</prosody></voice></speak>";
+
+        var data = new Dictionary<string, string>
+        {
+            { "ssml", ssml },
+            { "token", credentials.Token },
+            { "key", credentials.Key.ToString() }
+        };
+
+        using var content = new FormUrlEncodedContent(data);
+
+        var uri = new Uri($"{TtsEndpoint}?isVertical=1&IG={credentials.ImpressionGuid.ToString("N").ToUpperInvariant()}&IID={Iid}");
+        using var request = new HttpRequestMessage
+        {
+            Method = HttpMethod.Post,
+            RequestUri = uri,
+            Content = content
+        };
+
+        var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Returns whether Bing Translator supports the specified language.
     /// </summary>
     /// <param name="language">The language.</param>
@@ -306,6 +373,16 @@ public sealed class BingTranslator : ITranslator, IDisposable
             "zh-TW" => "zh-Hant",
             _ => languageCode
         };
+    }
+
+    private static void EnsureValidTTSLanguage(string language, out MicrosoftVoice voice)
+    {
+        if (!MicrosoftTranslator.DefaultVoices.TryGetValue(language, out var temp))
+        {
+            throw new ArgumentException($"Unable to get the voice from language {language}.", nameof(language));
+        }
+
+        voice = temp;
     }
 
     /// <summary>
