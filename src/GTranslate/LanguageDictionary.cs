@@ -52,13 +52,10 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
     public Language GetLanguage(string code)
     {
         TranslatorGuards.NotNull(code);
-
-        if (TryGetValue(code, out var language))
-        {
-            return language;
-        }
-
-        return Aliases.TryGetValue(code, out var iso) ? _languages[iso] : throw new ArgumentException($"Unknown language \"{code}\".", nameof(code));
+        if (!TryGetLanguage(code, out var language))
+            throw new ArgumentException($"Unknown language \"{code}\".", nameof(code));
+        
+        return language;
     }
 
     /// <summary>

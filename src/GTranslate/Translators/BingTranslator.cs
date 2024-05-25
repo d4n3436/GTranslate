@@ -306,26 +306,25 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="IsLanguageSupported(Language)"/>
     bool ITranslator.IsLanguageSupported(ILanguage language) => language is Language lang && IsLanguageSupported(lang);
 
-    // returns new credentials as a cached object
-    private static async Task<CachedObject<BingCredentials>> GetCredentialsAsync(ITranslator translator, HttpClient httpClient)
+    private async Task<CachedObject<BingCredentials>> GetCredentialsAsync()
     {
-        byte[] bytes = await httpClient.GetByteArrayAsync(_translatorPageUri).ConfigureAwait(false);
-        return GetCredentials(bytes, translator);
+        byte[] bytes = await _httpClient.GetByteArrayAsync(_translatorPageUri).ConfigureAwait(false);
+        return GetCredentials(bytes);
     }
 
-    private static CachedObject<BingCredentials> GetCredentials(ReadOnlySpan<byte> bytes, ITranslator translator)
+    private CachedObject<BingCredentials> GetCredentials(ReadOnlySpan<byte> bytes)
     {
         int credentialsStartIndex = bytes.IndexOf(CredentialsStart);
         if (credentialsStartIndex == -1)
         {
-            throw new TranslatorException("Unable to find the Bing credentials.", translator.Name);
+            throw new TranslatorException("Unable to find the Bing credentials.", Name);
         }
 
         int keyStartIndex = credentialsStartIndex + CredentialsStart.Length;
         int keyLength = bytes[keyStartIndex..].IndexOf((byte)',');
         if (keyLength == -1)
         {
-            throw new TranslatorException("Unable to find the Bing key.", translator.Name);
+            throw new TranslatorException("Unable to find the Bing key.", Name);
         }
 
         // Unix timestamp generated once the page is loaded. Valid for 3600000 milliseconds or 1 hour
@@ -339,7 +338,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         int tokenLength = bytes[tokenStartIndex..].IndexOf((byte)'"');
         if (tokenLength == -1)
         {
-            throw new TranslatorException("Unable to find the Bing token.", translator.Name);
+            throw new TranslatorException("Unable to find the Bing token.", Name);
         }
 
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
@@ -420,7 +419,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
                 return _cachedCredentials.Value;
             }
 
-            _cachedCredentials = await GetCredentialsAsync(this, _httpClient).ConfigureAwait(false);
+            _cachedCredentials = await GetCredentialsAsync().ConfigureAwait(false);
         }
         finally
         {
