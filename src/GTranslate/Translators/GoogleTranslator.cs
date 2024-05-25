@@ -20,11 +20,11 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     private const string _apiEndpoint = "https://translate.googleapis.com/translate_a/single";
     private const string _ttsApiEndpoint = "https://translate.google.com/translate_tts";
     private static readonly string[] _ttsLanguages =
-    {
+    [
         "af", "am", "ar", "bg", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "eu", "fi", "fr", "gl", "gu", "ha", "hi",
         "hr", "hu", "hy", "id", "is", "it", "iw", "ja", "jv", "km", "kn", "ko", "la", "lt", "lv", "mk", "ml", "mr", "ms", "my", "ne", "nl", "no",
         "pa", "pl", "pt", "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh-CN", "zh-TW"
-    };
+    ];
 
     private static readonly Lazy<HashSet<ILanguage>> _lazyTtsLanguages = new(() => new HashSet<ILanguage>(_ttsLanguages.Select(Language.GetLanguage)));
 
@@ -96,16 +96,10 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        string query = "?client=gtx" +
-                       $"&sl={GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto")}" +
-                       $"&tl={GoogleHotPatch(toLanguage.ISO6391)}" +
-                       "&dt=t" +
-                       "&dt=bd" +
-                       "&dj=1" +
-                       "&source=input" +
-                       $"&tk={MakeToken(text.AsSpan())}";
+        string query =
+            $"?client=gtx&sl={GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto")}&tl={GoogleHotPatch(toLanguage.ISO6391)}&dt=t&dt=bd&dj=1&source=input&tk={MakeToken(text.AsSpan())}";
 
-        using var content = new FormUrlEncodedContent(new KeyValuePair<string, string>[] { new("q", text) });
+        using var content = new FormUrlEncodedContent([new KeyValuePair<string, string>("q", text)]);
         using var request = new HttpRequestMessage
         {
             Method = HttpMethod.Post,

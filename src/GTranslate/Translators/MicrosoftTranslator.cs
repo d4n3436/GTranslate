@@ -37,7 +37,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
 
     // From Microsoft Translator Android app
     private static readonly byte[] _privateKey =
-    {
+    [
         0xa2, 0x29, 0x3a, 0x3d, 0xd0, 0xdd, 0x32, 0x73,
         0x97, 0x7a, 0x64, 0xdb, 0xc2, 0xf3, 0x27, 0xf5,
         0xd7, 0xbf, 0x87, 0xd9, 0x45, 0x9d, 0xf0, 0x5a,
@@ -46,7 +46,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         0x6e, 0x4d, 0xaa, 0xc9, 0xa3, 0x70, 0x12, 0x35,
         0xc7, 0xeb, 0x12, 0xf6, 0xe8, 0x23, 0x07, 0x9e,
         0x47, 0x10, 0x95, 0x91, 0x88, 0x55, 0xd8, 0x17
-    };
+    ];
 
     /// <inheritdoc/>
     public string Name => nameof(MicrosoftTranslator);
@@ -55,7 +55,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     private CachedObject<MicrosoftAuthTokenInfo> _cachedAuthTokenInfo;
     private readonly SemaphoreSlim _voicesSemaphore = new(1, 1);
     private readonly SemaphoreSlim _authTokenInfoSemaphore = new(1, 1);
-    private MicrosoftVoice[] _voices = Array.Empty<MicrosoftVoice>();
+    private MicrosoftVoice[] _voices = [];
     private bool _disposed;
     
     /// <summary>
@@ -114,38 +114,38 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     public static IReadOnlyDictionary<string, IReadOnlyCollection<string>> Scripts { get; }
         = new ReadOnlyDictionary<string, IReadOnlyCollection<string>>(new Dictionary<string, IReadOnlyCollection<string>>
     {
-        ["ar"] = new[] { "Latn", "Arab" },
-        ["as"] = new[] { "Latn", "Beng" },
-        ["be"] = new[] { "Latn", "Cyrl" },
-        ["bg"] = new[] { "Latn", "Cyrl" },
-        ["bn"] = new[] { "Latn", "Beng" },
-        ["el"] = new[] { "Latn", "Grek" },
-        ["fa"] = new[] { "Latn", "Arab" },
-        ["gu"] = new[] { "Latn", "Gujr" },
-        ["he"] = new[] { "Latn", "Hebr" },
-        ["hi"] = new[] { "Latn", "Deva" },
-        ["ja"] = new[] { "Latn", "Jpan" },
-        ["kk"] = new[] { "Latn", "Cyrl" },
-        ["kn"] = new[] { "Latn", "Knda" },
-        ["ko"] = new[] { "Latn", "Kore" },
-        ["ky"] = new[] { "Latn", "Cyrl" },
-        ["mk"] = new[] { "Latn", "Cyrl" },
-        ["ml"] = new[] { "Latn", "Mlym" },
-        ["mn"] = new[] { "Latn", "Cyrl" },
-        ["mr"] = new[] { "Latn", "Deva" },
-        ["or"] = new[] { "Latn", "Orya" },
-        ["pa"] = new[] { "Latn", "Guru" },
-        ["ru"] = new[] { "Latn", "Cyrl" },
-        ["sd"] = new[] { "Latn", "Arab" },
-        ["si"] = new[] { "Latn", "Sinh" },
-        ["ta"] = new[] { "Latn", "Taml" },
-        ["te"] = new[] { "Latn", "Telu" },
-        ["tg"] = new[] { "Latn", "Cyrl" },
-        ["tt"] = new[] { "Latn", "Cyrl" },
-        ["uk"] = new[] { "Latn", "Cyrl" },
-        ["ur"] = new[] { "Latn", "Arab" },
-        ["zh-CN"] = new[] { "Latn", "Hans" }, // zh-Hans
-        ["zh-TW"] = new[] { "Latn", "Hant" } // zh-Hant
+        ["ar"] = ["Latn", "Arab"],
+        ["as"] = ["Latn", "Beng"],
+        ["be"] = ["Latn", "Cyrl"],
+        ["bg"] = ["Latn", "Cyrl"],
+        ["bn"] = ["Latn", "Beng"],
+        ["el"] = ["Latn", "Grek"],
+        ["fa"] = ["Latn", "Arab"],
+        ["gu"] = ["Latn", "Gujr"],
+        ["he"] = ["Latn", "Hebr"],
+        ["hi"] = ["Latn", "Deva"],
+        ["ja"] = ["Latn", "Jpan"],
+        ["kk"] = ["Latn", "Cyrl"],
+        ["kn"] = ["Latn", "Knda"],
+        ["ko"] = ["Latn", "Kore"],
+        ["ky"] = ["Latn", "Cyrl"],
+        ["mk"] = ["Latn", "Cyrl"],
+        ["ml"] = ["Latn", "Mlym"],
+        ["mn"] = ["Latn", "Cyrl"],
+        ["mr"] = ["Latn", "Deva"],
+        ["or"] = ["Latn", "Orya"],
+        ["pa"] = ["Latn", "Guru"],
+        ["ru"] = ["Latn", "Cyrl"],
+        ["sd"] = ["Latn", "Arab"],
+        ["si"] = ["Latn", "Sinh"],
+        ["ta"] = ["Latn", "Taml"],
+        ["te"] = ["Latn", "Telu"],
+        ["tg"] = ["Latn", "Cyrl"],
+        ["tt"] = ["Latn", "Cyrl"],
+        ["uk"] = ["Latn", "Cyrl"],
+        ["ur"] = ["Latn", "Arab"],
+        ["zh-CN"] = ["Latn", "Hans"], // zh-Hans
+        ["zh-TW"] = ["Latn", "Hant"] // zh-Hant
     });
 
     /// <summary>
@@ -635,7 +635,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
 #if NET6_0_OR_GREATER
         byte[] hash = HMACSHA256.HashData(_privateKey, bytes);
 #else
-        var hmac = new HMACSHA256(_privateKey);
+        using var hmac = new HMACSHA256(_privateKey);
         byte[] hash = hmac.ComputeHash(bytes);
 #endif
         return $"MSTranslatorAndroidApp::{Convert.ToBase64String(hash)}::{dateTime}::{guid}";

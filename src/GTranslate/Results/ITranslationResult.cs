@@ -34,6 +34,4 @@ public interface ITranslationResult<out TLanguage>
 }
 
 /// <inheritdoc/>
-public interface ITranslationResult : ITranslationResult<ILanguage>
-{
-}
+public interface ITranslationResult : ITranslationResult<ILanguage>;

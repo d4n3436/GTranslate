@@ -5,7 +5,7 @@ namespace GTranslate.Extensions;
 
 internal static class StringExtensions
 {
-    private static readonly char[] _separators = { '\t', '\r', '\n', ' ' };
+    private static readonly char[] _separators = ['\t', '\r', '\n', ' '];
 
     // Splits a text into lines of max. 200 chars without breaking words (if possible)
     // This algorithm is not as accurate as the one Google uses, but it's good enough

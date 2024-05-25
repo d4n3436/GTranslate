@@ -10,7 +10,7 @@ namespace GTranslate;
 /// <remarks>Due to the way GTranslate handles the supported languages,
 ///  custom translators should use a custom language class instead of this.
 /// </remarks>
-[DebuggerDisplay("{" + nameof(DebuggerDisplay) + ",nq}")]
+[DebuggerDisplay($"{{{nameof(DebuggerDisplay)},nq}}")]
 public sealed class Language : ILanguage, IEquatable<Language>
 {
     /// <summary>

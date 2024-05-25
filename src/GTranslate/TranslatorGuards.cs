@@ -10,7 +10,7 @@ namespace GTranslate;
 
 internal static class TranslatorGuards
 {
-    public static void NotNull<T>(T? obj, [CallerArgumentExpression(nameof(obj))] string? parameterName = null)
+    public static void NotNull<T>([NotNull] T? obj, [CallerArgumentExpression(nameof(obj))] string? parameterName = null)
         where T : class
     {
         if (obj is null)

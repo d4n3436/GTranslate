@@ -63,7 +63,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(yandexTranslator);
         TranslatorGuards.NotNull(bingTranslator);
 
-        _translators = new ITranslator[] { googleTranslator, googleTranslator2, microsoftTranslator, yandexTranslator, bingTranslator };
+        _translators = [googleTranslator, googleTranslator2, microsoftTranslator, yandexTranslator, bingTranslator];
     }
 
     /// <summary>
@@ -99,7 +99,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
             }
             catch (Exception e)
             {
-                exceptions ??= new List<Exception>();
+                exceptions ??= [];
                 exceptions.Add(e);
             }
         }
@@ -134,7 +134,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
             }
             catch (Exception e)
             {
-                exceptions ??= new List<Exception>();
+                exceptions ??= [];
                 exceptions.Add(e);
             }
         }
@@ -193,7 +193,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
             }
             catch (Exception e)
             {
-                exceptions ??= new List<Exception>();
+                exceptions ??= [];
                 exceptions.Add(e);
             }
         }
@@ -229,7 +229,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
             }
             catch (Exception e)
             {
-                exceptions ??= new List<Exception>();
+                exceptions ??= [];
                 exceptions.Add(e);
             }
         }

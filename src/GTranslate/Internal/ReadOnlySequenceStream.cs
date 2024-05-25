@@ -30,7 +30,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-internal class ReadOnlySequenceStream : Stream
+internal sealed class ReadOnlySequenceStream : Stream
 {
     private readonly ReadOnlySequence<byte> _readOnlySequence;
     private bool _isDisposed;

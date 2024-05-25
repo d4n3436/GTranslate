@@ -19,7 +19,7 @@ public class MicrosoftLanguageScraper : ILanguageScraper
 
     public TranslationServices TranslationService => TranslationServices.Microsoft;
 
-    public IReadOnlyCollection<ILanguage> ExistingTtsLanguages => Array.Empty<ILanguage>();
+    public IReadOnlyCollection<ILanguage> ExistingTtsLanguages => [];
 
     public async Task<LanguageData> GetLanguageDataAsync()
     {

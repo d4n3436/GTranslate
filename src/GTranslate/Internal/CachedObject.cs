@@ -7,7 +7,7 @@ namespace GTranslate;
 /// Represents a generic cached object.
 /// </summary>
 /// <typeparam name="T">The type of the value to cache.</typeparam>
-[DebuggerDisplay("{" + nameof(DebuggerDisplay) + ",nq}")]
+[DebuggerDisplay($"{{{nameof(DebuggerDisplay)},nq}}")]
 internal readonly struct CachedObject<T>
 {
     /// <summary>

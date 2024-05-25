@@ -148,7 +148,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         return aliases;
     }
 
-    private readonly IReadOnlyDictionary<string, Language> _languages = new ReadOnlyDictionary<string, Language>(new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
+    private readonly ReadOnlyDictionary<string, Language> _languages = new(new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
     {
         ["af"] = new("Afrikaans", "Afrikaans", "af", "afr"),
         ["ak"] = new("Akan", "Ákán", "ak", "aka", TranslationServices.Google),

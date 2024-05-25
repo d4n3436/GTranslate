@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using GTranslate;
@@ -11,9 +10,9 @@ namespace LanguageScraper;
 
 public class YandexLanguageScraper : ILanguageScraper
 {
-    private static ReadOnlySpan<byte> TranslatorLangsStart => Encoding.UTF8.GetBytes("TRANSLATOR_LANGS: ");
+    private static ReadOnlySpan<byte> TranslatorLangsStart => "TRANSLATOR_LANGS: "u8;
 
-    private static ReadOnlySpan<byte> TranslatorLangsEnd => Encoding.UTF8.GetBytes(",\n");
+    private static ReadOnlySpan<byte> TranslatorLangsEnd => ",\n"u8;
 
     private readonly HttpClient _httpClient = new();
 
@@ -24,7 +23,7 @@ public class YandexLanguageScraper : ILanguageScraper
 
     public TranslationServices TranslationService => TranslationServices.Yandex;
 
-    public IReadOnlyCollection<ILanguage> ExistingTtsLanguages => Array.Empty<ILanguage>();
+    public IReadOnlyCollection<ILanguage> ExistingTtsLanguages => [];
 
     public async Task<LanguageData> GetLanguageDataAsync()
     {
@@ -39,6 +38,6 @@ public class YandexLanguageScraper : ILanguageScraper
             .Select(x => new ScrapedLanguage(x.Value.GetString()!, x.Name, "?", "?"))
             .ToArray();
 
-        return new LanguageData { Languages = languages, TtsLanguages = Array.Empty<ILanguage>() };
+        return new LanguageData { Languages = languages, TtsLanguages = [] };
     }
 }

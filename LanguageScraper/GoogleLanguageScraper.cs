@@ -13,17 +13,17 @@ namespace LanguageScraper;
 // For GoogleTranslator and GoogleTranslator2
 public class GoogleLanguageScraper : ILanguageScraper
 {
-    private static ReadOnlySpan<byte> LanguagesId => Encoding.UTF8.GetBytes("n9wk7");
+    private static ReadOnlySpan<byte> LanguagesId => "n9wk7"u8;
 
-    private static ReadOnlySpan<byte> TtsLanguagesId => Encoding.UTF8.GetBytes("ycyxUb");
+    private static ReadOnlySpan<byte> TtsLanguagesId => "ycyxUb"u8;
 
-    private static ReadOnlySpan<byte> LanguagesStart => Encoding.UTF8.GetBytes("data:");
+    private static ReadOnlySpan<byte> LanguagesStart => "data:"u8;
 
-    private static ReadOnlySpan<byte> LanguagesEnd => Encoding.UTF8.GetBytes(", sideChannel");
+    private static ReadOnlySpan<byte> LanguagesEnd => ", sideChannel"u8;
 
-    private static ReadOnlySpan<byte> NativeNamesStart => Encoding.UTF8.GetBytes("window.LanguageDisplays.nativeNames = ");
+    private static ReadOnlySpan<byte> NativeNamesStart => "window.LanguageDisplays.nativeNames = "u8;
 
-    private static ReadOnlySpan<byte> NativeNamesEnd => Encoding.UTF8.GetBytes(";window.LanguageDisplays.localNames");
+    private static ReadOnlySpan<byte> NativeNamesEnd => ";window.LanguageDisplays.localNames"u8;
 
     private readonly HttpClient _httpClient = new();
 
@@ -85,7 +85,7 @@ public class GoogleLanguageScraper : ILanguageScraper
         }
     }
 
-    private static IReadOnlyList<ILanguage> GetTtsLanguages(byte[] htmlBytes)
+    private static ScrapedLanguage[] GetTtsLanguages(byte[] htmlBytes)
     {
         return GetLanguageData(htmlBytes, TtsLanguagesId)
             .RootElement[0]
@@ -123,7 +123,7 @@ public class GoogleLanguageScraper : ILanguageScraper
                 Name: x.Value,
                 ISO6391: x.Key,
                 ISO6393: "?",
-                NativeName: nativeNames.TryGetValue(x.Key, out string? nativeName) ? nativeName : "?"))
+                NativeName: nativeNames.GetValueOrDefault(x.Key, "?")))
             .ToArray();
     }
 

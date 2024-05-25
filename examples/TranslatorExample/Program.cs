@@ -9,7 +9,7 @@ internal static class Program
     private static async Task Main()
     {
         Console.WriteLine("Translator Example\n");
-        var translator = new AggregateTranslator();
+        using var translator = new AggregateTranslator();
 
         while (true)
         {

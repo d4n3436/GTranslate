@@ -3,7 +3,7 @@ using System.Buffers;
 
 namespace GTranslate;
 
-internal class MemorySegment<T> : ReadOnlySequenceSegment<T>
+internal sealed class MemorySegment<T> : ReadOnlySequenceSegment<T>
 {
     public MemorySegment(ReadOnlyMemory<T> memory)
     {

@@ -20,12 +20,12 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     private const string _apiUrl = "https://translate.yandex.net/api/v1/tr.json";
     private const string _defaultUserAgent = "ru.yandex.translate/3.20.2024";
     private static readonly Uri _transliterationApiUri = new("https://translate.yandex.net/translit/translit");
-    private static readonly HashSet<ILanguage> _ttsLanguages = new()
-    {
+    private static readonly HashSet<ILanguage> _ttsLanguages =
+    [
         Language.GetLanguage("ru"),
         Language.GetLanguage("en"),
         Language.GetLanguage("tr")
-    };
+    ];
 
     /// <summary>
     /// Gets a read-only collection of languages that support text-to-speech.
@@ -96,9 +96,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        string query = $"?ucid={GetOrUpdateUcid():N}" +
-                       "&srv=android" +
-                       "&format=text";
+        string query = $"?ucid={GetOrUpdateUcid():N}&srv=android&format=text";
 
         var data = new Dictionary<string, string>
         {
@@ -206,9 +204,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
         TranslatorGuards.NotNull(text);
 
-        string query = $"?ucid={GetOrUpdateUcid():N}" +
-                       "&srv=android" +
-                       "&format=text";
+        string query = $"?ucid={GetOrUpdateUcid():N}&srv=android&format=text";
 
         var data = new Dictionary<string, string>
         {

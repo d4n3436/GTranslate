@@ -4,11 +4,7 @@ namespace GTranslate;
 
 
 [JsonSerializable(typeof(MicrosoftVoice[]))]
-internal partial class MicrosoftVoiceContext : JsonSerializerContext
-{
-}
+internal sealed partial class MicrosoftVoiceContext : JsonSerializerContext;
 
 [JsonSerializable(typeof(string))]
-internal partial class StringContext : JsonSerializerContext
-{
-}
+internal sealed partial class StringContext : JsonSerializerContext;
