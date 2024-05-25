@@ -67,5 +67,6 @@ internal readonly struct CachedObject<T>
     /// <inheritdoc/>
     public override string ToString() => $"{nameof(Value)}: {Value}, {nameof(IsExpired)}: {IsExpired()}";
 
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => ToString();
 }

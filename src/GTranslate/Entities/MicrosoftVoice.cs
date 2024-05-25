@@ -46,5 +46,6 @@ public class MicrosoftVoice
     /// <inheritdoc/>
     public override string ToString() => $"{nameof(DisplayName)}: '{DisplayName}', {nameof(Locale)}: '{Locale}'";
 
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => ToString();
 }

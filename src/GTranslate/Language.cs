@@ -108,5 +108,6 @@ public sealed class Language : ILanguage, IEquatable<Language>
     /// <inheritdoc/>
     public override string ToString() => $"{nameof(Name)}: '{Name}', {nameof(NativeName)}: '{NativeName}', {nameof(ISO6391)}: {ISO6391}, {nameof(ISO6393)}: {ISO6393}";
 
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => ToString();
 }
