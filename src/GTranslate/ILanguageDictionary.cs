@@ -15,7 +15,7 @@ public interface ILanguageDictionary<TCode, TLanguage> : IReadOnlyDictionary<TCo
     /// Gets a language from a language code.
     /// </summary>
     /// <param name="code">The language code.</param>
-    /// <returns>The language, or default{TCode} if the language was not found.</returns>
+    /// <returns>The language.</returns>
     TLanguage GetLanguage(TCode code);
 
     /// <summary>

@@ -45,7 +45,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
     /// <summary>
     /// Gets a language from a language code, name or alias.
     /// </summary>
-    /// <param name="code">The language name or code. It can be a ISO 639-1 code, a ISO 639-3 code, a language name or a language alias.</param>
+    /// <param name="code">The language name or code. It can be a ISO 639-1 code, a ISO 639-3 code, a language name, or a language alias.</param>
     /// <returns>The language, or an exception if the language was not found.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="code"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when the language was not found.</exception>
@@ -64,7 +64,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
     /// <summary>
     /// Tries to get a language from a language code, name or alias.
     /// </summary>
-    /// <param name="code">The language name or code. It can be a ISO 639-1 code, a ISO 639-3 code, a language name or a language alias.</param>
+    /// <param name="code">The language name or code. It can be a ISO 639-1 code, a ISO 639-3 code, a language name, or a language alias.</param>
     /// <param name="language">The language, if found.</param>
     /// <returns><see langword="true"/> if the language was found, otherwise <see langword="false"/>.</returns>
     public bool TryGetLanguage(string code, [MaybeNullWhen(false)] out Language language)
@@ -81,7 +81,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
             return true;
         }
 
-        if (!Aliases.TryGetValue(code, out string? iso))
+        if (!Aliases.TryGetValue(code, out var iso))
         {
             return false;
         }

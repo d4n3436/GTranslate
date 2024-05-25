@@ -1,7 +1,7 @@
 ﻿namespace GTranslate;
 
 /// <summary>
-/// Represents a language.
+/// Provides information about a language.
 /// </summary>
 public interface ILanguage
 {
