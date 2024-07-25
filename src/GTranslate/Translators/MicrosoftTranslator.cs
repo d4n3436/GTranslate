@@ -23,12 +23,12 @@ namespace GTranslate.Translators;
 /// </summary>
 public sealed class MicrosoftTranslator : ITranslator, IDisposable
 {
-    private const string _apiEndpoint = "dev-co4-test1.microsofttranslator-int.com";
+    private const string _apiEndpoint = "api.cognitive.microsofttranslator.com";
     private const string _apiVersion = "3.0";
     private const string _detectUrl = $"{_apiEndpoint}/detect?api-version={_apiVersion}";
     private const string _speechTokenUrl = "dev.microsofttranslator.com/apps/endpoint?api-version=1.0";
-    // test base domain: dev-sn2-test1.microsofttranslator-int.com
-    // end point co4 (works): https://dev-co4-test1.microsofttranslator-int.com/
+    // test base domain (405 error): dev-sn2-test1.microsofttranslator-int.com
+    // end point co4 (405 error): https://dev-co4-test1.microsofttranslator-int.com/
     // end point int (405 error): https://dev.microsofttranslator-int.com/
 
     private static readonly Uri _detectUri = new($"https://{_detectUrl}");
@@ -467,7 +467,6 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
                 Method = HttpMethod.Post,
                 RequestUri = _speechTokenUri
             };
-
 
             request.Headers.Add("X-ClientVersion", "N/A");
             request.Headers.Add("X-MT-Signature", GetSignature(_speechTokenUrl));
