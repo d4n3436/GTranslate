@@ -7,7 +7,7 @@ namespace GTranslate.Results;
 
 /// <summary>
 /// Represents the result of translating text using <see cref="AggregateTranslator"/>.
-/// It wraps a <see cref="ITranslationResult"/> and includes exceptions have occured in other translators before receiving the result.
+/// It wraps a <see cref="ITranslationResult"/> and includes exceptions that have occurred in other translators before receiving the result.
 /// </summary>
 public class AggregateTranslationResult : ITranslationResult
 {
@@ -24,7 +24,7 @@ public class AggregateTranslationResult : ITranslationResult
     public ITranslationResult InnerResult { get; }
 
     /// <summary>
-    /// Gets a read-only dictionary of exceptions that have occured in other translators before receiving the result. The key is the name of the translator that has thrown the exception (the value).
+    /// Gets a read-only dictionary of exceptions that have occurred in other translators before receiving the result. The key is the name of the translator that has thrown the exception (the value).
     /// </summary>
     public IReadOnlyDictionary<string, Exception> Exceptions { get; }
 
