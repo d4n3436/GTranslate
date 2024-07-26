@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GTranslate.Extensions;
 using GTranslate.Results;
 
 namespace GTranslate.Translators;
@@ -85,7 +86,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        List<Exception> exceptions = null!;
+        Dictionary<string, Exception> exceptions = null!;
         foreach (var translator in _translators)
         {
             if (!translator.IsLanguageSupported(toLanguage) || fromLanguage != null && !translator.IsLanguageSupported(fromLanguage))
@@ -95,12 +96,13 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
 
             try
             {
-                return await translator.TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
+                var result = await translator.TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
+                return new AggregateTranslationResult(result, exceptions?.AsReadOnly() ?? EmptyDictionary<string, Exception>.Value);
             }
             catch (Exception e)
             {
                 exceptions ??= [];
-                exceptions.Add(e);
+                exceptions.Add(translator.Name, e);
             }
         }
 
@@ -109,7 +111,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
             throw new TranslatorException($"No available translator supports the translation of the provided text from \"{fromLanguage}\" to \"{toLanguage}\".");
         }
 
-        throw new AggregateException("No translator provided a valid result.", exceptions);
+        throw new AggregateException("No translator provided a valid result.", exceptions.Values);
     }
 
     /// <inheritdoc cref="TranslateAsync(string, string, string)"/>
@@ -120,7 +122,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        List<Exception> exceptions = null!;
+        Dictionary<string, Exception> exceptions = null!;
         foreach (var translator in _translators)
         {
             if (!translator.IsLanguageSupported(toLanguage) || fromLanguage != null && !translator.IsLanguageSupported(fromLanguage))
@@ -130,12 +132,13 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
 
             try
             {
-                return await translator.TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
+                var result = await translator.TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
+                return new AggregateTranslationResult(result, exceptions?.AsReadOnly() ?? EmptyDictionary<string, Exception>.Value);
             }
             catch (Exception e)
             {
                 exceptions ??= [];
-                exceptions.Add(e);
+                exceptions.Add(translator.Name, e);
             }
         }
 
@@ -144,7 +147,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
             throw new TranslatorException($"No available translator supports the translation of the provided text from \"{fromLanguage!.ISO6391}\" to \"{toLanguage.ISO6391}\".");
         }
 
-        throw new AggregateException("No translator provided a valid result.", exceptions);
+        throw new AggregateException("No translator provided a valid result.", exceptions.Values);
     }
 
     /// <summary>
@@ -179,7 +182,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        List<Exception> exceptions = null!;
+        Dictionary<string, Exception> exceptions = null!;
         foreach (var translator in _translators)
         {
             if (!translator.IsLanguageSupported(toLanguage) || fromLanguage != null && !translator.IsLanguageSupported(fromLanguage))
@@ -189,12 +192,13 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
 
             try
             {
-                return await translator.TransliterateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
+                var result = await translator.TransliterateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
+                return new AggregateTransliterationResult(result, exceptions?.AsReadOnly() ?? EmptyDictionary<string, Exception>.Value);
             }
             catch (Exception e)
             {
                 exceptions ??= [];
-                exceptions.Add(e);
+                exceptions.Add(translator.Name, e);
             }
         }
 
@@ -203,7 +207,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
             throw new TranslatorException($"No available translator supports the transliteration of the provided text from \"{fromLanguage!.ISO6391}\" to \"{toLanguage.ISO6391}\".");
         }
 
-        throw new AggregateException("No translator provided a valid result.", exceptions);
+        throw new AggregateException("No translator provided a valid result.", exceptions.Values);
     }
 
     /// <summary>
