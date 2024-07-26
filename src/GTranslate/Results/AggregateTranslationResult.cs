@@ -42,4 +42,7 @@ public class AggregateTranslationResult : ITranslationResult
 
     /// <inheritdoc/>
     public ILanguage TargetLanguage => InnerResult.TargetLanguage;
+
+    /// <inheritdoc/>
+    public override string ToString() => $"{nameof(Translation)}: '{Translation}', {nameof(TargetLanguage)}: '{TargetLanguage.Name} ({TargetLanguage.ISO6391})', {nameof(SourceLanguage)}: '{SourceLanguage.Name} ({SourceLanguage.ISO6391})', {nameof(Service)}: {Service}";
 }
