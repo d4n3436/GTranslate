@@ -2,7 +2,7 @@
 
 namespace GTranslate.Models;
 
-internal class MicrosoftTranslatorTranslation
+internal class MicrosoftTranslationModel
 {
     [JsonPropertyName("to")]
     public required string To { get; set; }
