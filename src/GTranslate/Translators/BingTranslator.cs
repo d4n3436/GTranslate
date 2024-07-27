@@ -2,12 +2,13 @@
 using System.Buffers.Text;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using GTranslate.Extensions;
+using GTranslate.Models;
 using GTranslate.Results;
 
 namespace GTranslate.Translators;
@@ -109,28 +110,22 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
         // Bing Translator always return status code 200 regardless of the content
         using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
-        var root = document.RootElement;
 
-        TranslatorGuards.ThrowIfStatusCodeIsPresent(root);
+        TranslatorGuards.ThrowIfStatusCodeIsPresent(document.RootElement);
 
-        var first = root.FirstOrDefault();
-        var translation = first.GetPropertyOrDefault("translations"u8).FirstOrDefault();
+        var results = document.Deserialize(BingTranslationResultModelContext.Default.BingTranslationResultModelArray)!;
+        var result = results[0];
 
-        if (first.ValueKind == JsonValueKind.Undefined || translation.ValueKind == JsonValueKind.Undefined)
+        if (!result.HasTranslations())
         {
-            throw new TranslatorException("The API returned an empty response.", Name);
+            throw new TranslatorException("Received an invalid response from the API.");
         }
 
-        var langDetection = first.GetProperty("detectedLanguage"u8);
-        string detectedLanguage = langDetection.GetProperty("language"u8).GetString() ?? string.Empty;
-        float score = langDetection.GetProperty("score"u8).GetSingle();
-        string translatedText = translation.GetProperty("text"u8).GetString() ?? throw new TranslatorException("Failed to get the translated text.", Name);
-        string targetLanguage = translation.GetProperty("to"u8).GetString() ?? toLanguage.ISO6391;
-        string? script = translation.GetPropertyOrDefault("transliteration"u8).GetPropertyOrDefault("script"u8).GetStringOrDefault();
-        string? transliteration = translation.GetPropertyOrDefault("transliteration"u8).GetPropertyOrDefault("text"u8).GetStringOrDefault()
-                                  ?? root.ElementAtOrDefault(1).GetPropertyOrDefault("inputTransliteration"u8).GetStringOrDefault();
+        var translation = result.Translations[0];
+        var transliteration = translation.Transliteration?.Text ?? results.ElementAtOrDefault(1)?.InputTransliteration;
 
-        return new BingTranslationResult(translatedText, text, Language.GetLanguage(targetLanguage), Language.GetLanguage(detectedLanguage), transliteration, script, score);
+        return new BingTranslationResult(translation.Text, text, Language.GetLanguage(translation.To), Language.GetLanguage(result.DetectedLanguage.Language),
+            transliteration, translation.Transliteration?.Script, result.DetectedLanguage.Score);
     }
 
     /// <summary>
@@ -248,12 +243,8 @@ public sealed class BingTranslator : ITranslator, IDisposable
         using var content = new FormUrlEncodedContent(data);
 
         var uri = new Uri($"{TtsEndpoint}?isVertical=1&IG={credentials.ImpressionGuid.ToString("N").ToUpperInvariant()}&IID={Iid}");
-        using var request = new HttpRequestMessage
-        {
-            Method = HttpMethod.Post,
-            RequestUri = uri,
-            Content = content
-        };
+        using var request = new HttpRequestMessage(HttpMethod.Post, uri);
+        request.Content = content;
 
         var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
