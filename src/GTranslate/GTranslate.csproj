@@ -21,8 +21,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'netstandard2.1'">
+  <ItemGroup Condition="'$(TargetFramework)' != 'net8.0'">
     <PackageReference Include="System.Text.Json" Version="8.0.4" />
+    <PackageReference Include="System.Net.Http.Json" Version="8.0.0" /> 
   </ItemGroup>
 
   <ItemGroup>

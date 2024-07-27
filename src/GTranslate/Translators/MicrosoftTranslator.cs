@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -14,6 +15,7 @@ using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
 using GTranslate.Extensions;
+using GTranslate.Models;
 using GTranslate.Results;
 
 namespace GTranslate.Translators;
@@ -211,34 +213,17 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
             url += $"&from={MicrosoftHotPatch(fromLanguage.ISO6391)}";
         }
 
-        using var request = new HttpRequestMessage
-        {
-            Method = HttpMethod.Post,
-            RequestUri = new Uri($"https://{url}")
-        };
-
+        using var request = new HttpRequestMessage(HttpMethod.Post, new Uri($"https://{url}"));
         request.Headers.Add("X-MT-Signature", GetSignature(url));
-        request.Content = new StringContent($"[{{\"Text\":\"{text.AsSpan().SafeJsonTextEncode()}\"}}]", Encoding.UTF8, "application/json");
+        request.Content = JsonContent.Create([new MicrosoftTranslatorRequest { Text = text }], MicrosoftTranslatorRequestContext.Default.MicrosoftTranslatorRequestArray);
 
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
+        var result = (await response.Content.ReadFromJsonAsync(MicrosoftTranslatorResultContext.Default.MicrosoftTranslatorResultArray).ConfigureAwait(false))![0];
+        var translation = result.Translations[0];
 
-        var root = document.RootElement[0];
-
-        var detectedLanguage = root.GetPropertyOrDefault("detectedLanguage"u8);
-        string sourceLanguage = detectedLanguage
-            .GetPropertyOrDefault("language"u8)
-            .GetStringOrDefault(fromLanguage?.ISO6391) ?? throw new TranslatorException("Failed to get the source language.", Name);
-
-        string targetLanguage = root.GetProperty("translations"u8)[0].GetProperty("to"u8).GetString() ?? toLanguage.ISO6391;
-
-        float? score = detectedLanguage.TryGetSingle("score"u8, out float temp) ? temp : null;
-        string translation = root.GetProperty("translations"u8)[0].GetProperty("text"u8).GetString() ?? throw new TranslatorException("Failed to get the translation.", Name);
-
-        return new MicrosoftTranslationResult(translation, text, Language.GetLanguage(targetLanguage), Language.GetLanguage(sourceLanguage), score);
+        return new MicrosoftTranslationResult(translation.Text, text, Language.GetLanguage(translation.To), Language.GetLanguage(result.DetectedLanguage.Language), result.DetectedLanguage.Score);
     }
 
     /// <summary>
