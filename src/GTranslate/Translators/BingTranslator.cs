@@ -183,11 +183,6 @@ public sealed class BingTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(text);
 
         var result = await TranslateAsync(text, "en").ConfigureAwait(false);
-        if (result.SourceLanguage is null)
-        {
-            throw new TranslatorException("Failed to get the detected language.", Name);
-        }
-
         return result.SourceLanguage;
     }
 

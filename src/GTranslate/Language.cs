@@ -78,7 +78,7 @@ public sealed class Language : ILanguage, IEquatable<Language>
     /// Gets a language from a language code, name or alias.
     /// </summary>
     /// <param name="code">The language name or code. It can be a ISO 639-1 code, a ISO 639-3 code, a language name, or a language alias.</param>
-    /// <returns>The language, or null if the language was not found.</returns>
+    /// <returns>The language, or an exception if the language was not found.</returns>
     public static Language GetLanguage(string code) => LanguageDictionary.GetLanguage(code);
 
     /// <summary>
