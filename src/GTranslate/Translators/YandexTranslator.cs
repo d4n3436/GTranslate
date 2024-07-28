@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
-using System.Text.Json;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
-using GTranslate.Extensions;
+using GTranslate.Models;
 using GTranslate.Results;
 
 namespace GTranslate.Translators;
@@ -106,31 +105,24 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         using var content = new FormUrlEncodedContent(data);
         using var response = await _httpClient.PostAsync(new Uri($"{_apiUrl}/translate{query}"), content).ConfigureAwait(false);
-        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        
+        var result = (await response.Content.ReadFromJsonAsync(YandexTranslationResultModelContext.Default.YandexTranslationResultModel).ConfigureAwait(false))!;
 
-        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
-
-        ThrowIfStatusCodeIsPresent(document.RootElement);
-
-        var textProp = document.RootElement.GetProperty("text"u8);
-        if (textProp.ValueKind != JsonValueKind.Array)
+        if (!result.IsSuccessful)
         {
-            throw new TranslatorException("Failed to get the translated text.", Name);
+            ThrowHttpRequestException(result.Code, result.Message);
         }
 
-        string translation = string.Concat(textProp.EnumerateArray().Select(x => x.GetString()));
-
-        string language = document.RootElement.GetProperty("lang"u8).GetString() ?? throw new TranslatorException("Failed to get the source language.", Name);
-        int index = language.IndexOf('-');
+        int index = result.Lang.IndexOf('-');
         if (index == -1)
         {
             throw new TranslatorException("Failed to get the source language.", Name);
         }
 
-        string source = ReversePatch(language[..index]);
-        string target = ReversePatch(language[++index..]);
+        string source = ReversePatch(result.Lang[..index]);
+        string target = ReversePatch(result.Lang[++index..]);
 
-        return new YandexTranslationResult(translation, text, Language.GetLanguage(target), Language.GetLanguage(source));
+        return new YandexTranslationResult(result.Text[0], text, Language.GetLanguage(target), Language.GetLanguage(source));
     }
 
     /// <summary>
@@ -177,18 +169,20 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         using var content = new FormUrlEncodedContent(data);
         using var response = await _httpClient.PostAsync(_transliterationApiUri, content).ConfigureAwait(false);
-        byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
         if (response.StatusCode == HttpStatusCode.BadRequest)
         {
-            throw new TranslatorException(Encoding.UTF8.GetString(bytes), Name);
+            string message = await response.Content.ReadAsStringAsync();
+            throw new TranslatorException(message, Name);
         }
 
         response.EnsureSuccessStatusCode();
+
+        string transliteration = (await response.Content.ReadFromJsonAsync(YandexTranslationResultModelContext.Default.String).ConfigureAwait(false))!;
         var target = Language.GetLanguage(toLanguage.ISO6391);
         var source = Language.GetLanguage(fromLanguage.ISO6391);
 
-        return new YandexTransliterationResult(JsonSerializer.Deserialize(bytes, StringContext.Default.String)!, text, target, source);
+        return new YandexTransliterationResult(transliteration, text, target, source);
     }
 
     /// <summary>
@@ -213,27 +207,19 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         };
 
         using var content = new FormUrlEncodedContent(data);
-        using var request = new HttpRequestMessage
-        {
-            Method = HttpMethod.Get,
-            RequestUri = new Uri($"{_apiUrl}/detect{query}"),
-            Content = content
-        };
+        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri($"{_apiUrl}/detect{query}"));
+        request.Content = content;
 
         using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
-        var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
-        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
+        var result = (await response.Content.ReadFromJsonAsync(YandexLanguageDetectionResultModelContext.Default.YandexLanguageDetectionResultModel).ConfigureAwait(false))!;
 
-        ThrowIfStatusCodeIsPresent(document.RootElement);
-
-        string? language = document.RootElement.GetProperty("lang"u8).GetString();
-        if (language is null || !Language.TryGetLanguage(language, out var lang))
+        if (!result.IsSuccessful)
         {
-            throw new TranslatorException("Failed to get the detected language.", Name);
+            ThrowHttpRequestException(result.Code, result.Message);
         }
 
-        return lang;
+        return Language.GetLanguage(ReversePatch(result.Lang));
     }
 
     /// <summary>
@@ -362,18 +348,16 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         };
     }
 
-    private static void ThrowIfStatusCodeIsPresent(JsonElement element)
+    [DoesNotReturn]
+    private static void ThrowHttpRequestException(HttpStatusCode code, string? message)
     {
-        if (element.TryGetInt32("code"u8, out int code) && code != 200)
-        {
-            string message = element.GetPropertyOrDefault("message"u8).GetStringOrDefault($"The API returned status code {code}.");
+        message ??= $"The API returned status code {code}.";
 
 #if NET5_0_OR_GREATER
-            throw new HttpRequestException(message, null, (HttpStatusCode)code);
+        throw new HttpRequestException(message, null, code);
 #else
-            throw new HttpRequestException(message);
+        throw new HttpRequestException(message);
 #endif
-        }
     }
 
     private static void EnsureValidTTSLanguage(ILanguage language)
