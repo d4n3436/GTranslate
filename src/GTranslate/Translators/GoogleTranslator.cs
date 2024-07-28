@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using GTranslate.Extensions;
+using GTranslate.Models;
 using GTranslate.Results;
 
 namespace GTranslate.Translators;
@@ -96,34 +97,16 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        string query =
-            $"?client=gtx&sl={GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto")}&tl={GoogleHotPatch(toLanguage.ISO6391)}&dt=t&dt=bd&dj=1&source=input&tk={MakeToken(text.AsSpan())}";
-
+        string query = $"?client=gtx&sl={GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto")}&tl={GoogleHotPatch(toLanguage.ISO6391)}&dt=t&dt=bd&dj=1&source=input&tk={MakeToken(text.AsSpan())}";
         using var content = new FormUrlEncodedContent([new KeyValuePair<string, string>("q", text)]);
-        using var request = new HttpRequestMessage
-        {
-            Method = HttpMethod.Post,
-            RequestUri = new Uri($"{_apiEndpoint}{query}"),
-            Content = content
-        };
-
-        using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+        using var response = await _httpClient.PostAsync(new Uri($"{_apiEndpoint}{query}"), content).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
 
-        var sentences = document.RootElement.GetProperty("sentences"u8);
-        if (sentences.ValueKind != JsonValueKind.Array)
-        {
-            throw new TranslatorException("Failed to get the translated text.", Name);
-        }
+        var result = (await response.Content.ReadFromJsonAsync(GoogleTranslationResultModelContext.Default.GoogleTranslationResultModel).ConfigureAwait(false))!;
+        string translation = string.Concat(result.Sentences.Select(x => x.Translation));
+        string transliteration = string.Concat(result.Sentences.Select(x => x.Transliteration));
 
-        string translation = string.Concat(sentences.EnumerateArray().Select(x => x.GetProperty("trans"u8).GetString()));
-        string transliteration = string.Concat(sentences.EnumerateArray().Select(x => x.GetPropertyOrDefault("translit"u8).GetStringOrDefault()));
-        string source = document.RootElement.GetProperty("src"u8).GetString() ?? string.Empty;
-        float? confidence = document.RootElement.TryGetSingle("confidence"u8, out float temp) ? temp : null;
-
-        return new GoogleTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(source), transliteration, confidence);
+        return new GoogleTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(result.Source), transliteration, result.Confidence);
     }
 
     /// <summary>
