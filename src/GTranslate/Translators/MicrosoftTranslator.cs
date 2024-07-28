@@ -519,6 +519,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
             "lg" => "lug",
             "no" => "nb",
             "ny" => "nya",
+            "rn" => "run",
             "sr" => "sr-Cyrl",
             "mn" => "mn-Cyrl",
             "tlh" => "tlh-Latn",
