@@ -340,13 +340,8 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
 
         string payload = $"<speak version='1.0' xml:lang='{voice.Locale}'><voice xml:lang='{voice.Locale}' xml:gender='{voice.Gender}' name='{voice.ShortName}'><prosody rate='{speakRate}'>{_ssmlEncoder.Encode(text)}</prosody></voice></speak>";
 
-        using var request = new HttpRequestMessage
-        {
-            Method = HttpMethod.Post,
-            RequestUri = new Uri($"https://{authInfo.Region}.tts.speech.microsoft.com/cognitiveservices/v1"),
-            Content = new StringContent(payload, Encoding.UTF8, "application/ssml+xml")
-        };
-
+        using var request = new HttpRequestMessage(HttpMethod.Post, new Uri($"https://{authInfo.Region}.tts.speech.microsoft.com/cognitiveservices/v1"));
+        request.Content = new StringContent(payload, Encoding.UTF8, "application/ssml+xml");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authInfo.Token);
         request.Headers.Add("X-Microsoft-OutputFormat", "audio-16khz-32kbitrate-mono-mp3");
 
@@ -426,12 +421,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
                 return _cachedAuthTokenInfo.Value;
             }
 
-            using var request = new HttpRequestMessage
-            {
-                Method = HttpMethod.Post,
-                RequestUri = _speechTokenUri
-            };
-
+            using var request = new HttpRequestMessage(HttpMethod.Post, _speechTokenUri);
             request.Headers.Add("X-ClientVersion", "N/A");
             request.Headers.Add("X-MT-Signature", GetSignature(_speechTokenUrl));
             request.Headers.Add("X-UserId", "0");

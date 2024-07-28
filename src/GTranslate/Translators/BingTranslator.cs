@@ -374,17 +374,17 @@ public sealed class BingTranslator : ITranslator, IDisposable
     private static void ThrowIfStatusCodeIsPresent(JsonDocument document)
     {
         // If "statusCode" property is present, the response is not successful
-        if (document.RootElement.TryGetProperty("statusCode"u8, out _))
-        {
-            var result = document.Deserialize(BingErrorResultModelContext.Default.BingErrorResultModel)!;
-            string message = result.Message ?? $"The API returned status code {result.Code}.";
+        if (!document.RootElement.TryGetProperty("statusCode"u8, out _))
+            return;
+
+        var result = document.Deserialize(BingErrorResultModelContext.Default.BingErrorResultModel)!;
+        string message = result.Message ?? $"The API returned status code {result.Code}.";
 
 #if NET5_0_OR_GREATER
-            throw new HttpRequestException(message, null, result.Code);
+        throw new HttpRequestException(message, null, result.Code);
 #else
-            throw new HttpRequestException(message);
+        throw new HttpRequestException(message);
 #endif
-        }
     }
 
     /// <summary>
