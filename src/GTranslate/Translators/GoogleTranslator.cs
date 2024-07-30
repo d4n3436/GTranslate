@@ -97,14 +97,14 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        string query = $"?client=gtx&sl={GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto")}&tl={GoogleHotPatch(toLanguage.ISO6391)}&dt=t&dt=bd&dj=1&source=input&tk={MakeToken(text.AsSpan())}";
+        string url = $"{_apiEndpoint}?client=gtx&sl={GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto")}&tl={GoogleHotPatch(toLanguage.ISO6391)}&dt=t&dt=bd&dj=1&source=input&tk={MakeToken(text.AsSpan())}";
         using var content = new FormUrlEncodedContent([new KeyValuePair<string, string>("q", text)]);
-        using var response = await _httpClient.PostAsync(new Uri($"{_apiEndpoint}{query}"), content).ConfigureAwait(false);
+        using var response = await _httpClient.PostAsync(new Uri(url), content).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         var result = (await response.Content.ReadFromJsonAsync(GoogleTranslationResultModelContext.Default.GoogleTranslationResultModel).ConfigureAwait(false))!;
-        string translation = string.Concat(result.Sentences.Select(x => x.Translation));
-        string transliteration = string.Concat(result.Sentences.Select(x => x.Transliteration));
+        string translation = result.Sentences is null ? string.Empty : string.Concat(result.Sentences.Select(x => x.Translation));
+        string? transliteration = result.Sentences is null ? null : string.Concat(result.Sentences.Select(x => x.Transliteration));
 
         return new GoogleTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(result.Source), transliteration, null, result.Confidence);
     }
@@ -143,12 +143,12 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
         var result = await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
-        if (string.IsNullOrEmpty(result.Transliteration))
+        if (result.Transliteration is null)
         {
             throw new TranslatorException("Failed to get the transliteration.", Name);
         }
 
-        return new GoogleTransliterationResult(result.Transliteration!, result.SourceTransliteration, text, result.TargetLanguage, result.SourceLanguage);
+        return new GoogleTransliterationResult(result.Transliteration, result.SourceTransliteration, text, result.TargetLanguage, result.SourceLanguage);
     }
 
     /// <summary>

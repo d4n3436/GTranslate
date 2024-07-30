@@ -6,7 +6,7 @@ namespace GTranslate.Models;
 internal class GoogleTranslationResultModel
 {
     [JsonPropertyName("sentences")]
-    public required IReadOnlyList<GoogleSentenceModel> Sentences { get; set; }
+    public IReadOnlyList<GoogleSentenceModel>? Sentences { get; set; }
 
     [JsonPropertyName("src")]
     public required string Source { get; set; }
