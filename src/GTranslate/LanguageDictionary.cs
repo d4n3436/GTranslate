@@ -158,7 +158,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["be"] = new("Belarusian", "беларуская", "be", "bel", TranslationServices.Google | TranslationServices.Yandex),
         ["bg"] = new("Bulgarian", "Български", "bg", "bul"),
         ["bho"] = new("Bhojpuri", "भोजपुरी", "bho", "bho", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
-        ["bm"] = new("Bambara", "ߓߊߡߊߣߊ߲ߞߊ߲", "bm", "bam", TranslationServices.Google),
+        ["bm"] = new("Bambara", "Bamanankan", "bm", "bam", TranslationServices.Google),
         ["bn"] = new("Bengali", "বাংলা", "bn", "ben"),
         ["bo"] = new("Tibetan", "བོད་སྐད་", "bo", "bod", TranslationServices.Bing | TranslationServices.Microsoft),
         ["brx"] = new("Bodo", "बड़ो", "brx", "brx", TranslationServices.Bing | TranslationServices.Microsoft),
