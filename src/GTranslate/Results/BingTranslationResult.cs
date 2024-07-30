@@ -1,5 +1,6 @@
 ﻿using GTranslate.Translators;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GTranslate.Results;
 
@@ -9,13 +10,14 @@ namespace GTranslate.Results;
 public class BingTranslationResult : ITranslationResult<Language>, ITranslationResult
 {
     internal BingTranslationResult(string translation, string source, Language targetLanguage,
-        Language sourceLanguage, string? transliteration, string? script, float score)
+        Language sourceLanguage, string? transliteration, string? sourceTransliteration, string? script, float score)
     {
         Translation = translation;
         Source = source;
         TargetLanguage = targetLanguage;
         SourceLanguage = sourceLanguage;
         Transliteration = transliteration;
+        SourceTransliteration = sourceTransliteration;
         Script = script;
         Score = score;
     }
@@ -36,12 +38,17 @@ public class BingTranslationResult : ITranslationResult<Language>, ITranslationR
     public Language SourceLanguage { get; }
 
     /// <summary>
-    /// Gets the transliteration of the text.
+    /// Gets the transliteration of the result (<see cref="Translation"/>).
     /// </summary>
     public string? Transliteration { get; }
 
     /// <summary>
-    /// Gets the language script.
+    /// Gets the transliteration of the source text.
+    /// </summary>
+    public string? SourceTransliteration { get; }
+
+    /// <summary>
+    /// Gets the script of <see cref="Transliteration"/>.
     /// </summary>
     public string? Script { get; }
 
@@ -49,6 +56,9 @@ public class BingTranslationResult : ITranslationResult<Language>, ITranslationR
     /// Gets the language detection score.
     /// </summary>
     public float Score { get; }
+
+    [MemberNotNullWhen(true, nameof(Transliteration), nameof(Script))]
+    internal bool HasTransliteration => Transliteration is not null && Script is not null;
 
     /// <inheritdoc />
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]

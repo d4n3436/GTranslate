@@ -116,16 +116,17 @@ public sealed class BingTranslator : ITranslator, IDisposable
         var results = document.Deserialize(BingTranslationResultModelContext.Default.BingTranslationResultModelArray)!;
         var result = results[0];
 
-        if (!result.HasTranslations())
+        if (!result.HasTranslations)
         {
             throw new TranslatorException("Received an invalid response from the API.");
         }
 
         var translation = result.Translations[0];
-        var transliteration = translation.Transliteration?.Text ?? results.ElementAtOrDefault(1)?.InputTransliteration;
+        var transliteration = translation.Transliteration?.Text;
+        var sourceTransliteration = results.ElementAtOrDefault(1)?.InputTransliteration;
 
         return new BingTranslationResult(translation.Text, text, Language.GetLanguage(translation.To), Language.GetLanguage(result.DetectedLanguage.Language),
-            transliteration, translation.Transliteration?.Script, result.DetectedLanguage.Score);
+            transliteration, sourceTransliteration, translation.Transliteration?.Script, result.DetectedLanguage.Score);
     }
 
     /// <summary>
@@ -162,12 +163,12 @@ public sealed class BingTranslator : ITranslator, IDisposable
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
         var result = await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
-        if (string.IsNullOrEmpty(result.Transliteration))
+        if (!result.HasTransliteration)
         {
             throw new TranslatorException("Failed to get the transliteration.", Name);
         }
 
-        return new BingTransliterationResult(result.Transliteration!, text, result.TargetLanguage, result.SourceLanguage, result.Script);
+        return new BingTransliterationResult(result.Transliteration, result.SourceTransliteration, text, result.TargetLanguage, result.SourceLanguage, result.Script);
     }
 
     /// <summary>

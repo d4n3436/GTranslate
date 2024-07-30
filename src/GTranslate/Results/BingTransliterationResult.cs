@@ -8,9 +8,10 @@ namespace GTranslate.Results;
 /// </summary>
 public class BingTransliterationResult : ITransliterationResult<Language>, ITransliterationResult
 {
-    internal BingTransliterationResult(string transliteration, string source, Language targetLanguage, Language sourceLanguage, string? script)
+    internal BingTransliterationResult(string transliteration, string? sourceTransliteration, string source, Language targetLanguage, Language sourceLanguage, string script)
     {
         Transliteration = transliteration;
+        SourceTransliteration = sourceTransliteration;
         Source = source;
         TargetLanguage = targetLanguage;
         SourceLanguage = sourceLanguage;
@@ -19,6 +20,11 @@ public class BingTransliterationResult : ITransliterationResult<Language>, ITran
 
     /// <inheritdoc cref="ITransliterationResult{TLanguage}.Transliteration"/>
     public string Transliteration { get; }
+
+    /// <summary>
+    /// Gets the transliteration of the source text (<see cref="Source"/>).
+    /// </summary>
+    public string? SourceTransliteration { get; }
 
     /// <inheritdoc cref="ITransliterationResult{TLanguage}.Source"/>
     public string Source { get; }
@@ -35,7 +41,7 @@ public class BingTransliterationResult : ITransliterationResult<Language>, ITran
     /// <summary>
     /// Gets the language script.
     /// </summary>
-    public string? Script { get; }
+    public string Script { get; }
 
     /// <inheritdoc />
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]

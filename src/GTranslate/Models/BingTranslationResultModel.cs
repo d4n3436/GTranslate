@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
@@ -17,14 +16,5 @@ internal class BingTranslationResultModel
     public string? InputTransliteration { get; set; }
 
     [MemberNotNullWhen(true, nameof(DetectedLanguage), nameof(Translations))]
-    public bool HasTranslations()
-    {
-        if (DetectedLanguage is not null && Translations is not null)
-        {
-            Debug.Assert(InputTransliteration is null);
-            return true;
-        }
-
-        return false;
-    }
+    public bool HasTranslations => DetectedLanguage is not null && Translations is not null;
 }
