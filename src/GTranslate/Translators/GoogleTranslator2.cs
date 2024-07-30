@@ -117,7 +117,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         }
 
         string translation;
-        if (root[1][0][0].GetArrayLength() > 5)
+        if (root[1][0][0].GetArrayLength() > 5 && root[1][0][0][5].ValueKind == JsonValueKind.Array)
         {
             translation = string.Join(" ", root[1][0][0][5].EnumerateArray().Select(x => x[0].GetString()));
         }
