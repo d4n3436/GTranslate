@@ -270,7 +270,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         response.EnsureSuccessStatusCode();
 
         var result = (await response.Content.ReadFromJsonAsync(MicrosoftTransliterationResultModelContext.Default.MicrosoftTransliterationResultModelArray).ConfigureAwait(false))![0];
-        return new MicrosoftTransliterationResult(result.Text, text, result.Script);
+        return new MicrosoftTransliterationResult(result.Text, text, Language.GetLanguage(language.ISO6391), result.Script, fromScript);
     }
 
     /// <summary>

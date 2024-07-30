@@ -9,7 +9,7 @@ namespace GTranslate.Results;
 public class MicrosoftTranslationResult : ITranslationResult<Language>, ITranslationResult
 {
     internal MicrosoftTranslationResult(string translation, string source, Language targetLanguage,
-        Language sourceLanguage, float? score)
+        Language sourceLanguage, float score)
     {
         Translation = translation;
         Source = source;
@@ -36,7 +36,7 @@ public class MicrosoftTranslationResult : ITranslationResult<Language>, ITransla
     /// <summary>
     /// Gets the language detection score.
     /// </summary>
-    public float? Score { get; }
+    public float? Score { get; } // TODO: Remove nullable mark
 
     /// <inheritdoc />
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
