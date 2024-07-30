@@ -16,5 +16,5 @@ internal class YandexLanguageDetectionResultModel
     public string? Lang { get; set; }
 
     [MemberNotNullWhen(true, nameof(Lang))]
-    public bool IsSuccessful => Code != HttpStatusCode.OK;
+    public bool IsSuccessful => Code == HttpStatusCode.OK;
 }

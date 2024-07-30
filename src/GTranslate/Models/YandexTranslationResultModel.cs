@@ -20,5 +20,5 @@ internal class YandexTranslationResultModel
     public string? Lang { get; set; }
 
     [MemberNotNullWhen(true, nameof(Text), nameof(Lang))]
-    public bool IsSuccessful => Code != HttpStatusCode.OK;
+    public bool IsSuccessful => Code == HttpStatusCode.OK;
 }
