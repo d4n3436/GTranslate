@@ -374,7 +374,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
     private static void ThrowIfStatusCodeIsPresent(JsonDocument document)
     {
         // If "statusCode" property is present, the response is not successful
-        if (!document.RootElement.TryGetProperty("statusCode"u8, out _))
+        if (document.RootElement.ValueKind == JsonValueKind.Array || !document.RootElement.TryGetProperty("statusCode"u8, out _))
             return;
 
         var result = document.Deserialize(BingErrorResultModelContext.Default.BingErrorResultModel)!;
