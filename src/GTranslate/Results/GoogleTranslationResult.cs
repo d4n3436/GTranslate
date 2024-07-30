@@ -9,13 +9,14 @@ namespace GTranslate.Results;
 public class GoogleTranslationResult : ITranslationResult<Language>, ITranslationResult
 {
     internal GoogleTranslationResult(string translation, string source, Language targetLanguage,
-        Language sourceLanguage, string? transliteration = null, float? confidence = null, string service = nameof(GoogleTranslator))
+        Language sourceLanguage, string? transliteration = null, string? sourceTransliteration = null, float? confidence = null, string service = nameof(GoogleTranslator))
     {
         Translation = translation;
         Source = source;
         TargetLanguage = targetLanguage;
         SourceLanguage = sourceLanguage;
         Transliteration = transliteration;
+        SourceTransliteration = sourceTransliteration;
         Confidence = confidence;
         Service = service;
     }
@@ -39,6 +40,11 @@ public class GoogleTranslationResult : ITranslationResult<Language>, ITranslatio
     /// Gets the transliteration of the text.
     /// </summary>
     public string? Transliteration { get; }
+
+    /// <summary>
+    /// Gets the transliteration of the source text.
+    /// </summary>
+    public string? SourceTransliteration { get; }
 
     /// <summary>
     /// Gets the translation confidence.

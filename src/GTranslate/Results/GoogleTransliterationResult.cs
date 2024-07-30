@@ -8,9 +8,10 @@ namespace GTranslate.Results;
 /// </summary>
 public class GoogleTransliterationResult : ITransliterationResult<Language>, ITransliterationResult
 {
-    internal GoogleTransliterationResult(string transliteration, string source, Language targetLanguage, Language sourceLanguage, string service = nameof(GoogleTranslator))
+    internal GoogleTransliterationResult(string transliteration, string? sourceTransliteration, string source, Language targetLanguage, Language sourceLanguage, string service = nameof(GoogleTranslator))
     {
         Transliteration = transliteration;
+        SourceTransliteration = sourceTransliteration;
         Source = source;
         TargetLanguage = targetLanguage;
         SourceLanguage = sourceLanguage;
@@ -19,6 +20,11 @@ public class GoogleTransliterationResult : ITransliterationResult<Language>, ITr
 
     /// <inheritdoc cref="ITransliterationResult{TLanguage}.Transliteration"/>
     public string Transliteration { get; }
+
+    /// <summary>
+    /// Gets the transliteration of the source text.
+    /// </summary>
+    public string? SourceTransliteration { get; }
 
     /// <inheritdoc cref="ITransliterationResult{TLanguage}.Source"/>
     public string Source { get; }

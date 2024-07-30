@@ -106,7 +106,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         string translation = string.Concat(result.Sentences.Select(x => x.Translation));
         string transliteration = string.Concat(result.Sentences.Select(x => x.Transliteration));
 
-        return new GoogleTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(result.Source), transliteration, result.Confidence);
+        return new GoogleTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(result.Source), transliteration, null, result.Confidence);
     }
 
     /// <summary>
@@ -148,7 +148,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
             throw new TranslatorException("Failed to get the transliteration.", Name);
         }
 
-        return new GoogleTransliterationResult(result.Transliteration!, text, result.TargetLanguage, result.SourceLanguage);
+        return new GoogleTransliterationResult(result.Transliteration!, result.SourceTransliteration, text, result.TargetLanguage, result.SourceLanguage);
     }
 
     /// <summary>

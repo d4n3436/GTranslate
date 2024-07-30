@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using GTranslate.Extensions;
+using GTranslate.Models;
 using GTranslate.Results;
 
 namespace GTranslate.Translators;
@@ -99,51 +100,38 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        string payload = $"""[["{text.AsSpan().SafeJsonTextEncode()}","{GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto")}","{GoogleHotPatch(toLanguage.ISO6391)}",true],[null]]""";
-
+        object[] payload = [new object[] { text, GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto"), GoogleHotPatch(toLanguage.ISO6391), true }, new object?[] { null }];
         using var request = BuildRequest(_translateRpcId, payload);
         using var document = await SendAndParseResponseAsync(request).ConfigureAwait(false);
 
         var root = document.RootElement;
 
         string target = root[1][1].GetString() ?? toLanguage.ISO6391;
-        string source = root[1][3].GetString() ?? string.Empty;
+        string source = root[1][3].GetString()!;
         
         if (source == "auto")
         {
-            source = root.ElementAtOrDefault(2).GetStringOrDefault()
-                     ?? "en"; // Source language is not present, this happens when the text is a hyperlink and fromLanguage is null
+            source = root.GetArrayLength() > 2
+                ? root[2].GetString()!
+                : "en"; // Source language is not present, this happens when the text is a hyperlink and fromLanguage is null
         }
 
         string translation;
-        var chunks = root[1][0][0]
-            .EnumerateArray()
-            .FirstOrDefault(x => x.ValueKind == JsonValueKind.Array);
-
-        if (chunks.ValueKind == JsonValueKind.Array)
+        if (root[1][0][0].GetArrayLength() > 5)
         {
-            translation = string.Join(" ", chunks.EnumerateArray().Select(x => x.FirstOrDefault().GetString()));
+            translation = string.Join(" ", root[1][0][0][5].EnumerateArray().Select(x => x[0].GetString()));
         }
         else
         {
             // no chunks found, could be a link or gender-specific translation
             // should we provide the value of the link and the gender-specific translations in separate properties?
-            translation = root[1][0][0][0].GetString() ?? string.Empty;
+            translation = root[1][0][0][0].GetString()!;
         }
 
-        if (string.IsNullOrEmpty(translation))
-        {
-            throw new TranslatorException("Failed to get the translated text.", Name);
-        }
+        string? targetTransliteration = root[1][0][0][1].GetString();
+        string? sourceTransliteration = root[0].ValueKind == JsonValueKind.Array ? root[0][0].GetString() : null;
 
-        string? transliteration = root[1][0][0]
-            .ElementAtOrDefault(1)
-            .GetStringOrDefault() ?? root
-            .FirstOrDefault()
-            .FirstOrDefault()
-            .GetStringOrDefault();
-
-        return new GoogleTranslationResult(translation, text, Language.GetLanguage(target), Language.GetLanguage(source), transliteration, null, Name);
+        return new GoogleTranslationResult(translation, text, Language.GetLanguage(target), Language.GetLanguage(source), targetTransliteration, sourceTransliteration, null, Name);
     }
 
     /// <summary>
@@ -185,7 +173,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
             throw new TranslatorException("Failed to get the transliteration.", Name);
         }
 
-        return new GoogleTransliterationResult(result.Transliteration!, text, result.TargetLanguage, result.SourceLanguage, Name);
+        return new GoogleTransliterationResult(result.Transliteration!, result.SourceTransliteration, text, result.TargetLanguage, result.SourceLanguage, Name);
     }
 
     /// <summary>
@@ -242,8 +230,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         
         async Task<ReadOnlyMemory<byte>> ProcessRequestAsync(ReadOnlyMemory<char> textChunk)
         {
-            string payload = $"""["{textChunk.Span.SafeJsonTextEncode()}","{language.ISO6391}",{(slow ? "true" : "null")},"null"]""";
-
+            object[] payload = [textChunk, language.ISO6391, slow ? "true" : "null", "null"];
             using var request = BuildRequest(_ttsRpcId, payload);
             using var document = await SendAndParseResponseAsync(request).ConfigureAwait(false);
 
@@ -304,12 +291,18 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         }
     }
 
-    private static HttpRequestMessage BuildRequest(string rpcId, string payload) => new()
+    private static HttpRequestMessage BuildRequest(string rpcId, object[] payload)
     {
-        Method = HttpMethod.Post,
-        RequestUri = new Uri($"_/TranslateWebserverUi/data/batchexecute?rpcids={rpcId}", UriKind.Relative),
-        Content = new FormUrlEncodedContent([new KeyValuePair<string, string>("f.req", $"""[[["{rpcId}","{JsonEncodedText.Encode(payload)}",null,"generic"]]]""")])
-    };
+        var serializedPayload = JsonSerializer.Serialize(payload, ObjectArrayContext.Default.ObjectArray);
+        object?[][][] request = [[[rpcId, serializedPayload, null, "generic"]]];
+
+        return new HttpRequestMessage
+        {
+            Method = HttpMethod.Post,
+            RequestUri = new Uri($"_/TranslateWebserverUi/data/batchexecute?rpcids={rpcId}", UriKind.Relative),
+            Content = new FormUrlEncodedContent([new KeyValuePair<string, string>("f.req", JsonSerializer.Serialize(request, ObjectArrayContext.Default.ObjectArrayArrayArray!))])
+        };
+    }
 
     /// <summary>
     /// Hot-patches language codes to Google-specific ones.
@@ -346,34 +339,25 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     private async Task<JsonDocument> SendAndParseResponseAsync(HttpRequestMessage request)
     {
         using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+        using var document = await GetJsonDocumentAsync(response).ConfigureAwait(false);
 
+        // get the actual data
+        string data = document.RootElement[0][2].GetString() ?? throw new TranslatorException("Unable to get the data from the response.", Name);
+        return JsonDocument.Parse(data);
+    }
+
+    private static async Task<JsonDocument> GetJsonDocumentAsync(HttpResponseMessage response)
+    {
         using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-        JsonDocument document;
 
         // skip magic chars
         if (stream.CanSeek)
         {
             stream.Seek(6, SeekOrigin.Begin);
-            document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
-        }
-        else
-        {
-            byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-            document = JsonDocument.Parse(bytes.AsMemory(6, bytes.Length - 6));
+            return await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
         }
 
-        string data;
-
-        try
-        {
-            // get the actual data
-            data = document.RootElement[0][2].GetString() ?? throw new TranslatorException("Unable to get the data from the response.", Name);
-        }
-        finally
-        {
-            document.Dispose();
-        }
-
-        return JsonDocument.Parse(data);
+        byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+        return JsonDocument.Parse(bytes.AsMemory(6, bytes.Length - 6));
     }
 }
