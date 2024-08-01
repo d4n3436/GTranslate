@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace GTranslate;
@@ -11,7 +12,15 @@ namespace GTranslate;
 /// </summary>
 public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
 {
-    internal LanguageDictionary() => Aliases = new ReadOnlyDictionary<string, string>(BuildLanguageAliases());
+    private const int TotalLanguages = 174;
+    private const int TotalAliases = 529;
+
+    internal LanguageDictionary()
+    {
+        Aliases = new ReadOnlyDictionary<string, string>(BuildLanguageAliases());
+        Debug.Assert(Count == TotalLanguages, $"TotalLanguages is outdated (Count was {Count})");
+        Debug.Assert(Aliases.Count == TotalAliases, $"TotalAliases is outdated (Count was {Aliases.Count})");
+    }
 
     /// <inheritdoc />
     public IEnumerator<KeyValuePair<string, Language>> GetEnumerator()
@@ -94,7 +103,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
 
     private Dictionary<string, string> BuildLanguageAliases()
     {
-        var aliases = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
+        var aliases = new Dictionary<string, string>(TotalAliases, StringComparer.InvariantCultureIgnoreCase)
         {
             ["bangla"] = "bn",
             ["myanmar"] = "my",
@@ -138,14 +147,10 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
             aliases[kvp.Value.ISO6393] = kvp.Key;
         }
 
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
-        aliases.TrimExcess();
-#endif
-        
         return aliases;
     }
 
-    private readonly ReadOnlyDictionary<string, Language> _languages = new(new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
+    private readonly ReadOnlyDictionary<string, Language> _languages = new(new Dictionary<string, Language>(TotalLanguages, StringComparer.OrdinalIgnoreCase)
     {
         ["af"] = new("Afrikaans", "Afrikaans", "af", "afr"),
         ["ak"] = new("Akan", "Ákán", "ak", "aka", TranslationServices.Google),
