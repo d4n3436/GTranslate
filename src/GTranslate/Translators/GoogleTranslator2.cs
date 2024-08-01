@@ -16,22 +16,23 @@ namespace GTranslate.Translators;
 /// </summary>
 public sealed class GoogleTranslator2 : ITranslator, IDisposable
 {
-    private const string _translateRpcId = "MkEWBc";
-    private const string _ttsRpcId = "jQ1olc";
-    private static readonly Uri _defaultBaseAddress = new("https://translate.google.com/");
-    private static readonly string[] _ttsLanguages =
+    private const string TranslateRpcId = "MkEWBc";
+    private const string TtsRpcId = "jQ1olc";
+    private static readonly Uri DefaultBaseAddress = new("https://translate.google.com/");
+
+    private static readonly string[] TtsLanguages =
     [
         "af", "am", "ar", "bg", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "eu", "fi", "fr", "gl", "gu", "ha", "hi", "hr",
         "hu", "hy", "id", "is", "it", "iw", "ja", "jv", "km", "kn", "ko", "la", "lt", "lv", "mk", "ml", "mr", "ms", "my", "ne", "nl", "no", "pa", "pl",
         "pt", "pt-PT", "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "yue", "zh-CN", "zh-TW"
     ];
 
-    private static readonly Lazy<HashSet<ILanguage>> _lazyTtsLanguages = new(() => new HashSet<ILanguage>(_ttsLanguages.Select(Language.GetLanguage)));
+    private static readonly Lazy<HashSet<ILanguage>> LazyTtsLanguages = new(() => [..TtsLanguages.Select(Language.GetLanguage)]);
 
     /// <summary>
     /// Gets a read-only collection of languages that support text-to-speech.
     /// </summary>
-    public static IReadOnlyCollection<ILanguage> TextToSpeechLanguages => _lazyTtsLanguages.Value;
+    public static IReadOnlyCollection<ILanguage> TextToSpeechLanguages => LazyTtsLanguages.Value;
 
     /// <inheritdoc/>
     public string Name => nameof(GoogleTranslator2);
@@ -60,7 +61,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(Constants.DefaultUserAgent);
         }
 
-        httpClient.BaseAddress ??= _defaultBaseAddress;
+        httpClient.BaseAddress ??= DefaultBaseAddress;
 
         _httpClient = httpClient;
     }
@@ -101,7 +102,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
         object[] payload = [new object[] { text, GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto"), GoogleHotPatch(toLanguage.ISO6391), true }, new object?[] { null }];
-        using var request = BuildRequest(_translateRpcId, payload);
+        using var request = BuildRequest(TranslateRpcId, payload);
         using var document = await SendAndParseResponseAsync(request).ConfigureAwait(false);
 
         var root = document.RootElement;
@@ -231,7 +232,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         async Task<ReadOnlyMemory<byte>> ProcessRequestAsync(ReadOnlyMemory<char> textChunk)
         {
             object[] payload = [textChunk, language.ISO6391, slow ? "true" : "null", "null"];
-            using var request = BuildRequest(_ttsRpcId, payload);
+            using var request = BuildRequest(TtsRpcId, payload);
             using var document = await SendAndParseResponseAsync(request).ConfigureAwait(false);
 
             return document.RootElement[0].GetBytesFromBase64();
@@ -285,7 +286,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
 
     private static void EnsureValidTTSLanguage(ILanguage language)
     {
-        if (!_lazyTtsLanguages.Value.Contains(language))
+        if (!LazyTtsLanguages.Value.Contains(language))
         {
             throw new ArgumentException("Language not supported.", nameof(language));
         }

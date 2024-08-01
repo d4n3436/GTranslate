@@ -3,4 +3,4 @@
 namespace GTranslate.Models;
 
 [JsonSerializable(typeof(MicrosoftTranslationResultModel[]))]
-internal partial class MicrosoftTranslationResultModelContext : JsonSerializerContext;
+internal sealed partial class MicrosoftTranslationResultModelContext : JsonSerializerContext;

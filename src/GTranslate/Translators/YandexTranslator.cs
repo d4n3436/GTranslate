@@ -16,10 +16,11 @@ namespace GTranslate.Translators;
 /// </summary>
 public sealed class YandexTranslator : ITranslator, IDisposable
 {
-    private const string _apiUrl = "https://translate.yandex.net/api/v1/tr.json";
-    private const string _defaultUserAgent = "ru.yandex.translate/3.20.2024";
-    private static readonly Uri _transliterationApiUri = new("https://translate.yandex.net/translit/translit");
-    private static readonly HashSet<ILanguage> _ttsLanguages =
+    private const string ApiUrl = "https://translate.yandex.net/api/v1/tr.json";
+    private const string DefaultUserAgent = "ru.yandex.translate/3.20.2024";
+    private static readonly Uri TransliterationApiUri = new("https://translate.yandex.net/translit/translit");
+
+    private static readonly HashSet<ILanguage> TtsLanguages =
     [
         Language.GetLanguage("ru"),
         Language.GetLanguage("en"),
@@ -29,7 +30,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <summary>
     /// Gets a read-only collection of languages that support text-to-speech.
     /// </summary>
-    public static IReadOnlyCollection<ILanguage> TextToSpeechLanguages => _ttsLanguages;
+    public static IReadOnlyCollection<ILanguage> TextToSpeechLanguages => TtsLanguages;
 
     /// <inheritdoc/>
     public string Name => nameof(YandexTranslator);
@@ -56,7 +57,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         if (httpClient.DefaultRequestHeaders.UserAgent.Count == 0)
         {
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_defaultUserAgent);
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(DefaultUserAgent);
         }
 
         _httpClient = httpClient;
@@ -104,7 +105,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         };
 
         using var content = new FormUrlEncodedContent(data);
-        using var response = await _httpClient.PostAsync(new Uri($"{_apiUrl}/translate{query}"), content).ConfigureAwait(false);
+        using var response = await _httpClient.PostAsync(new Uri($"{ApiUrl}/translate{query}"), content).ConfigureAwait(false);
         
         var result = (await response.Content.ReadFromJsonAsync(YandexTranslationResultModelContext.Default.YandexTranslationResultModel).ConfigureAwait(false))!;
 
@@ -168,11 +169,11 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         };
 
         using var content = new FormUrlEncodedContent(data);
-        using var response = await _httpClient.PostAsync(_transliterationApiUri, content).ConfigureAwait(false);
+        using var response = await _httpClient.PostAsync(TransliterationApiUri, content).ConfigureAwait(false);
 
         if (response.StatusCode == HttpStatusCode.BadRequest)
         {
-            string message = await response.Content.ReadAsStringAsync();
+            string message = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             throw new TranslatorException(message, Name);
         }
 
@@ -207,7 +208,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         };
 
         using var content = new FormUrlEncodedContent(data);
-        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri($"{_apiUrl}/detect{query}"));
+        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri($"{ApiUrl}/detect{query}"));
         request.Content = content;
 
         using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
@@ -362,7 +363,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
     private static void EnsureValidTTSLanguage(ILanguage language)
     {
-        if (!_ttsLanguages.Contains(language))
+        if (!TtsLanguages.Contains(language))
         {
             throw new ArgumentException("Language not supported.", nameof(language));
         }

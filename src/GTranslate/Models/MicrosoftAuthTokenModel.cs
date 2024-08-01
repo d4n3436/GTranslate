@@ -2,7 +2,7 @@
 
 namespace GTranslate.Models;
 
-internal class MicrosoftAuthTokenModel
+internal sealed class MicrosoftAuthTokenModel
 {
     [JsonPropertyName("t")]
     public required string Token { get; set; }

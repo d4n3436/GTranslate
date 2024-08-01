@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace GTranslate.Models;
 
-internal class YandexTranslationResultModel
+internal sealed class YandexTranslationResultModel
 {
     [JsonPropertyName("code")]
     public required HttpStatusCode Code { get; set; }

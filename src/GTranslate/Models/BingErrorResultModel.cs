@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace GTranslate.Models;
 
-internal class BingErrorResultModel
+internal sealed class BingErrorResultModel
 {
     [JsonPropertyName("code")]
     public required HttpStatusCode Code { get; set; }

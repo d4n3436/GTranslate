@@ -2,7 +2,7 @@
 
 namespace GTranslate.Models;
 
-internal class MicrosoftLanguageDetectionResultModel
+internal sealed class MicrosoftLanguageDetectionResultModel
 {
     [JsonPropertyName("language")]
     public required string Language { get; set; }

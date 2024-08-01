@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace GTranslate.Models;
 
-internal class GoogleTranslationResultModel
+internal sealed class GoogleTranslationResultModel
 {
     [JsonPropertyName("sentences")]
     public IReadOnlyList<GoogleSentenceModel>? Sentences { get; set; }

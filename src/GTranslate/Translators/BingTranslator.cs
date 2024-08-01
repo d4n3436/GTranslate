@@ -20,8 +20,9 @@ public sealed class BingTranslator : ITranslator, IDisposable
 {
     private const string HostUrl = "https://www.bing.com";
     private const string TtsEndpoint = $"{HostUrl}/tfettts";
-    private static readonly Uri _translatorPageUri = new($"{HostUrl}/translator");  
+    private static readonly Uri TranslatorPageUri = new($"{HostUrl}/translator");  
     private const string Iid = "translator.5024.1";
+
     private static ReadOnlySpan<byte> CredentialsStart => "var params_AbusePreventionHelper = ["u8;
 
     /// <inheritdoc/>
@@ -227,7 +228,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
         var credentials = await GetOrUpdateCredentialsAsync().ConfigureAwait(false);
 
-        string ssml = $"<speak version='1.0' xml:lang='{voice.Locale}'><voice xml:lang='{voice.Locale}' xml:gender='{voice.Gender}' name='{voice.ShortName}'><prosody rate='{speakRate}'>{MicrosoftTranslator._ssmlEncoder.Encode(text)}</prosody></voice></speak>";
+        string ssml = $"<speak version='1.0' xml:lang='{voice.Locale}'><voice xml:lang='{voice.Locale}' xml:gender='{voice.Gender}' name='{voice.ShortName}'><prosody rate='{speakRate}'>{MicrosoftTranslator.SsmlEncoder.Encode(text)}</prosody></voice></speak>";
 
         var data = new Dictionary<string, string>
         {
@@ -295,7 +296,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
     private async Task<CachedObject<BingCredentials>> GetCredentialsAsync()
     {
-        byte[] bytes = await _httpClient.GetByteArrayAsync(_translatorPageUri).ConfigureAwait(false);
+        byte[] bytes = await _httpClient.GetByteArrayAsync(TranslatorPageUri).ConfigureAwait(false);
         return GetCredentials(bytes);
     }
 

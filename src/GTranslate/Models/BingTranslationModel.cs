@@ -2,7 +2,7 @@
 
 namespace GTranslate.Models;
 
-internal class BingTranslationModel
+internal sealed class BingTranslationModel
 {
     [JsonPropertyName("text")]
     public required string Text { get; set; }

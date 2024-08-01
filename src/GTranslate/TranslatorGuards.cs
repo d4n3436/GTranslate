@@ -75,12 +75,15 @@ internal static class TranslatorGuards
         }
     }
 
-    public static void ObjectNotDisposed<T>(T obj, [DoesNotReturnIf(true)] bool disposed, string? objectName = null)
-        where T : IDisposable
+    public static void ObjectNotDisposed(object obj, [DoesNotReturnIf(true)] bool disposed)
     {
+#if NET8_0_OR_GREATER
+        ObjectDisposedException.ThrowIf(disposed, obj);
+#else
         if (disposed)
         {
-            throw new ObjectDisposedException(objectName ?? obj.GetType().Name);
+            throw new ObjectDisposedException(obj.GetType().FullName);
         }
+#endif
     }
 }

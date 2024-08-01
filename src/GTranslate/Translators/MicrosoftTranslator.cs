@@ -24,20 +24,21 @@ namespace GTranslate.Translators;
 /// </summary>
 public sealed class MicrosoftTranslator : ITranslator, IDisposable
 {
-    private const string _apiEndpoint = "api.cognitive.microsofttranslator.com";
-    private const string _apiVersion = "3.0";
-    private const string _detectUrl = $"{_apiEndpoint}/detect?api-version={_apiVersion}";
-    private const string _speechTokenUrl = "dev.microsofttranslator.com/apps/endpoint?api-version=1.0";
+    private const string ApiEndpoint = "api.cognitive.microsofttranslator.com";
+    private const string ApiVersion = "3.0";
+    private const string DetectUrl = $"{ApiEndpoint}/detect?api-version={ApiVersion}";
+    private const string SpeechTokenUrl = "dev.microsofttranslator.com/apps/endpoint?api-version=1.0";
+
     // test base domain (405 error): dev-sn2-test1.microsofttranslator-int.com
     // end point co4 (405 error): https://dev-co4-test1.microsofttranslator-int.com/
     // end point int (405 error): https://dev.microsofttranslator-int.com/
 
-    private static readonly Uri _detectUri = new($"https://{_detectUrl}");
-    private static readonly Uri _speechTokenUri = new($"https://{_speechTokenUrl}");
-    internal static readonly HtmlEncoder _ssmlEncoder = HtmlEncoder.Create(UnicodeRanges.All); // Like the default encoder but only encodes required characters
+    private static readonly Uri DetectUri = new($"https://{DetectUrl}");
+    private static readonly Uri SpeechTokenUri = new($"https://{SpeechTokenUrl}");
+    internal static readonly HtmlEncoder SsmlEncoder = HtmlEncoder.Create(UnicodeRanges.All); // Like the default encoder but only encodes required characters
 
     // From Microsoft Translator Android app
-    private static readonly byte[] _privateKey =
+    private static readonly byte[] PrivateKey =
     [
         0xa2, 0x29, 0x3a, 0x3d, 0xd0, 0xdd, 0x32, 0x73,
         0x97, 0x7a, 0x64, 0xdb, 0xc2, 0xf3, 0x27, 0xf5,
@@ -206,7 +207,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        string url = $"{_apiEndpoint}/translate?api-version={_apiVersion}&to={MicrosoftHotPatch(toLanguage.ISO6391)}";
+        string url = $"{ApiEndpoint}/translate?api-version={ApiVersion}&to={MicrosoftHotPatch(toLanguage.ISO6391)}";
         if (fromLanguage is not null)
         {
             url += $"&from={MicrosoftHotPatch(fromLanguage.ISO6391)}";
@@ -260,7 +261,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toScript);
         EnsureValidScripts(language.ISO6391, fromScript, toScript);
 
-        string url = $"{_apiEndpoint}/transliterate?api-version={_apiVersion}&language={MicrosoftHotPatch(language.ISO6391)}&fromScript={fromScript}&toScript={toScript}";
+        string url = $"{ApiEndpoint}/transliterate?api-version={ApiVersion}&language={MicrosoftHotPatch(language.ISO6391)}&fromScript={fromScript}&toScript={toScript}";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, new Uri($"https://{url}"));
         request.Headers.Add("X-MT-Signature", GetSignature(url));
@@ -287,8 +288,8 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(text);
 
         
-        using var request = new HttpRequestMessage(HttpMethod.Post, _detectUri);
-        request.Headers.Add("X-MT-Signature", GetSignature(_detectUrl));
+        using var request = new HttpRequestMessage(HttpMethod.Post, DetectUri);
+        request.Headers.Add("X-MT-Signature", GetSignature(DetectUrl));
         request.Content = JsonContent.Create([new MicrosoftTranslatorRequest { Text = text }], MicrosoftTranslatorRequestContext.Default.MicrosoftTranslatorRequestArray);
 
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
@@ -338,7 +339,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         
         var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
 
-        string payload = $"<speak version='1.0' xml:lang='{voice.Locale}'><voice xml:lang='{voice.Locale}' xml:gender='{voice.Gender}' name='{voice.ShortName}'><prosody rate='{speakRate}'>{_ssmlEncoder.Encode(text)}</prosody></voice></speak>";
+        string payload = $"<speak version='1.0' xml:lang='{voice.Locale}'><voice xml:lang='{voice.Locale}' xml:gender='{voice.Gender}' name='{voice.ShortName}'><prosody rate='{speakRate}'>{SsmlEncoder.Encode(text)}</prosody></voice></speak>";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, new Uri($"https://{authInfo.Region}.tts.speech.microsoft.com/cognitiveservices/v1"));
         request.Content = new StringContent(payload, Encoding.UTF8, "application/ssml+xml");
@@ -421,9 +422,9 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
                 return _cachedAuthTokenInfo.Value;
             }
 
-            using var request = new HttpRequestMessage(HttpMethod.Post, _speechTokenUri);
+            using var request = new HttpRequestMessage(HttpMethod.Post, SpeechTokenUri);
             request.Headers.Add("X-ClientVersion", "N/A");
-            request.Headers.Add("X-MT-Signature", GetSignature(_speechTokenUrl));
+            request.Headers.Add("X-MT-Signature", GetSignature(SpeechTokenUrl));
             request.Headers.Add("X-UserId", "0");
 
             using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
@@ -581,9 +582,9 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         byte[] bytes = Encoding.UTF8.GetBytes($"MSTranslatorAndroidApp{escapedUrl}{dateTime}{guid}".ToLowerInvariant());
 
 #if NET6_0_OR_GREATER
-        byte[] hash = HMACSHA256.HashData(_privateKey, bytes);
+        byte[] hash = HMACSHA256.HashData(PrivateKey, bytes);
 #else
-        using var hmac = new HMACSHA256(_privateKey);
+        using var hmac = new HMACSHA256(PrivateKey);
         byte[] hash = hmac.ComputeHash(bytes);
 #endif
         return $"MSTranslatorAndroidApp::{Convert.ToBase64String(hash)}::{dateTime}::{guid}";

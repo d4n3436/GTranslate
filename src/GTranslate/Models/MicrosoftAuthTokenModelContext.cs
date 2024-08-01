@@ -3,4 +3,4 @@
 namespace GTranslate.Models;
 
 [JsonSerializable(typeof(MicrosoftAuthTokenModel))]
-internal partial class MicrosoftAuthTokenModelContext : JsonSerializerContext;
+internal sealed partial class MicrosoftAuthTokenModelContext : JsonSerializerContext;

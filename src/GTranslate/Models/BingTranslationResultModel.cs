@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace GTranslate.Models;
 
-internal class BingTranslationResultModel
+internal sealed class BingTranslationResultModel
 {
     [JsonPropertyName("detectedLanguage")]
     public BingDetectedLanguageModel? DetectedLanguage { get; set; }

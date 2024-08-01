@@ -3,4 +3,4 @@
 namespace GTranslate.Models;
 
 [JsonSerializable(typeof(BingErrorResultModel))]
-internal partial class BingErrorResultModelContext : JsonSerializerContext;
+internal sealed partial class BingErrorResultModelContext : JsonSerializerContext;

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace GTranslate.Models;
 
-internal class MicrosoftTranslationResultModel
+internal sealed class MicrosoftTranslationResultModel
 {
     [JsonPropertyName("detectedLanguage")]
     public required MicrosoftDetectedLanguageModel DetectedLanguage { get; set; }

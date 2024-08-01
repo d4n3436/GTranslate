@@ -16,23 +16,24 @@ namespace GTranslate.Translators;
 /// </summary>
 public sealed class GoogleTranslator : ITranslator, IDisposable
 {
-    private const string _salt1 = "+-a^+6";
-    private const string _salt2 = "+-3^+b+-f";
-    private const string _apiEndpoint = "https://translate.googleapis.com/translate_a/single";
-    private const string _ttsApiEndpoint = "https://translate.google.com/translate_tts";
-    private static readonly string[] _ttsLanguages =
+    private const string Salt1 = "+-a^+6";
+    private const string Salt2 = "+-3^+b+-f";
+    private const string ApiEndpoint = "https://translate.googleapis.com/translate_a/single";
+    private const string TtsApiEndpoint = "https://translate.google.com/translate_tts";
+
+    private static readonly string[] TtsLanguages =
     [
         "af", "am", "ar", "bg", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "eu", "fi", "fr", "gl", "gu", "ha", "hi", "hr",
         "hu", "hy", "id", "is", "it", "iw", "ja", "jv", "km", "kn", "ko", "la", "lt", "lv", "mk", "ml", "mr", "ms", "my", "ne", "nl", "no", "pa", "pl",
         "pt", "pt-PT", "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "yue", "zh-CN", "zh-TW"
     ];
 
-    private static readonly Lazy<HashSet<ILanguage>> _lazyTtsLanguages = new(() => new HashSet<ILanguage>(_ttsLanguages.Select(Language.GetLanguage)));
+    private static readonly Lazy<HashSet<ILanguage>> LazyTtsLanguages = new(() =>[..TtsLanguages.Select(Language.GetLanguage)]);
 
     /// <summary>
     /// Gets a read-only collection of languages that support text-to-speech.
     /// </summary>
-    public static IReadOnlyCollection<ILanguage> TextToSpeechLanguages => _lazyTtsLanguages.Value;
+    public static IReadOnlyCollection<ILanguage> TextToSpeechLanguages => LazyTtsLanguages.Value;
 
     /// <inheritdoc/>
     public string Name => nameof(GoogleTranslator);
@@ -97,7 +98,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        string url = $"{_apiEndpoint}?client=gtx&sl={GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto")}&tl={GoogleHotPatch(toLanguage.ISO6391)}&dt=t&dt=bd&dj=1&source=input&tk={MakeToken(text.AsSpan())}";
+        string url = $"{ApiEndpoint}?client=gtx&sl={GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto")}&tl={GoogleHotPatch(toLanguage.ISO6391)}&dt=t&dt=bd&dj=1&source=input&tk={MakeToken(text.AsSpan())}";
         using var content = new FormUrlEncodedContent([new KeyValuePair<string, string>("q", text)]);
         using var response = await _httpClient.PostAsync(new Uri(url), content).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
@@ -213,7 +214,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
             string escapedText = Uri.EscapeDataString(textChunk.ToString());
             string token = MakeToken(textChunk.Span);
 
-            string url = $"{_ttsApiEndpoint}?ie=UTF-8&q={escapedText}&tl={language.ISO6391}&ttsspeed={speed}&total={total}&idx={index}&client=tw-ob&textlen={textChunk.Length}&tk={token}";
+            string url = $"{TtsApiEndpoint}?ie=UTF-8&q={escapedText}&tl={language.ISO6391}&ttsspeed={speed}&total={total}&idx={index}&client=tw-ob&textlen={textChunk.Length}&tk={token}";
             return await _httpClient.GetByteArrayAsync(new Uri(url)).ConfigureAwait(false);
         }
     }
@@ -265,7 +266,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
 
     private static void EnsureValidTTSLanguage(ILanguage language)
     {
-        if (!_lazyTtsLanguages.Value.Contains(language))
+        if (!LazyTtsLanguages.Value.Contains(language))
         {
             throw new ArgumentException("Language not supported.", nameof(language));
         }
@@ -291,10 +292,10 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
 
         foreach (char ch in text)
         {
-            a = WorkToken(a + ch, _salt1);
+            a = WorkToken(a + ch, Salt1);
         }
 
-        a = WorkToken(a, _salt2);
+        a = WorkToken(a, Salt2);
 
         if (a < 0)
         {

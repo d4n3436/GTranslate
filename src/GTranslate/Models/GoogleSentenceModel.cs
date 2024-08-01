@@ -2,7 +2,7 @@
 
 namespace GTranslate.Models;
 
-internal class GoogleSentenceModel
+internal sealed class GoogleSentenceModel
 {
     [JsonPropertyName("trans")]
     public required string Translation { get; set; }

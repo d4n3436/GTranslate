@@ -3,4 +3,4 @@
 namespace GTranslate.Models;
 
 [JsonSerializable(typeof(YandexTranslationResultModel))]
-internal partial class YandexTranslationResultModelContext : JsonSerializerContext;
+internal sealed partial class YandexTranslationResultModelContext : JsonSerializerContext;
