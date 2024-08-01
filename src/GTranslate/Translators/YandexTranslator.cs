@@ -352,7 +352,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     [DoesNotReturn]
     private static void ThrowHttpRequestException(HttpStatusCode code, string? message)
     {
-        message ??= $"The API returned status code {code}.";
+        message ??= $"The API returned status code {(int)code}.";
 
 #if NET5_0_OR_GREATER
         throw new HttpRequestException(message, null, code);
