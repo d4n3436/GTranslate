@@ -5,8 +5,8 @@ namespace GTranslate.Models;
 
 internal sealed class BingErrorResultModel
 {
-    [JsonPropertyName("code")]
-    public required HttpStatusCode Code { get; set; }
+    [JsonPropertyName("statusCode")]
+    public required HttpStatusCode StatusCode { get; set; }
 
     [JsonPropertyName("message")]
     public string? Message { get; set; }

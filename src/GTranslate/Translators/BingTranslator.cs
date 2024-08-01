@@ -380,10 +380,10 @@ public sealed class BingTranslator : ITranslator, IDisposable
             return;
 
         var result = document.Deserialize(BingErrorResultModelContext.Default.BingErrorResultModel)!;
-        string message = result.Message ?? $"The API returned status code {result.Code}.";
+        string message = string.IsNullOrEmpty(result.Message) ? $"The API returned status code {result.StatusCode}." : result.Message;
 
 #if NET5_0_OR_GREATER
-        throw new HttpRequestException(message, null, result.Code);
+        throw new HttpRequestException(message, null, result.StatusCode);
 #else
         throw new HttpRequestException(message);
 #endif
