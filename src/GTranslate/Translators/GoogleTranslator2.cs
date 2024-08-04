@@ -101,7 +101,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        object[] payload = [new object[] { text, GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto"), GoogleHotPatch(toLanguage.ISO6391), true }, new object?[] { null }];
+        object[] payload = [new object[] { text, GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto"), GoogleHotPatch(toLanguage.ISO6391), 1 }, Array.Empty<object>()];
         using var request = BuildRequest(TranslateRpcId, payload);
         using var document = await SendAndParseResponseAsync(request).ConfigureAwait(false);
 
@@ -231,7 +231,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         
         async Task<ReadOnlyMemory<byte>> ProcessRequestAsync(ReadOnlyMemory<char> textChunk)
         {
-            object[] payload = [textChunk, language.ISO6391, slow ? "true" : "null", "null"];
+            object?[] payload = [textChunk.ToString(), language.ISO6391, null, "undefined", new object[] { slow ? 1 : 0 }];
             using var request = BuildRequest(TtsRpcId, payload);
             using var document = await SendAndParseResponseAsync(request).ConfigureAwait(false);
 
@@ -292,9 +292,9 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         }
     }
 
-    private static HttpRequestMessage BuildRequest(string rpcId, object[] payload)
+    private static HttpRequestMessage BuildRequest(string rpcId, object?[] payload)
     {
-        var serializedPayload = JsonSerializer.Serialize(payload, ObjectArrayContext.Default.ObjectArray);
+        var serializedPayload = JsonSerializer.Serialize(payload, ObjectArrayContext.Default.ObjectArray!);
         object?[][][] request = [[[rpcId, serializedPayload, null, "generic"]]];
 
         return new HttpRequestMessage

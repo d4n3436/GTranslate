@@ -4,5 +4,5 @@ namespace GTranslate.Models;
 
 [JsonSerializable(typeof(object?[][][]))]
 [JsonSerializable(typeof(string))]
-[JsonSerializable(typeof(bool))]
+[JsonSerializable(typeof(int))]
 internal sealed partial class ObjectArrayContext : JsonSerializerContext;
