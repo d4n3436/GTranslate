@@ -27,28 +27,24 @@ public class MicrosoftVoice
     /// <summary>
     /// Gets the display name of this voice.
     /// </summary>
-    [JsonRequired]
     [JsonPropertyName("DisplayName")]
     public string DisplayName { get; }
 
     /// <summary>
     /// Gets the short name of this voice.
     /// </summary>
-    [JsonRequired]
     [JsonPropertyName("ShortName")]
     public string ShortName { get; }
 
     /// <summary>
     /// Gets the gender of this voice.
     /// </summary>
-    [JsonRequired]
-    [JsonPropertyName("ShortName")]
+    [JsonPropertyName("Gender")]
     public string Gender { get; }
 
     /// <summary>
     /// Gets the locale of this voice.
     /// </summary>
-    [JsonRequired]
     [JsonPropertyName("Locale")]
     public string Locale { get; }
 
