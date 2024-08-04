@@ -12,8 +12,8 @@ namespace GTranslate;
 /// </summary>
 public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
 {
-    private const int TotalLanguages = 174;
-    private const int TotalAliases = 529;
+    private const int TotalLanguages = 267;
+    private const int TotalAliases = 796;
 
     internal LanguageDictionary()
     {
