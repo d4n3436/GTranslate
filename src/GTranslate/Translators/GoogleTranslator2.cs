@@ -315,6 +315,10 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         return languageCode switch
         {
             "mni" => "mni-Mtei",
+            "prs" => "fa-FA",
+            "nqo" => "bm-Nkoo",
+            "ndc" => "ndc-ZW",
+            "sat" => "sat-Latn",
             _ => languageCode
         };
     }
