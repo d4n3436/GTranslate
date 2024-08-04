@@ -300,8 +300,9 @@ public sealed class BingTranslator : ITranslator, IDisposable
         return GetCredentials(bytes);
     }
 
-    private CachedObject<BingCredentials> GetCredentials(ReadOnlySpan<byte> bytes)
+    private CachedObject<BingCredentials> GetCredentials(byte[] html)
     {
+        var bytes = html.AsSpan();
         int credentialsStartIndex = bytes.IndexOf(CredentialsStart);
         if (credentialsStartIndex == -1)
         {
@@ -329,11 +330,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
             throw new TranslatorException("Unable to find the Bing token.", Name);
         }
 
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
-        string token = Encoding.UTF8.GetString(bytes.Slice(tokenStartIndex, tokenLength));
-#else
-        string token = Encoding.UTF8.GetString(bytes.Slice(tokenStartIndex, tokenLength).ToArray());
-#endif
+        string token = Encoding.UTF8.GetString(html, tokenStartIndex, tokenLength);
         var credentials = new BingCredentials(token, key, Guid.NewGuid());
 
         return new CachedObject<BingCredentials>(credentials, DateTimeOffset.FromUnixTimeMilliseconds(key + 3600000));
