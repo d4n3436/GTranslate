@@ -12,5 +12,5 @@ internal sealed class GoogleTranslationResultModel
     public required string Source { get; set; }
 
     [JsonPropertyName("confidence")]
-    public required float Confidence { get; set; }
+    public float? Confidence { get; set; }
 }
