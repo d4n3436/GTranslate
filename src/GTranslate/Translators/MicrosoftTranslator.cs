@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -14,6 +13,7 @@ using System.Text.Json;
 using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
+using GTranslate.Extensions;
 using GTranslate.Models;
 using GTranslate.Results;
 
@@ -67,7 +67,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// This dictionary is incomplete; it only includes 1 voice per language despite the API offering multiple voices.<br/>
     /// To get the complete list, use <see cref="GetTTSVoicesAsync"/>.
     /// </remarks>
-    public static IReadOnlyDictionary<string, MicrosoftVoice> DefaultVoices => new ReadOnlyDictionary<string, MicrosoftVoice>(new Dictionary<string, MicrosoftVoice>
+    public static IReadOnlyDictionary<string, MicrosoftVoice> DefaultVoices { get; } = new Dictionary<string, MicrosoftVoice>
     {
         ["af"] = new("Adri", "af-ZA-AdriNeural", "Female", "af-ZA"),
         ["am"] = new("Mekdes", "am-ET-MekdesNeural", "Female", "am-ET"),
@@ -133,13 +133,12 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         ["zh-CN"] = new("Xiaoxiao", "zh-CN-XiaoxiaoNeural", "Female", "zh-CN"), // zh-Hans
         ["zh-TW"] = new("Xiaoxiao", "zh-CN-XiaoxiaoNeural", "Female", "zh-CN"), // zh-Hant
         ["yue"] = new("HiuGaai", "zh-HK-HiuGaaiNeural", "Female", "zh-HK")
-    });
+    }.ToReadOnlyDictionary();
 
     /// <summary>
     /// Gets a read-only dictionary containing the languages that support transliteration and their supported scripts.
     /// </summary>
-    public static IReadOnlyDictionary<string, IReadOnlyCollection<string>> Scripts { get; }
-        = new ReadOnlyDictionary<string, IReadOnlyCollection<string>>(new Dictionary<string, IReadOnlyCollection<string>>
+    public static IReadOnlyDictionary<string, IReadOnlyCollection<string>> Scripts { get; } = new Dictionary<string, IReadOnlyCollection<string>>
     {
         ["ar"] = ["Latn", "Arab"],
         ["as"] = ["Latn", "Beng"],
@@ -173,7 +172,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         ["ur"] = ["Latn", "Arab"],
         ["zh-CN"] = ["Latn", "Hans"], // zh-Hans
         ["zh-TW"] = ["Latn", "Hant"] // zh-Hant
-    });
+    }.ToReadOnlyDictionary();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MicrosoftTranslator"/> class.

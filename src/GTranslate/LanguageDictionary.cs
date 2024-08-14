@@ -1,11 +1,17 @@
-﻿using System;
+﻿using GTranslate.Extensions;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace GTranslate;
+
+#if NET8_0_OR_GREATER
+using ReadOnlyLanguageDictionary = System.Collections.Frozen.FrozenDictionary<string, Language>;
+#else
+using ReadOnlyLanguageDictionary = System.Collections.ObjectModel.ReadOnlyDictionary<string, Language>;
+#endif
 
 /// <summary>
 /// Represents the default language dictionary used in GTranslate. It contains all the supported languages across all the included translators.
@@ -17,7 +23,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
 
     internal LanguageDictionary()
     {
-        Aliases = new ReadOnlyDictionary<string, string>(BuildLanguageAliases());
+        Aliases = BuildLanguageAliases().ToReadOnlyDictionary();
         Debug.Assert(Count == TotalLanguages, $"TotalLanguages is outdated (Count was {Count})");
         Debug.Assert(Aliases.Count == TotalAliases, $"TotalAliases is outdated (Count was {Aliases.Count})");
     }
@@ -155,7 +161,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         return aliases;
     }
 
-    private readonly ReadOnlyDictionary<string, Language> _languages = new(new Dictionary<string, Language>(TotalLanguages, StringComparer.OrdinalIgnoreCase)
+    private readonly ReadOnlyLanguageDictionary _languages = new Dictionary<string, Language>(TotalLanguages, StringComparer.OrdinalIgnoreCase)
     {
         ["aa"] = new("Afar", "Qafaraf", "aa", "aar", TranslationServices.Google),
         ["ab"] = new("Abkhaz", "Аԥсуа бызшәа", "ab", "abk", TranslationServices.Google),
@@ -424,5 +430,5 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["zh-CN"] = new("Chinese (Simplified)", "中文 (简体)", "zh-CN", "zho-CN"),
         ["zh-TW"] = new("Chinese (Traditional)", "繁體中文 (繁體)", "zh-TW", "zho-TW", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["zu"] = new("Zulu", "Isi-Zulu", "zu", "zul")
-    });
+    }.ToReadOnlyDictionary();
 }
