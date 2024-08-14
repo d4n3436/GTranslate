@@ -22,9 +22,10 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
     private static readonly HashSet<ILanguage> TtsLanguages =
     [
-        Language.GetLanguage("ru"),
         Language.GetLanguage("en"),
-        Language.GetLanguage("tr")
+        Language.GetLanguage("ru"),
+        Language.GetLanguage("tr"),
+        Language.GetLanguage("uk")
     ];
 
     /// <summary>
@@ -342,9 +343,10 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         return languageCode switch
         {
-            "ru" => "ru_RU",
             "en" => "en_GB",
+            "ru" => "ru_RU",
             "tr" => "tr_TR",
+            "uk" => "uk_UA",
             _ => throw new ArgumentException("Unknown language.", nameof(languageCode))
         };
     }
