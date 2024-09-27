@@ -247,7 +247,9 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         var result = (await response.Content.ReadFromJsonAsync(MicrosoftTranslationResultModelContext.Default.MicrosoftTranslationResultModelArray).ConfigureAwait(false))![0];
         var translation = result.Translations[0];
 
-        return new MicrosoftTranslationResult(translation.Text, text, Language.GetLanguage(translation.To), Language.GetLanguage(result.DetectedLanguage.Language), result.DetectedLanguage.Score);
+        string sourceLanguage = fromLanguage?.ISO6391 ?? result.DetectedLanguage?.Language ?? throw new TranslatorException("Expected detected language to be present on API response when fromLanguage is not provided.", Name);
+
+        return new MicrosoftTranslationResult(translation.Text, text, Language.GetLanguage(translation.To), Language.GetLanguage(sourceLanguage), result.DetectedLanguage?.Score ?? 0);
     }
 
     /// <summary>

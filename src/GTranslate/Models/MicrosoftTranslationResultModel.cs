@@ -6,7 +6,7 @@ namespace GTranslate.Models;
 internal sealed class MicrosoftTranslationResultModel
 {
     [JsonPropertyName("detectedLanguage")]
-    public required MicrosoftDetectedLanguageModel DetectedLanguage { get; set; }
+    public MicrosoftDetectedLanguageModel? DetectedLanguage { get; set; }
 
     [JsonPropertyName("translations")]
     public required IReadOnlyList<MicrosoftTranslationModel> Translations { get; set; }

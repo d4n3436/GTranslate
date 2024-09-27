@@ -8,5 +8,5 @@ internal sealed class BingDetectedLanguageModel
     public required string Language { get; set; }
 
     [JsonPropertyName("score")]
-    public required float Score { get; set; }
+    public float? Score { get; set; }
 }

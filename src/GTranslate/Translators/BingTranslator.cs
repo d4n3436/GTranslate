@@ -127,7 +127,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         var sourceTransliteration = results.ElementAtOrDefault(1)?.InputTransliteration;
 
         return new BingTranslationResult(translation.Text, text, Language.GetLanguage(translation.To), Language.GetLanguage(result.DetectedLanguage.Language),
-            transliteration, sourceTransliteration, translation.Transliteration?.Script, result.DetectedLanguage.Score);
+            transliteration, sourceTransliteration, translation.Transliteration?.Script, result.DetectedLanguage.Score ?? 0);
     }
 
     /// <summary>
