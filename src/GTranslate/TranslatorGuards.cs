@@ -75,6 +75,14 @@ internal static class TranslatorGuards
         }
     }
 
+    public static void MaxTextLength(string text, int maxLength, [CallerArgumentExpression(nameof(text))] string? parameterName = null)
+    {
+        if (text.Length > maxLength)
+        {
+            throw new ArgumentException($"The text exceeds the maximum length of {maxLength} characters allowed for the translator.", parameterName);
+        }
+    }
+
     public static void ObjectNotDisposed(object obj, [DoesNotReturnIf(true)] bool disposed)
     {
 #if NET8_0_OR_GREATER

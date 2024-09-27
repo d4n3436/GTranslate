@@ -22,6 +22,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
     private const string TtsEndpoint = $"{HostUrl}/tfettts";
     private static readonly Uri TranslatorPageUri = new($"{HostUrl}/translator");  
     private const string Iid = "translator.5024.1";
+    private const int MaxTextLength = 1000;
 
     private static ReadOnlySpan<byte> CredentialsStart => "var params_AbusePreventionHelper = ["u8;
 
@@ -78,6 +79,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
         TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
         TranslatorGuards.LanguageSupported(this, toLang, fromLang);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         return await TranslateAsync(text, toLang, fromLang).ConfigureAwait(false);
     }
@@ -89,6 +91,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(text);
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         var credentials = await GetOrUpdateCredentialsAsync().ConfigureAwait(false);
 
@@ -151,6 +154,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
         TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
         TranslatorGuards.LanguageSupported(this, toLang, fromLang);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         return await TransliterateAsync(text, toLang, fromLang).ConfigureAwait(false);
     }
@@ -162,6 +166,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(text);
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         var result = await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
         if (!result.HasTransliteration)
@@ -183,6 +188,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
     public async Task<Language> DetectLanguageAsync(string text)
     {
         TranslatorGuards.NotNull(text);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         var result = await TranslateAsync(text, "en").ConfigureAwait(false);
         return result.SourceLanguage;

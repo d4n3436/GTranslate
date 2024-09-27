@@ -28,6 +28,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     private const string ApiVersion = "3.0";
     private const string DetectUrl = $"{ApiEndpoint}/detect?api-version={ApiVersion}";
     private const string SpeechTokenUrl = "dev.microsofttranslator.com/apps/endpoint?api-version=1.0";
+    private const int MaxTextLength = 1000;
 
     // test base domain (405 error): dev-sn2-test1.microsofttranslator-int.com
     // end point co4 (405 error): https://dev-co4-test1.microsofttranslator-int.com/
@@ -219,6 +220,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
         TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
         TranslatorGuards.LanguageSupported(this, toLang, fromLang);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         return await TranslateAsync(text, toLang, fromLang).ConfigureAwait(false);
     }
@@ -230,6 +232,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(text);
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         string url = $"{ApiEndpoint}/translate?api-version={ApiVersion}&to={MicrosoftHotPatch(toLanguage.ISO6391)}";
         if (fromLanguage is not null)
@@ -273,6 +276,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(toScript);
         TranslatorGuards.LanguageFound(language, out var lang);
         TranslatorGuards.LanguageSupported(this, lang);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         return await TransliterateAsync(text, lang, fromScript, toScript).ConfigureAwait(false);
     }
@@ -285,6 +289,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.NotNull(language);
         TranslatorGuards.NotNull(fromScript);
         TranslatorGuards.NotNull(toScript);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
         EnsureValidScripts(language.ISO6391, fromScript, toScript);
 
         string url = $"{ApiEndpoint}/transliterate?api-version={ApiVersion}&language={MicrosoftHotPatch(language.ISO6391)}&fromScript={fromScript}&toScript={toScript}";
@@ -312,7 +317,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     {
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
         TranslatorGuards.NotNull(text);
-
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
         
         using var request = new HttpRequestMessage(HttpMethod.Post, DetectUri);
         request.Headers.Add("X-MT-Signature", GetSignature(DetectUrl));

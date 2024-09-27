@@ -19,6 +19,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     private const string TranslateRpcId = "MkEWBc";
     private const string TtsRpcId = "jQ1olc";
     private static readonly Uri DefaultBaseAddress = new("https://translate.google.com/");
+    private const int MaxTextLength = 5000;
 
     private static readonly string[] TtsLanguages =
     [
@@ -87,6 +88,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
         TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
         TranslatorGuards.LanguageSupported(this, toLang, fromLang);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         return await TranslateAsync(text, toLang, fromLang).ConfigureAwait(false);
     }
@@ -100,6 +102,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         TranslatorGuards.NotNull(text);
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         object[] payload = [new object[] { text, GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto"), GoogleHotPatch(toLanguage.ISO6391), 1 }, Array.Empty<object>()];
         using var request = BuildRequest(TranslateRpcId, payload);
@@ -156,6 +159,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
         TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
         TranslatorGuards.LanguageSupported(this, toLang, fromLang);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         return await TransliterateAsync(text, toLang, fromLang).ConfigureAwait(false);
     }
@@ -167,6 +171,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         TranslatorGuards.NotNull(text);
         TranslatorGuards.NotNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         var result = await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
         if (string.IsNullOrEmpty(result.Transliteration))
@@ -188,6 +193,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     public async Task<Language> DetectLanguageAsync(string text)
     {
         TranslatorGuards.NotNull(text);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         var result = await TranslateAsync(text, "en").ConfigureAwait(false);
         return result.SourceLanguage;
