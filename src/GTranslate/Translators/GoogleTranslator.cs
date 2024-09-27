@@ -23,8 +23,8 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
 
     private static readonly string[] TtsLanguages =
     [
-        "af", "am", "ar", "bg", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "eu", "fi", "fr", "gl", "gu", "ha", "hi", "hr",
-        "hu", "hy", "id", "is", "it", "iw", "ja", "jv", "km", "kn", "ko", "la", "lt", "lv", "mk", "ml", "mr", "ms", "my", "ne", "nl", "no", "pa", "pl",
+        "af", "am", "ar", "bg", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "eu", "fi", "fr", "fr-CA", "gl", "gu", "ha", "hi",
+        "hr", "hu", "hy", "id", "is", "it", "iw", "ja", "jv", "km", "kn", "ko", "la", "lt", "lv", "mk", "ml", "mr", "ms", "my", "ne", "nl", "no", "pa", "pl",
         "pt", "pt-PT", "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "yue", "zh-CN", "zh-TW"
     ];
 
