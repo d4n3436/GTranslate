@@ -1,4 +1,5 @@
 ﻿using GTranslate.Translators;
+using System;
 using System.Diagnostics;
 
 namespace GTranslate.Results;
@@ -8,7 +9,8 @@ namespace GTranslate.Results;
 /// </summary>
 public class BingTransliterationResult : ITransliterationResult<Language>, ITransliterationResult
 {
-    internal BingTransliterationResult(string transliteration, string? sourceTransliteration, string source, Language targetLanguage, Language sourceLanguage, string script)
+    internal BingTransliterationResult(string transliteration, string? sourceTransliteration,
+        string source, Language targetLanguage, Language? sourceLanguage, string script)
     {
         Transliteration = transliteration;
         SourceTransliteration = sourceTransliteration;
@@ -35,8 +37,9 @@ public class BingTransliterationResult : ITransliterationResult<Language>, ITran
     /// <inheritdoc/>
     public Language TargetLanguage { get; }
 
-    /// <inheritdoc/>
-    public Language SourceLanguage { get; }
+    /// <inheritdoc cref="ITransliterationResult{TLanguage}.SourceLanguage"/>
+    /// <remarks>This property returns <see langword="null"/> when the translator can't determine the source language.</remarks>
+    public Language? SourceLanguage { get; }
 
     /// <summary>
     /// Gets the language script.
@@ -45,12 +48,16 @@ public class BingTransliterationResult : ITransliterationResult<Language>, ITran
 
     /// <inheritdoc />
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    ILanguage ITransliterationResult<ILanguage>.SourceLanguage => SourceLanguage;
+    Language ITransliterationResult<Language>.SourceLanguage => SourceLanguage ?? throw new NotSupportedException("The source language is not available for this result.");
+
+    /// <inheritdoc />
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    ILanguage ITransliterationResult<ILanguage>.SourceLanguage => SourceLanguage ?? throw new NotSupportedException("The source language is not available for this result.");
 
     /// <inheritdoc />
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     ILanguage ITransliterationResult<ILanguage>.TargetLanguage => TargetLanguage;
 
     /// <inheritdoc/>
-    public override string ToString() => $"{nameof(Transliteration)}: '{Transliteration}', {nameof(TargetLanguage)}: '{TargetLanguage.Name} ({TargetLanguage.ISO6391})', {nameof(SourceLanguage)}: '{SourceLanguage.Name} ({SourceLanguage.ISO6391})', {nameof(Service)}: {Service}";
+    public override string ToString() => $"{nameof(Transliteration)}: '{Transliteration}', {nameof(TargetLanguage)}: '{TargetLanguage.Name} ({TargetLanguage.ISO6391})', {nameof(SourceLanguage)}: '{SourceLanguage?.Name ?? "Unknown"} ({SourceLanguage?.ISO6391 ?? "N/A"})', {nameof(Service)}: {Service}";
 }

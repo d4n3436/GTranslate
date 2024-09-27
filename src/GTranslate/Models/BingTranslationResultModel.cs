@@ -14,7 +14,4 @@ internal sealed class BingTranslationResultModel
 
     [JsonPropertyName("inputTransliteration")]
     public string? InputTransliteration { get; set; }
-
-    [MemberNotNullWhen(true, nameof(DetectedLanguage), nameof(Translations))]
-    public bool HasTranslations => DetectedLanguage is not null && Translations is not null;
 }

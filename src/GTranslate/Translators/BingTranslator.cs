@@ -120,7 +120,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         var results = document.Deserialize(BingTranslationResultModelContext.Default.BingTranslationResultModelArray)!;
         var result = results[0];
 
-        if (!result.HasTranslations)
+        if (result.Translations is null)
         {
             throw new TranslatorException("Received an invalid response from the API.");
         }
@@ -128,9 +128,10 @@ public sealed class BingTranslator : ITranslator, IDisposable
         var translation = result.Translations[0];
         var transliteration = translation.Transliteration?.Text;
         var sourceTransliteration = results.ElementAtOrDefault(1)?.InputTransliteration;
+        var sourceLanguage = result.DetectedLanguage?.Language ?? fromLanguage?.ISO6391;
 
-        return new BingTranslationResult(translation.Text, text, Language.GetLanguage(translation.To), Language.GetLanguage(result.DetectedLanguage.Language),
-            transliteration, sourceTransliteration, translation.Transliteration?.Script, result.DetectedLanguage.Score ?? 0);
+        return new BingTranslationResult(translation.Text, text, Language.GetLanguage(translation.To), sourceLanguage is null ? null : Language.GetLanguage(sourceLanguage),
+            transliteration, sourceTransliteration, translation.Transliteration?.Script, result.DetectedLanguage?.Score ?? 0);
     }
 
     /// <summary>
@@ -191,7 +192,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         var result = await TranslateAsync(text, "en").ConfigureAwait(false);
-        return result.SourceLanguage;
+        return result.SourceLanguage ?? throw new TranslatorException("Unable to detect the language of text.");
     }
 
     /// <summary>
