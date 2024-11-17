@@ -26,5 +26,10 @@ public enum TranslationServices
     /// <summary>
     /// Microsoft Azure Translator.
     /// </summary>
-    Microsoft = 1 << 3
+    Microsoft = 1 << 3,
+
+    /// <summary>
+    /// DeepL Translator.
+    /// </summary>
+    DeepL
 }
