@@ -5,14 +5,14 @@ namespace GTranslate.Extensions;
 
 internal static class StringExtensions
 {
-    private static readonly char[] _separators = ['\t', '\r', '\n', ' '];
+    private static readonly char[] Separators = ['\t', '\r', '\n', ' '];
 
     // Splits a text into lines of max. 200 chars without breaking words (if possible)
     // This algorithm is not as accurate as the one Google uses, but it's good enough
     // Google prioritizes maintaining the structure of sentences rather than minimizing the number of requests
     public static IEnumerable<ReadOnlyMemory<char>> SplitWithoutWordBreaking(this string text, int maxLength = 200)
     {
-        string[] split = text.Split(_separators, StringSplitOptions.RemoveEmptyEntries);
+        string[] split = text.Split(Separators, StringSplitOptions.RemoveEmptyEntries);
         var current = string.Join(" ", split).AsMemory();
 
         while (!current.IsEmpty)
