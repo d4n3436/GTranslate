@@ -18,8 +18,8 @@ using ReadOnlyLanguageDictionary = System.Collections.ObjectModel.ReadOnlyDictio
 /// </summary>
 public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
 {
-    private const int TotalLanguages = 267;
-    private const int TotalAliases = 796;
+    private const int TotalLanguages = 269;
+    private const int TotalAliases = 801;
 
     internal LanguageDictionary()
     {
@@ -210,6 +210,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["cnh"] = new("Hakha Chin", "Laiholh", "cnh", "cnh", TranslationServices.Google),
         ["co"] = new("Corsican", "Corsu", "co", "cos", TranslationServices.Google),
         ["crh"] = new("Crimean Tatar", "Къырымтатар тили", "crh", "crh", TranslationServices.Google),
+        ["crh-Latn"] = new("Crimean Tatar (Latin)", "qırımtatar tili", "crh-Latn", "crh-Latn", TranslationServices.Google),
         ["crs"] = new("Seychellois Creole", "Seselwa", "crs", "crs", TranslationServices.Google),
         ["cs"] = new("Czech", "Čeština", "cs", "ces"),
         ["cv"] = new("Chuvash", "Чӑвашла", "cv", "chv", TranslationServices.Google | TranslationServices.Yandex),
@@ -239,7 +240,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["fo"] = new("Faroese", "føroyskt mál", "fo", "fao", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["fon"] = new("Fon", "Fɔngbè", "fon", "fon", TranslationServices.Google),
         ["fr"] = new("French", "Français", "fr", "fra"),
-        ["fr-CA"] = new("French (Canada)", "Français (Canada)", "fr-CA", "fr-CA", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["fr-CA"] = new("French (Canada)", "Français (Canada)", "fr-CA", "fr-CA", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["fur"] = new("Friulian", "furlan", "fur", "fur", TranslationServices.Google),
         ["fy"] = new("Frisian", "Frysk", "fy", "fry", TranslationServices.Google),
         ["ga"] = new("Irish", "Gaeilge", "ga", "gle"),
@@ -270,8 +271,8 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["ilo"] = new("Ilocano", "Iloko", "ilo", "ilo", TranslationServices.Google),
         ["is"] = new("Icelandic", "Íslenska", "is", "isl"),
         ["it"] = new("Italian", "Italiano", "it", "ita"),
-        ["iu"] = new("Inuktitut", "ᐃᓄᒃᑎᑐᑦ", "iu", "iku", TranslationServices.Bing | TranslationServices.Microsoft),
-        ["iu-Latn"] = new("Inuktitut (Latin)", "Inuktitut (Latin)", "iu-Latn", "iu-Latn", TranslationServices.Bing | TranslationServices.Microsoft),
+        ["iu"] = new("Inuktitut", "ᐃᓄᒃᑎᑐᑦ", "iu", "iku", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
+        ["iu-Latn"] = new("Inuktitut (Latin)", "Inuktitut (Latin)", "iu-Latn", "iu-Latn", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["ja"] = new("Japanese", "日本語", "ja", "jpn"),
         ["jam"] = new("Jamaican Patois", "Patwah", "jam", "jam", TranslationServices.Google),
         ["jv"] = new("Javanese", "Jawa", "jv", "jav", TranslationServices.Google | TranslationServices.Yandex),
@@ -292,7 +293,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["ks"] = new("Kashmiri", "کٲشُر", "ks", "kas", TranslationServices.Bing | TranslationServices.Microsoft),
         ["ktu"] = new("Kituba", "Kikongo ya leta", "ktu", "ktu", TranslationServices.Google),
         ["ku"] = new("Kurdish", "Kurdî", "ku", "kur", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
-        ["kv"] = new("Komi", "Коми кыв", "kv", "kom", TranslationServices.Google),
+        ["kv"] = new("Komi", "Коми кыв", "kv", "kom", TranslationServices.Google | TranslationServices.Yandex),
         ["ky"] = new("Kyrgyz", "Kyrgyz", "ky", "kir"),
         ["la"] = new("Latin", "Latina", "la", "lat", TranslationServices.Google | TranslationServices.Yandex),
         ["lb"] = new("Luxembourgish", "Lëtzebuergesch", "lb", "ltz", TranslationServices.Google | TranslationServices.Yandex),
@@ -304,6 +305,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["lo"] = new("Lao", "ລາວ", "lo", "lao"),
         ["lt"] = new("Lithuanian", "Lietuvių", "lt", "lit"),
         ["ltg"] = new("Latgalian", "latgalīšu volūda", "ltg", "ltg", TranslationServices.Google),
+        ["lua"] = new("Tshiluba", "Tshiluba", "lua", "lua", TranslationServices.Google),
         ["luo"] = new("Luo", "Dholuo", "luo", "luo", TranslationServices.Google),
         ["lus"] = new("Mizo", "Mizo ṭawng", "lus", "lus", TranslationServices.Google),
         ["lv"] = new("Latvian", "Latviešu", "lv", "lav"),
@@ -409,7 +411,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["tt"] = new("Tatar", "Татар", "tt", "tat"),
         ["tum"] = new("Tumbuka", "chiTumbuka", "tum", "tum", TranslationServices.Google),
         ["ty"] = new("Tahitian", "Reo Tahiti", "ty", "tah", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
-        ["tyv"] = new("Tuvan", "тыва дыл", "tyv", "tyv", TranslationServices.Google),
+        ["tyv"] = new("Tuvan", "тыва дыл", "tyv", "tyv", TranslationServices.Google | TranslationServices.Yandex),
         ["udm"] = new("Udmurt", "Удмурт кыл", "udm", "udm", TranslationServices.Google | TranslationServices.Yandex),
         ["ug"] = new("Uyghur", "ئۇيغۇرچە", "ug", "uig", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["uk"] = new("Ukrainian", "Українська", "uk", "ukr"),
