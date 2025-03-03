@@ -25,6 +25,9 @@ public class GoogleLanguageScraper : ILanguageScraper
 
     private static ReadOnlySpan<byte> NativeNamesEnd => ";window.LanguageDisplays.localNames"u8;
 
+    private static readonly Uri GoogleLanguageListUri = new("https://ssl.gstatic.com/inputtools/js/ln/17/en.js");
+    private static readonly Uri GoogleTranslateUri = new("https://translate.google.com/");
+
     private readonly HttpClient _httpClient = new();
 
     public GoogleLanguageScraper()
@@ -38,7 +41,7 @@ public class GoogleLanguageScraper : ILanguageScraper
 
     public async Task<LanguageData> GetLanguageDataAsync()
     {
-        byte[] bytes = await _httpClient.GetByteArrayAsync(new Uri("https://translate.google.com/"));
+        byte[] bytes = await _httpClient.GetByteArrayAsync(GoogleTranslateUri);
 
         var languages = await GetLanguagesAsync(bytes);
         var ttsLanguages = GetTtsLanguages(bytes);
@@ -103,18 +106,13 @@ public class GoogleLanguageScraper : ILanguageScraper
             .ToDictionary(x => x[0], x => x[1]);
 
         // Get native names
-        byte[] bytes = await _httpClient.GetByteArrayAsync(new Uri("https://ssl.gstatic.com/inputtools/js/ln/17/en.js"));
+        byte[] bytes = await _httpClient.GetByteArrayAsync(GoogleLanguageListUri);
+        var span = bytes.AsSpan();
 
-        for (int i = 0; i < bytes.Length; i++)
-        {
-            if (bytes[i] == (byte)'\'')
-            {
-                bytes[i] = (byte)'"'; // Replace single quotes with double quotes so it can be parsed as JSON.
-            }
-        }
+        span.Replace((byte)'\'', (byte)'"'); // Replace single quotes with double quotes so it can be parsed as JSON.
 
-        int start = bytes.AsSpan().IndexOf(NativeNamesStart) + NativeNamesStart.Length;
-        int end = bytes.AsSpan().IndexOf(NativeNamesEnd);
+        int start = span.IndexOf(NativeNamesStart) + NativeNamesStart.Length;
+        int end = span.IndexOf(NativeNamesEnd);
 
         var nativeNames = JsonDocument.Parse(bytes.AsMemory(start..end))
             .Deserialize<Dictionary<string, string>>()!;

@@ -10,9 +10,11 @@ namespace LanguageScraper;
 
 public class YandexLanguageScraper : ILanguageScraper
 {
-    private static ReadOnlySpan<byte> TranslatorLangsStart => "TRANSLATOR_LANGS: "u8;
+    private static ReadOnlySpan<byte> TranslatorLanguagesStart => "TRANSLATOR_LANGS: "u8;
 
-    private static ReadOnlySpan<byte> TranslatorLangsEnd => ",\n"u8;
+    private static ReadOnlySpan<byte> TranslatorLanguagesEnd => ",\n"u8;
+
+    private static readonly Uri YandexTranslateUri = new("https://translate.yandex.com/");
 
     private readonly HttpClient _httpClient = new();
 
@@ -27,10 +29,11 @@ public class YandexLanguageScraper : ILanguageScraper
 
     public async Task<LanguageData> GetLanguageDataAsync()
     {
-        byte[] bytes = await _httpClient.GetByteArrayAsync(new Uri("https://translate.yandex.com/"));
+        byte[] bytes = await _httpClient.GetByteArrayAsync(YandexTranslateUri);
+        var span = bytes.AsSpan();
 
-        int start = bytes.AsSpan().IndexOf(TranslatorLangsStart) + TranslatorLangsStart.Length;
-        int length = bytes.AsSpan(start..).IndexOf(TranslatorLangsEnd);
+        int start = span.IndexOf(TranslatorLanguagesStart) + TranslatorLanguagesStart.Length;
+        int length = span[start..].IndexOf(TranslatorLanguagesEnd);
 
         var languages = JsonDocument.Parse(bytes.AsMemory(start, length))
             .RootElement

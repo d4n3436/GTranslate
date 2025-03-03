@@ -10,6 +10,8 @@ namespace LanguageScraper;
 
 public class MicrosoftLanguageScraper : ILanguageScraper
 {
+    private static readonly Uri LanguagesEndpoint = new("https://api.cognitive.microsofttranslator.com/languages?api-version=3.0&scope=translation");
+
     private readonly HttpClient _httpClient = new();
 
     public MicrosoftLanguageScraper()
@@ -23,7 +25,7 @@ public class MicrosoftLanguageScraper : ILanguageScraper
 
     public async Task<LanguageData> GetLanguageDataAsync()
     {
-        var stream = await _httpClient.GetStreamAsync(new Uri("https://api.cognitive.microsofttranslator.com/languages?api-version=3.0&scope=translation"));
+        var stream = await _httpClient.GetStreamAsync(LanguagesEndpoint);
         var document = await JsonDocument.ParseAsync(stream);
 
         var languages = document
@@ -33,6 +35,6 @@ public class MicrosoftLanguageScraper : ILanguageScraper
             .Select(x => new ScrapedLanguage(x.Value.GetProperty("name").GetString()!, x.Name, string.Empty, x.Value.GetProperty("nativeName").GetString()!))
             .ToArray();
 
-        return new LanguageData { Languages = languages, TtsLanguages = Array.Empty<ILanguage>() };
+        return new LanguageData { Languages = languages, TtsLanguages = [] };
     }
 }
