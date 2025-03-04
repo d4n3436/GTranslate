@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>2.2.8</Version>
+    <Version>2.3.0</Version>
     <LangVersion>13</LangVersion>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
     <Authors>d4n3436</Authors>
@@ -12,7 +12,7 @@
     <PackageProjectUrl>https://github.com/d4n3436/GTranslate</PackageProjectUrl>
     <RepositoryUrl>https://github.com/d4n3436/GTranslate</RepositoryUrl>
     <PackageReleaseNotes>https://github.com/d4n3436/GTranslate/releases</PackageReleaseNotes>
-	<PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Copyright>Copyright ©2021 d4n3436</Copyright>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
