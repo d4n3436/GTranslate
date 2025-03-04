@@ -1,7 +1,7 @@
 # GTranslate
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Nuget](https://img.shields.io/nuget/vpre/GTranslate)](https://www.nuget.org/packages/GTranslate)
 
-A collection of free translation APIs (Google Translate, Bing Translator, Microsoft Translator and Yandex.Translate). Currently supports translation, transliteration, language detection and text-to-speech.
+GTranslate is a collection of free translation APIs (Google Translate, Bing Translator, Microsoft Translator and Yandex.Translate). Currently supports translation, transliteration, language detection and text-to-speech.
 
 ## Features
 
