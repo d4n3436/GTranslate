@@ -1,7 +1,7 @@
 # GTranslate
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Nuget](https://img.shields.io/nuget/vpre/GTranslate)](https://www.nuget.org/packages/GTranslate)
 
-GTranslate is a collection of free translation APIs (Google Translate, Bing Translator, Microsoft Translator and Yandex.Translate). Currently supports translation, transliteration, language detection and text-to-speech.
+GTranslate is a collection of free translation APIs (Google Translate, Bing Translator, Microsoft Translator and Yandex.Translate). It currently supports translation, transliteration, language detection and text-to-speech.
 
 ## Features
 
@@ -48,7 +48,7 @@ Console.WriteLine(result);
 ```
 
 ### Transliteration
-Transliteration is similar to translation but way it works is specific to each translator. Some translators only support transliteration implicitly and others have dedicated transliteration endpoints (like Yandex).
+Transliteration is similar to translation but the way it works is specific to each translator. Some translators only support transliteration implicitly and others have dedicated transliteration endpoints (like Yandex).
 ```c#
 using GTranslate.Translators;
 
@@ -63,12 +63,12 @@ Console.WriteLine(result);
 // Transliteration: 'privet, mir', TargetLanguage: 'English (en)', SourceLanguage: 'Russian (ru)', Service: YandexTranslator
 ```
 
-It's recommended to use `MicrosoftTranslator` for transliteration because of its superior API that allows you to explicitly specify the source and target script.
+It's recommended to use `MicrosoftTranslator` for transliteration because of its superior API that allows you to specify the source and target script explicitly.
 
 ### Languages
 GTranslate provides an easy way to access languages through the `Language` class. A `Language` object contains the English name, native name, ISO 639-1 code, ISO 639-3 code and the supported services (translation engines).
 
-To get a `Language` object from its ISO 639-1 code, use the `Language.GetLanguage` or `Language.TryGetLanguage` methods. If the language was not found `Language.GetLanguage` will throw an exception and `Language.TryGetLanguage` will simply return `false`.
+To get a `Language` object from its ISO 639-1 code, use the `Language.GetLanguage` or `Language.TryGetLanguage` methods. If the language was not found, `Language.GetLanguage` will throw an exception and `Language.TryGetLanguage` will simply return `false`.
 A language can also be obtained through its English/native name, ISO-6393 code and some aliases (like `zh-Hans` or `zh-Hant`).
 
 ```c#
@@ -83,13 +83,13 @@ if (Language.TryGetLanguage(input, out var language)
 }
 ```
 
-GTranslate exposes the complete list of languages through a language dictionary class `LanguageDictionary` which can be accessed through `Language.LanguageDictionary`. 
+GTranslate exposes the complete list of languages via the language dictionary class `LanguageDictionary` which can be accessed through `Language.LanguageDictionary`. 
 It is essentially a read-only dictionary of ISO 639-1 codes and their respective languages.
 
 ### Results
 
-Calling `TranslateAsync` returns an object deriving from `ITranslationResult`. It contains the translation, souce text, service, source language and target language.
+Calling `TranslateAsync` returns an object that derives from `ITranslationResult`. It contains the translation, source text, service, source language and target language.
 
-The same applies to `TransliterateAsync` and `ITransliterationResult` but the transliteration is present instead of the translation.
+The same applies to `TransliterateAsync` and `ITransliterationResult` except the transliteration is present instead of the translation.
 
-Some translation engines will provide results with extra data in them. This extra data is exposed through properties in their concrete classes. For example, `GoogleTranslationResult` from (`GoogleTranslator.TranslateAsync`) will sometimes provide the confidence of the translation and the transliteration.
+Some translation engines will provide results with additional data. This extra data is exposed through properties in their concrete classes. For example, `GoogleTranslationResult` from (`GoogleTranslator.TranslateAsync`) will sometimes provide the confidence level of the translation and the transliteration.
