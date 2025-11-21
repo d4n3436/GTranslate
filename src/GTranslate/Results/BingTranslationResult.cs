@@ -1,7 +1,7 @@
-﻿using GTranslate.Translators;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using GTranslate.Translators;
 
 namespace GTranslate.Results;
 

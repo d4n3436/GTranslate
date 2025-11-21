@@ -1,5 +1,5 @@
-﻿using GTranslate;
 using System.Collections.Generic;
+using GTranslate;
 
 namespace LanguageScraper;
 

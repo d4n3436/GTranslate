@@ -89,7 +89,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
         Dictionary<string, Exception> exceptions = null!;
         foreach (var translator in _translators)
         {
-            if (!translator.IsLanguageSupported(toLanguage) || fromLanguage != null && !translator.IsLanguageSupported(fromLanguage))
+            if (!translator.IsLanguageSupported(toLanguage) || (fromLanguage != null && !translator.IsLanguageSupported(fromLanguage)))
             {
                 continue;
             }
@@ -125,7 +125,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
         Dictionary<string, Exception> exceptions = null!;
         foreach (var translator in _translators)
         {
-            if (!translator.IsLanguageSupported(toLanguage) || fromLanguage != null && !translator.IsLanguageSupported(fromLanguage))
+            if (!translator.IsLanguageSupported(toLanguage) || (fromLanguage != null && !translator.IsLanguageSupported(fromLanguage)))
             {
                 continue;
             }
@@ -185,7 +185,7 @@ public sealed class AggregateTranslator : ITranslator, IDisposable
         Dictionary<string, Exception> exceptions = null!;
         foreach (var translator in _translators)
         {
-            if (!translator.IsLanguageSupported(toLanguage) || fromLanguage != null && !translator.IsLanguageSupported(fromLanguage))
+            if (!translator.IsLanguageSupported(toLanguage) || (fromLanguage != null && !translator.IsLanguageSupported(fromLanguage)))
             {
                 continue;
             }

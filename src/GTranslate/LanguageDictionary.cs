@@ -1,9 +1,9 @@
-﻿using GTranslate.Extensions;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using GTranslate.Extensions;
 
 namespace GTranslate;
 
@@ -69,7 +69,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         TranslatorGuards.NotNull(code);
         if (!TryGetLanguage(code, out var language))
             throw new ArgumentException($"Unknown language \"{code}\".", nameof(code));
-        
+
         return language;
     }
 
@@ -81,7 +81,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
     /// <returns><see langword="true"/> if the language was found, otherwise <see langword="false"/>.</returns>
     public bool TryGetLanguage(string code, [MaybeNullWhen(false)] out Language language)
     {
-        language = default;
+        language = null;
 
         if (string.IsNullOrEmpty(code))
         {
@@ -93,7 +93,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
             return true;
         }
 
-        if (!Aliases.TryGetValue(code, out var iso))
+        if (!Aliases.TryGetValue(code, out string? iso))
         {
             return false;
         }

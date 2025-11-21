@@ -5,7 +5,7 @@ namespace GTranslate;
 
 internal static class EmptyDictionary<TKey, TValue> where TKey : notnull
 {
-    public static IReadOnlyDictionary<TKey, TValue> Value { get; } = 
+    public static IReadOnlyDictionary<TKey, TValue> Value { get; } =
 
 #if NET8_0_OR_GREATER
         ReadOnlyDictionary<TKey, TValue>.Empty;

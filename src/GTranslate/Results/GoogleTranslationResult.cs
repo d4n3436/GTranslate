@@ -1,5 +1,5 @@
-﻿using GTranslate.Translators;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using GTranslate.Translators;
 
 namespace GTranslate.Results;
 

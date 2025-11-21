@@ -28,7 +28,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         "pt", "pt-PT", "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "yue", "zh-CN", "zh-TW"
     ];
 
-    private static readonly Lazy<HashSet<ILanguage>> LazyTtsLanguages = new(() =>[..TtsLanguages.Select(Language.GetLanguage)]);
+    private static readonly Lazy<HashSet<ILanguage>> LazyTtsLanguages = new(() => [.. TtsLanguages.Select(Language.GetLanguage)]);
 
     /// <summary>
     /// Gets a read-only collection of languages that support text-to-speech.

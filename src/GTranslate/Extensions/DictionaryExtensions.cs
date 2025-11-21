@@ -13,6 +13,6 @@ internal static class DictionaryExtensions
     public static System.Collections.Frozen.FrozenDictionary<TKey, TValue> ToReadOnlyDictionary<TKey, TValue>(this Dictionary<TKey, TValue> dictionary) where TKey : notnull
         => System.Collections.Frozen.FrozenDictionary.ToFrozenDictionary(dictionary, dictionary.Comparer);
 #else
-        public static ReadOnlyDictionary<TKey, TValue> ToReadOnlyDictionary<TKey, TValue>(this Dictionary<TKey, TValue> dictionary) where TKey : notnull => AsReadOnly(dictionary);
+    public static ReadOnlyDictionary<TKey, TValue> ToReadOnlyDictionary<TKey, TValue>(this Dictionary<TKey, TValue> dictionary) where TKey : notnull => AsReadOnly(dictionary);
 #endif
 }

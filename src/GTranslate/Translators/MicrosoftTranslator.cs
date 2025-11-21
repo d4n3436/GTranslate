@@ -60,7 +60,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     private readonly SemaphoreSlim _authTokenInfoSemaphore = new(1, 1);
     private MicrosoftVoice[] _voices = [];
     private bool _disposed;
-    
+
     /// <summary>
     /// Gets a read-only dictionary containing the hardcoded TTS voices used internally in Bing Translator.
     /// </summary>
@@ -318,7 +318,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
         TranslatorGuards.NotNull(text);
         TranslatorGuards.MaxTextLength(text, MaxTextLength);
-        
+
         using var request = new HttpRequestMessage(HttpMethod.Post, DetectUri);
         request.Headers.Add("X-MT-Signature", GetSignature(DetectUrl));
         request.Content = JsonContent.Create([new MicrosoftTranslatorRequest { Text = text }], MicrosoftTranslatorRequestContext.Default.MicrosoftTranslatorRequestArray);
@@ -367,7 +367,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         TranslatorGuards.ObjectNotDisposed(this, _disposed);
         TranslatorGuards.NotNull(text);
         TranslatorGuards.NotNull(voice);
-        
+
         var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
 
         string payload = $"<speak version='1.0' xml:lang='{voice.Locale}'><voice xml:lang='{voice.Locale}' xml:gender='{voice.Gender}' name='{voice.ShortName}'><prosody rate='{speakRate}'>{SsmlEncoder.Encode(text)}</prosody></voice></speak>";
@@ -645,7 +645,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
 
     private static byte[] Base64UrlDecode(string text)
     {
-        int padding = 3 - (text.Length + 3) % 4;
+        int padding = 3 - ((text.Length + 3) % 4);
         if (padding > 0)
         {
             text = $"{text}{new string('=', padding)}";

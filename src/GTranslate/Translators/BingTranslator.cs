@@ -20,7 +20,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
 {
     private const string HostUrl = "https://www.bing.com";
     private const string TtsEndpoint = $"{HostUrl}/tfettts";
-    private static readonly Uri TranslatorPageUri = new($"{HostUrl}/translator");  
+    private static readonly Uri TranslatorPageUri = new($"{HostUrl}/translator");
     private const string Iid = "translator.5024.1";
     private const int MaxTextLength = 1000;
 
@@ -126,9 +126,9 @@ public sealed class BingTranslator : ITranslator, IDisposable
         }
 
         var translation = result.Translations[0];
-        var transliteration = translation.Transliteration?.Text;
-        var sourceTransliteration = results.ElementAtOrDefault(1)?.InputTransliteration;
-        var sourceLanguage = result.DetectedLanguage?.Language ?? fromLanguage?.ISO6391;
+        string? transliteration = translation.Transliteration?.Text;
+        string? sourceTransliteration = results.ElementAtOrDefault(1)?.InputTransliteration;
+        string? sourceLanguage = result.DetectedLanguage?.Language ?? fromLanguage?.ISO6391;
 
         return new BingTranslationResult(translation.Text, text, Language.GetLanguage(translation.To), sourceLanguage is null ? null : Language.GetLanguage(sourceLanguage),
             transliteration, sourceTransliteration, translation.Transliteration?.Script, result.DetectedLanguage?.Score ?? 0);

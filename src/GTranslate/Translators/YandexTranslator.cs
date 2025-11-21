@@ -107,7 +107,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
         using var content = new FormUrlEncodedContent(data);
         using var response = await _httpClient.PostAsync(new Uri($"{ApiUrl}/translate{query}"), content).ConfigureAwait(false);
-        
+
         var result = (await response.Content.ReadFromJsonAsync(YandexTranslationResultModelContext.Default.YandexTranslationResultModel).ConfigureAwait(false))!;
 
         if (!result.IsSuccessful)

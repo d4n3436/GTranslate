@@ -28,7 +28,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         "pt", "pt-PT", "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "yue", "zh-CN", "zh-TW"
     ];
 
-    private static readonly Lazy<HashSet<ILanguage>> LazyTtsLanguages = new(() => [..TtsLanguages.Select(Language.GetLanguage)]);
+    private static readonly Lazy<HashSet<ILanguage>> LazyTtsLanguages = new(() => [.. TtsLanguages.Select(Language.GetLanguage)]);
 
     /// <summary>
     /// Gets a read-only collection of languages that support text-to-speech.
@@ -112,7 +112,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
 
         string target = root[1][1].GetString() ?? toLanguage.ISO6391;
         string source = root[1][3].GetString()!;
-        
+
         if (source == "auto")
         {
             source = root.GetArrayLength() > 2
@@ -232,9 +232,9 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
 
         // Send requests and parse responses in parallel
         var chunks = await Task.WhenAll(tasks).ConfigureAwait(false);
-        
+
         return chunks.AsSpan().AsReadOnlySequence().AsStream();
-        
+
         async Task<ReadOnlyMemory<byte>> ProcessRequestAsync(ReadOnlyMemory<char> textChunk)
         {
             object?[] payload = [textChunk.ToString(), language.ISO6391, null, "undefined", new object[] { slow ? 1 : 0 }];
@@ -300,7 +300,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
 
     private static HttpRequestMessage BuildRequest(string rpcId, object?[] payload)
     {
-        var serializedPayload = JsonSerializer.Serialize(payload, ObjectArrayContext.Default.ObjectArray!);
+        string serializedPayload = JsonSerializer.Serialize(payload, ObjectArrayContext.Default.ObjectArray!);
         object?[][][] request = [[[rpcId, serializedPayload, null, "generic"]]];
 
         return new HttpRequestMessage
