@@ -1,12 +1,14 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using GTranslate.Translators;
+using JetBrains.Annotations;
 
 namespace GTranslate.Results;
 
 /// <summary>
 /// Represents a transliteration result from Bing Translator.
 /// </summary>
+[PublicAPI]
 public class BingTransliterationResult : ITransliterationResult<Language>, ITransliterationResult
 {
     internal BingTransliterationResult(string transliteration, string? sourceTransliteration,

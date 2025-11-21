@@ -1,9 +1,12 @@
-﻿namespace GTranslate.Results;
+using JetBrains.Annotations;
+
+namespace GTranslate.Results;
 
 /// <summary>
 /// Represents a translation result.
 /// </summary>
 /// <typeparam name="TLanguage">The language type.</typeparam>
+[PublicAPI]
 public interface ITranslationResult<out TLanguage>
     where TLanguage : ILanguage
 {
@@ -34,4 +37,5 @@ public interface ITranslationResult<out TLanguage>
 }
 
 /// <inheritdoc/>
+[PublicAPI]
 public interface ITranslationResult : ITranslationResult<ILanguage>;

@@ -1,13 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using GTranslate;
+using JetBrains.Annotations;
 
 namespace LanguageScraper;
 
+[UsedImplicitly]
 public class YandexLanguageScraper : ILanguageScraper
 {
     private static ReadOnlySpan<byte> TranslatorLanguagesStart => "TRANSLATOR_LANGS: "u8;

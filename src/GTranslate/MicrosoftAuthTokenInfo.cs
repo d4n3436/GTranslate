@@ -1,8 +1,11 @@
-﻿namespace GTranslate;
+using JetBrains.Annotations;
+
+namespace GTranslate;
 
 /// <summary>
 /// Represents a Microsoft Authorization token.
 /// </summary>
+[PublicAPI]
 public sealed class MicrosoftAuthTokenInfo
 {
     internal MicrosoftAuthTokenInfo(string token, string region)

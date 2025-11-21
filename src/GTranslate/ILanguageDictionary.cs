@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 
 namespace GTranslate;
 
@@ -8,6 +9,7 @@ namespace GTranslate;
 /// </summary>
 /// <typeparam name="TCode">The type of codes (or keys) associated with a language.</typeparam>
 /// <typeparam name="TLanguage">The type of values that implements <see cref="ILanguage"/>.</typeparam>
+[PublicAPI]
 public interface ILanguageDictionary<TCode, TLanguage> : IReadOnlyDictionary<TCode, TLanguage>
     where TLanguage : ILanguage
 {

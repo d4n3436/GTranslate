@@ -1,13 +1,15 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using GTranslate.Translators;
+using JetBrains.Annotations;
 
 namespace GTranslate.Results;
 
 /// <summary>
 /// Represents a transliteration result from Microsoft Translator.
 /// </summary>
+[PublicAPI]
 public class MicrosoftTransliterationResult : ITransliterationResult<Language>, ITransliterationResult
 {
     internal MicrosoftTransliterationResult(string transliteration, string source, Language sourceLanguage, string script, string sourceScript)

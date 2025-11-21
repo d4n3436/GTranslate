@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 
 namespace GTranslate;
 
@@ -11,6 +12,7 @@ namespace GTranslate;
 /// Due to the way GTranslate handles the supported languages,
 /// custom translators should use a custom language class instead.
 /// </remarks>
+[PublicAPI]
 [DebuggerDisplay($"{{{nameof(DebuggerDisplay)},nq}}")]
 public sealed class Language : ILanguage, IEquatable<Language>
 {

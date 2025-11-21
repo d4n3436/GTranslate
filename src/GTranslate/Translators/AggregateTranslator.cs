@@ -5,12 +5,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using GTranslate.Extensions;
 using GTranslate.Results;
+using JetBrains.Annotations;
 
 namespace GTranslate.Translators;
 
 /// <summary>
 /// Represents an aggregate translator. This class groups multiple translation services into a single class for ease of use.
 /// </summary>
+[PublicAPI]
 public sealed class AggregateTranslator : ITranslator, IDisposable
 {
     /// <inheritdoc/>

@@ -9,12 +9,14 @@ using GTranslate.Common;
 using GTranslate.Extensions;
 using GTranslate.Models;
 using GTranslate.Results;
+using JetBrains.Annotations;
 
 namespace GTranslate.Translators;
 
 /// <summary>
 /// Represents a translator that uses the old (previous) Google Translate API.
 /// </summary>
+[PublicAPI]
 public sealed class GoogleTranslator : ITranslator, IDisposable
 {
     private const string Salt1 = "+-a^+6";
@@ -196,7 +198,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(language);
-        EnsureValidTTSLanguage(language);
+        EnsureValidTextToSpeechLanguage(language);
 
         var textParts = text.SplitWithoutWordBreaking().ToArray();
         var tasks = new Task<ReadOnlyMemory<byte>>[textParts.Length];
@@ -215,8 +217,8 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
             string escapedText = Uri.EscapeDataString(textChunk.ToString());
             string token = MakeToken(textChunk.Span);
 
-            string url = $"{TtsApiEndpoint}?ie=UTF-8&q={escapedText}&tl={language.ISO6391}&ttsspeed={speed}&total={total}&idx={index}&client=tw-ob&textlen={textChunk.Length}&tk={token}";
-            return await _httpClient.GetByteArrayAsync(new Uri(url)).ConfigureAwait(false);
+            var uri = new Uri($"{TtsApiEndpoint}?ie=UTF-8&q={escapedText}&tl={language.ISO6391}&ttsspeed={speed}&total={total}&idx={index}&client=tw-ob&textlen={textChunk.Length}&tk={token}");
+            return await _httpClient.GetByteArrayAsync(uri).ConfigureAwait(false);
         }
     }
 
@@ -265,7 +267,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="IsLanguageSupported(Language)"/>
     bool ITranslator.IsLanguageSupported(ILanguage language) => language is Language lang && IsLanguageSupported(lang);
 
-    private static void EnsureValidTTSLanguage(ILanguage language)
+    private static void EnsureValidTextToSpeechLanguage(ILanguage language)
     {
         if (!LazyTtsLanguages.Value.Contains(language))
         {
@@ -282,12 +284,14 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     {
         return languageCode switch
         {
+            // ReSharper disable StringLiteralTypo, CommentTypo
             "mni" => "mni-Mtei",
             "prs" => "fa-FA",
             "nqo" => "bm-Nkoo",
             "ndc" => "ndc-ZW",
             "sat" => "sat-Latn",
             _ => languageCode
+            // ReSharper restore StringLiteralTypo, CommentTypo
         };
     }
 

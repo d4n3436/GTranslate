@@ -35,6 +35,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations.Sources" Version="2025.2.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="$(SolutionDir)README.md" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
 

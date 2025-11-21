@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using GTranslate.Extensions;
+using JetBrains.Annotations;
 
 namespace GTranslate;
 
@@ -16,6 +17,7 @@ using ReadOnlyLanguageDictionary = System.Collections.ObjectModel.ReadOnlyDictio
 /// <summary>
 /// Represents the default language dictionary used in GTranslate. It contains all the supported languages across all the included translators.
 /// </summary>
+[PublicAPI]
 public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
 {
     private const int TotalLanguages = 269;
@@ -109,6 +111,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
 
     private Dictionary<string, string> BuildLanguageAliases()
     {
+        // ReSharper disable StringLiteralTypo, CommentTypo
         var aliases = new Dictionary<string, string>(TotalAliases, StringComparer.InvariantCultureIgnoreCase)
         {
             ["bangla"] = "bn",
@@ -150,6 +153,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
             ["ndc-zw"] = "ndc", // Ndau (Zimbabwe)
             ["sat-Latn"] = "sat"
         };
+        // ReSharper restore StringLiteralTypo, CommentTypo
 
         foreach (var kvp in _languages)
         {
@@ -161,6 +165,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         return aliases;
     }
 
+    // ReSharper disable StringLiteralTypo, CommentTypo
     private readonly ReadOnlyLanguageDictionary _languages = new Dictionary<string, Language>(TotalLanguages, StringComparer.OrdinalIgnoreCase)
     {
         ["aa"] = new("Afar", "Qafaraf", "aa", "aar", TranslationServices.Google),
@@ -433,4 +438,5 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
         ["zh-TW"] = new("Chinese (Traditional)", "繁體中文 (繁體)", "zh-TW", "zho-TW", TranslationServices.Google | TranslationServices.Bing | TranslationServices.Microsoft),
         ["zu"] = new("Zulu", "Isi-Zulu", "zu", "zul")
     }.ToReadOnlyDictionary();
+    // ReSharper restore StringLiteralTypo, CommentTypo
 }

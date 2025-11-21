@@ -1,10 +1,12 @@
-﻿using System;
+using System;
+using JetBrains.Annotations;
 
 namespace GTranslate;
 
 /// <summary>
 /// The exception that is thrown by a translation service.
 /// </summary>
+[PublicAPI]
 public class TranslatorException : Exception
 {
     /// <summary>

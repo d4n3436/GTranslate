@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -9,12 +9,14 @@ using System.Threading.Tasks;
 using GTranslate.Common;
 using GTranslate.Models;
 using GTranslate.Results;
+using JetBrains.Annotations;
 
 namespace GTranslate.Translators;
 
 /// <summary>
 /// Represents the Yandex Translator.
 /// </summary>
+[PublicAPI]
 public sealed class YandexTranslator : ITranslator, IDisposable
 {
     private const string ApiUrl = "https://translate.yandex.net/api/v1/tr.json";
@@ -242,7 +244,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(language);
         TranslatorGuards.LanguageFound(language, out var lang);
-        EnsureValidTTSLanguage(lang);
+        EnsureValidTextToSpeechLanguage(lang);
 
         return await TextToSpeechAsync(text, lang, speed).ConfigureAwait(false);
     }
@@ -253,9 +255,9 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(language);
-        EnsureValidTTSLanguage(language);
+        EnsureValidTextToSpeechLanguage(language);
 
-        string url = $"https://tts.voicetech.yandex.net/tts?text={Uri.EscapeDataString(text)}&lang={YandexTTSHotPatch(language.ISO6391)}&speed={speed}&format=mp3&quality=hi&platform=android&application=translate";
+        string url = $"https://tts.voicetech.yandex.net/tts?text={Uri.EscapeDataString(text)}&lang={YandexTextToSpeechHotPatch(language.ISO6391)}&speed={speed}&format=mp3&quality=hi&platform=android&application=translate";
         using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
 
         var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
@@ -338,7 +340,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
         };
     }
 
-    private static string YandexTTSHotPatch(string languageCode)
+    private static string YandexTextToSpeechHotPatch(string languageCode)
     {
         ArgumentNullException.ThrowIfNull(languageCode);
 
@@ -364,7 +366,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 #endif
     }
 
-    private static void EnsureValidTTSLanguage(ILanguage language)
+    private static void EnsureValidTextToSpeechLanguage(ILanguage language)
     {
         if (!TtsLanguages.Contains(language))
         {

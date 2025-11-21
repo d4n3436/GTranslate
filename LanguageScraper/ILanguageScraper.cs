@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GTranslate;
+using JetBrains.Annotations;
 
 namespace LanguageScraper;
 
@@ -14,6 +15,7 @@ public interface ILanguageScraper
 
     Task<LanguageData> GetLanguageDataAsync();
 
+    [UsedImplicitly]
     async Task DisplayMissingLanguagesAsync()
     {
         var data = await GetLanguageDataAsync();

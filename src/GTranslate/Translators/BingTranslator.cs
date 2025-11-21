@@ -12,12 +12,14 @@ using System.Threading.Tasks;
 using GTranslate.Common;
 using GTranslate.Models;
 using GTranslate.Results;
+using JetBrains.Annotations;
 
 namespace GTranslate.Translators;
 
 /// <summary>
 /// Represents the Bing Translator.
 /// </summary>
+[PublicAPI]
 public sealed class BingTranslator : ITranslator, IDisposable
 {
     private const string HostUrl = "https://www.bing.com";
@@ -213,7 +215,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(language);
-        EnsureValidTTSLanguage(language, out var voice);
+        EnsureValidTextToSpeechLanguage(language, out var voice);
 
         return await TextToSpeechAsync(text, voice, speakRate).ConfigureAwait(false);
     }
@@ -328,7 +330,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         // Unix timestamp generated once the page is loaded. Valid for 3600000 milliseconds or 1 hour
         if (!Utf8Parser.TryParse(bytes.Slice(keyStartIndex, keyLength), out long key, out _))
         {
-            // This shouldn't happen but we'll handle this case anyways
+            // This shouldn't happen, but we'll handle this case anyway
             key = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
 
@@ -356,6 +358,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
         return languageCode switch
         {
+            // ReSharper disable StringLiteralTypo, CommentTypo
             "lg" => "lug",
             "no" => "nb",
             "ny" => "nya",
@@ -366,10 +369,11 @@ public sealed class BingTranslator : ITranslator, IDisposable
             "zh-CN" => "zh-Hans",
             "zh-TW" => "zh-Hant",
             _ => languageCode
+            // ReSharper restore StringLiteralTypo, CommentTypo
         };
     }
 
-    private static void EnsureValidTTSLanguage(string language, out MicrosoftVoice voice)
+    private static void EnsureValidTextToSpeechLanguage(string language, out MicrosoftVoice voice)
     {
         if (!MicrosoftTranslator.DefaultVoices.TryGetValue(language, out var temp))
         {

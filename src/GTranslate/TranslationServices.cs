@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using JetBrains.Annotations;
 
 namespace GTranslate;
 
@@ -6,6 +7,7 @@ namespace GTranslate;
 /// Specifies the translation services.
 /// </summary>
 [Flags]
+[PublicAPI]
 public enum TranslationServices
 {
     /// <summary>

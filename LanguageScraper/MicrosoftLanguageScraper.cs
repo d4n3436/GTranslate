@@ -1,13 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using GTranslate;
+using JetBrains.Annotations;
 
 namespace LanguageScraper;
 
+[UsedImplicitly]
 public class MicrosoftLanguageScraper : ILanguageScraper
 {
     private static readonly Uri LanguagesEndpoint = new("https://api.cognitive.microsofttranslator.com/languages?api-version=3.0&scope=translation");

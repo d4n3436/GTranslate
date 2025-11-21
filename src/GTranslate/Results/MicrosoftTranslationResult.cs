@@ -1,11 +1,13 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using GTranslate.Translators;
+using JetBrains.Annotations;
 
 namespace GTranslate.Results;
 
 /// <summary>
 /// Represents a translation result from Microsoft Translator.
 /// </summary>
+[PublicAPI]
 public class MicrosoftTranslationResult : ITranslationResult<Language>, ITranslationResult
 {
     internal MicrosoftTranslationResult(string translation, string source, Language targetLanguage,

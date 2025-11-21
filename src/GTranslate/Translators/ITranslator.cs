@@ -1,11 +1,13 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using GTranslate.Results;
+using JetBrains.Annotations;
 
 namespace GTranslate.Translators;
 
 /// <summary>
 /// Represents a translator.
 /// </summary>
+[PublicAPI]
 public interface ITranslator
 {
     /// <summary>

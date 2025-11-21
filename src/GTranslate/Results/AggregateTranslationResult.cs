@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using GTranslate.Translators;
+using JetBrains.Annotations;
 
 namespace GTranslate.Results;
 
@@ -9,6 +10,7 @@ namespace GTranslate.Results;
 /// Represents the result of translating text using <see cref="AggregateTranslator"/>.
 /// It wraps a <see cref="ITranslationResult"/> and includes exceptions that have occurred in other translators before receiving the result.
 /// </summary>
+[PublicAPI]
 public class AggregateTranslationResult : ITranslationResult
 {
     internal AggregateTranslationResult(ITranslationResult result, IReadOnlyDictionary<string, Exception> exceptions)

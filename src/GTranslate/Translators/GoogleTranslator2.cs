@@ -9,12 +9,14 @@ using GTranslate.Common;
 using GTranslate.Extensions;
 using GTranslate.Models;
 using GTranslate.Results;
+using JetBrains.Annotations;
 
 namespace GTranslate.Translators;
 
 /// <summary>
 /// Represents a translator for the new Google Translate RPC API.
 /// </summary>
+[PublicAPI]
 public sealed class GoogleTranslator2 : ITranslator, IDisposable
 {
     private const string TranslateRpcId = "MkEWBc";
@@ -227,7 +229,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(language);
-        EnsureValidTTSLanguage(language);
+        EnsureValidTextToSpeechLanguage(language);
 
         var tasks = text.SplitWithoutWordBreaking().Select(ProcessRequestAsync);
 
@@ -291,7 +293,7 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     /// <inheritdoc cref="IsLanguageSupported(Language)"/>
     bool ITranslator.IsLanguageSupported(ILanguage language) => language is Language lang && IsLanguageSupported(lang);
 
-    private static void EnsureValidTTSLanguage(ILanguage language)
+    private static void EnsureValidTextToSpeechLanguage(ILanguage language)
     {
         if (!LazyTtsLanguages.Value.Contains(language))
         {
@@ -321,12 +323,14 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
     {
         return languageCode switch
         {
+            // ReSharper disable StringLiteralTypo, CommentTypo
             "mni" => "mni-Mtei",
             "prs" => "fa-FA",
             "nqo" => "bm-Nkoo",
             "ndc" => "ndc-ZW",
             "sat" => "sat-Latn",
             _ => languageCode
+            // ReSharper restore StringLiteralTypo, CommentTypo
         };
     }
 

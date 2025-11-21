@@ -1,13 +1,15 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using GTranslate.Translators;
+using JetBrains.Annotations;
 
 namespace GTranslate.Results;
 
 /// <summary>
 /// Represents a translation result from Bing Translator.
 /// </summary>
+[PublicAPI]
 public class BingTranslationResult : ITranslationResult<Language>, ITranslationResult
 {
     internal BingTranslationResult(string translation, string source, Language targetLanguage,

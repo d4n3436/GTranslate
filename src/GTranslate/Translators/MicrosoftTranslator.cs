@@ -17,12 +17,14 @@ using GTranslate.Common;
 using GTranslate.Extensions;
 using GTranslate.Models;
 using GTranslate.Results;
+using JetBrains.Annotations;
 
 namespace GTranslate.Translators;
 
 /// <summary>
 /// Represents the Microsoft Azure translator.
 /// </summary>
+[PublicAPI]
 public sealed class MicrosoftTranslator : ITranslator, IDisposable
 {
     private const string ApiEndpoint = "api.cognitive.microsofttranslator.com";
@@ -31,7 +33,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     private const string SpeechTokenUrl = "dev.microsofttranslator.com/apps/endpoint?api-version=1.0";
     private const int MaxTextLength = 1000;
 
-    // test base domain (405 error): dev-sn2-test1.microsofttranslator-int.com
+    // test base domain (405 error): https://dev-sn2-test1.microsofttranslator-int.com/
     // end point co4 (405 error): https://dev-co4-test1.microsofttranslator-int.com/
     // end point int (405 error): https://dev.microsofttranslator-int.com/
 
@@ -75,6 +77,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// </remarks>
     public static IReadOnlyDictionary<string, MicrosoftVoice> DefaultVoices { get; } = new Dictionary<string, MicrosoftVoice>
     {
+        // ReSharper disable StringLiteralTypo, CommentTypo
         ["af"] = new("Adri", "af-ZA-AdriNeural", "Female", "af-ZA"),
         ["am"] = new("Mekdes", "am-ET-MekdesNeural", "Female", "am-ET"),
         ["ar"] = new("Hamed", "ar-SA-HamedNeural", "Male", "ar-SA"),
@@ -139,6 +142,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         ["zh-CN"] = new("Xiaoxiao", "zh-CN-XiaoxiaoNeural", "Female", "zh-CN"), // zh-Hans
         ["zh-TW"] = new("Xiaoxiao", "zh-CN-XiaoxiaoNeural", "Female", "zh-CN"), // zh-Hant
         ["yue"] = new("HiuGaai", "zh-HK-HiuGaaiNeural", "Female", "zh-HK")
+        // ReSharper restore StringLiteralTypo, CommentTypo
     }.ToReadOnlyDictionary();
 
     /// <summary>
@@ -146,6 +150,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// </summary>
     public static IReadOnlyDictionary<string, IReadOnlyCollection<string>> Scripts { get; } = new Dictionary<string, IReadOnlyCollection<string>>
     {
+        // ReSharper disable StringLiteralTypo, CommentTypo
         ["ar"] = ["Latn", "Arab"],
         ["as"] = ["Latn", "Beng"],
         ["be"] = ["Latn", "Cyrl"],
@@ -178,6 +183,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         ["ur"] = ["Latn", "Arab"],
         ["zh-CN"] = ["Latn", "Hans"], // zh-Hans
         ["zh-TW"] = ["Latn", "Hant"] // zh-Hant
+        // ReSharper restore StringLiteralTypo, CommentTypo
     }.ToReadOnlyDictionary();
 
     /// <summary>
@@ -351,7 +357,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(language);
-        EnsureValidTTSLanguage(language, out var voice);
+        EnsureValidTextToSpeechLanguage(language, out var voice);
 
         return await TextToSpeechAsync(text, voice, speakRate).ConfigureAwait(false);
     }
@@ -395,6 +401,8 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// Gets a list of supported TTS voices and caches it.
     /// </summary>
     /// <returns>A <see cref="ValueTask{TResult}"/> containing the list of voices.</returns>
+    // ReSharper disable once InconsistentNaming
+    // Updating name is a breaking change
     public async ValueTask<IReadOnlyCollection<MicrosoftVoice>> GetTTSVoicesAsync()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -543,6 +551,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
 
         return languageCode switch
         {
+            // ReSharper disable StringLiteralTypo, CommentTypo
             "lg" => "lug",
             "no" => "nb",
             "ny" => "nya",
@@ -553,10 +562,11 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
             "zh-CN" => "zh-Hans",
             "zh-TW" => "zh-Hant",
             _ => languageCode
+            // ReSharper restore StringLiteralTypo, CommentTypo
         };
     }
 
-    private static void EnsureValidTTSLanguage(string language, out MicrosoftVoice voice)
+    private static void EnsureValidTextToSpeechLanguage(string language, out MicrosoftVoice voice)
     {
         if (!DefaultVoices.TryGetValue(language, out var temp))
         {

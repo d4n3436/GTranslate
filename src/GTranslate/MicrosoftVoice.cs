@@ -1,11 +1,13 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 
 namespace GTranslate;
 
 /// <summary>
 /// Represents a TTS voice in Microsoft Translator.
 /// </summary>
+[PublicAPI]
 [DebuggerDisplay($"{{{nameof(DebuggerDisplay)},nq}}")]
 public class MicrosoftVoice
 {

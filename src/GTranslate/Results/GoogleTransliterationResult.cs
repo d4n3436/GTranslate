@@ -1,11 +1,13 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using GTranslate.Translators;
+using JetBrains.Annotations;
 
 namespace GTranslate.Results;
 
 /// <summary>
 /// Represents a transliteration result from Google Translate.
 /// </summary>
+[PublicAPI]
 public class GoogleTransliterationResult : ITransliterationResult<Language>, ITransliterationResult
 {
     internal GoogleTransliterationResult(string transliteration, string? sourceTransliteration, string source, Language targetLanguage, Language sourceLanguage, string service = nameof(GoogleTranslator))

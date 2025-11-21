@@ -1,11 +1,13 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using GTranslate.Translators;
+using JetBrains.Annotations;
 
 namespace GTranslate.Results;
 
 /// <summary>
 /// Represents a translation result from Yandex.Translate.
 /// </summary>
+[PublicAPI]
 public class YandexTranslationResult : ITranslationResult<Language>, ITranslationResult
 {
     internal YandexTranslationResult(string translation, string source, Language targetLanguage, Language sourceLanguage)

@@ -7,10 +7,12 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using GTranslate;
 using GTranslate.Translators;
+using JetBrains.Annotations;
 
 namespace LanguageScraper;
 
 // For GoogleTranslator and GoogleTranslator2
+[UsedImplicitly]
 public class GoogleLanguageScraper : ILanguageScraper
 {
     private static ReadOnlySpan<byte> LanguagesId => "n9wk7"u8;
