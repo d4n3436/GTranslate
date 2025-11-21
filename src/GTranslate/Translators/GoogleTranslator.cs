@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -56,7 +56,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// <param name="httpClient">An <see cref="HttpClient"/> instance.</param>
     public GoogleTranslator(HttpClient httpClient)
     {
-        TranslatorGuards.NotNull(httpClient);
+        ArgumentNullException.ThrowIfNull(httpClient);
 
         if (httpClient.DefaultRequestHeaders.UserAgent.Count == 0)
         {
@@ -81,9 +81,9 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// </exception>
     public async Task<GoogleTranslationResult> TranslateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
         TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
         TranslatorGuards.LanguageSupported(this, toLang, fromLang);
@@ -94,12 +94,12 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="TranslateAsync(string, string, string)"/>
     public async Task<GoogleTranslationResult> TranslateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
-        string url = $"{ApiEndpoint}?client=gtx&sl={GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto")}&tl={GoogleHotPatch(toLanguage.ISO6391)}&dt=t&dt=bd&dj=1&source=input&tk={MakeToken(text.AsSpan())}";
+        string url = $"{ApiEndpoint}?client=gtx&sl={GoogleHotPatch(fromLanguage?.ISO6391 ?? "auto")}&tl={GoogleHotPatch(toLanguage.ISO6391)}&dt=t&dt=bd&dj=1&source=input&tk={MakeToken(text)}";
         using var content = new FormUrlEncodedContent([new KeyValuePair<string, string>("q", text)]);
         using var response = await _httpClient.PostAsync(new Uri(url), content).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
@@ -126,9 +126,9 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// </exception>
     public async Task<GoogleTransliterationResult> TransliterateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
         TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
         TranslatorGuards.LanguageSupported(this, toLang, fromLang);
@@ -139,9 +139,9 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="TransliterateAsync(string, string, string)"/>
     public async Task<GoogleTransliterationResult> TransliterateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
         var result = await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
@@ -163,7 +163,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// <exception cref="TranslatorException">Thrown when an error occurred during the operation.</exception>
     public async Task<Language> DetectLanguageAsync(string text)
     {
-        TranslatorGuards.NotNull(text);
+        ArgumentNullException.ThrowIfNull(text);
 
         var result = await TranslateAsync(text, "en").ConfigureAwait(false);
         return result.SourceLanguage;
@@ -182,9 +182,9 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// <exception cref="TranslatorException">Thrown when <paramref name="language"/> is not supported, or an error occurred during the operation.</exception>
     public async Task<Stream> TextToSpeechAsync(string text, string language, float speed = 1)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(language);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(language);
         TranslatorGuards.LanguageFound(language, out var lang);
 
         return await TextToSpeechAsync(text, lang, speed).ConfigureAwait(false);
@@ -193,9 +193,9 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="TextToSpeechAsync(string, string, float)"/>
     public async Task<Stream> TextToSpeechAsync(string text, ILanguage language, float speed = 1)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(language);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(language);
         EnsureValidTTSLanguage(language);
 
         var textParts = text.SplitWithoutWordBreaking().ToArray();
@@ -208,7 +208,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         // Send requests and parse responses in parallel
         var chunks = await Task.WhenAll(tasks).ConfigureAwait(false);
 
-        return chunks.AsSpan().AsReadOnlySequence().AsStream();
+        return chunks.AsReadOnlySequence().AsStream();
 
         async Task<ReadOnlyMemory<byte>> ProcessRequestAsync(ReadOnlyMemory<char> textChunk, int index, int total)
         {
@@ -227,7 +227,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// <returns><see langword="true"/> if the language is supported, otherwise <see langword="false"/>.</returns>
     public bool IsLanguageSupported(string language)
     {
-        TranslatorGuards.NotNull(language);
+        ArgumentNullException.ThrowIfNull(language);
 
         return Language.TryGetLanguage(language, out var lang) && IsLanguageSupported(lang);
     }
@@ -235,7 +235,7 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="IsLanguageSupported(string)"/>
     public bool IsLanguageSupported(Language language)
     {
-        TranslatorGuards.NotNull(language);
+        ArgumentNullException.ThrowIfNull(language);
 
         return (language.SupportedServices & TranslationServices.Google) == TranslationServices.Google;
     }

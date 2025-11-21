@@ -1,18 +1,28 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using GTranslate.Common;
 
 namespace GTranslate.Extensions;
 
 internal static class DictionaryExtensions
 {
-    public static ReadOnlyDictionary<TKey, TValue> AsReadOnly<TKey, TValue>(this Dictionary<TKey, TValue> dictionary) where TKey : notnull => new(dictionary);
+    extension<TKey, TValue>(Dictionary<TKey, TValue> dictionary) where TKey : notnull
+    {
+        public ReadOnlyDictionary<TKey, TValue> AsReadOnly() => new(dictionary);
 
-    // Converts the dictionary into a frozen dictionary if possible
-
+        // Converts the dictionary into a frozen dictionary if possible
 #if NET8_0_OR_GREATER
-    public static System.Collections.Frozen.FrozenDictionary<TKey, TValue> ToReadOnlyDictionary<TKey, TValue>(this Dictionary<TKey, TValue> dictionary) where TKey : notnull
+        public System.Collections.Frozen.FrozenDictionary<TKey, TValue> ToReadOnlyDictionary()
         => System.Collections.Frozen.FrozenDictionary.ToFrozenDictionary(dictionary, dictionary.Comparer);
 #else
-    public static ReadOnlyDictionary<TKey, TValue> ToReadOnlyDictionary<TKey, TValue>(this Dictionary<TKey, TValue> dictionary) where TKey : notnull => AsReadOnly(dictionary);
+        public ReadOnlyDictionary<TKey, TValue> ToReadOnlyDictionary() => AsReadOnly(dictionary);
+#endif
+    }
+
+#if !NET8_0_OR_GREATER
+    extension<TKey, TValue>(ReadOnlyDictionary<TKey, TValue>) where TKey : notnull
+    {
+        public static ReadOnlyDictionary<TKey, TValue> Empty => EmptyDictionary<TKey, TValue>.Value;
+    }
 #endif
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using GTranslate.Translators;
 
@@ -7,15 +6,6 @@ namespace GTranslate;
 
 internal static class TranslatorGuards
 {
-    public static void NotNull<T>([NotNull] T? obj, [CallerArgumentExpression(nameof(obj))] string? parameterName = null)
-        where T : class
-    {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(parameterName);
-        }
-    }
-
     public static void LanguageFound(string? language, out Language lang, string message = "Unknown language.",
         [CallerArgumentExpression(nameof(language))] string? parameterName = null)
     {
@@ -81,17 +71,5 @@ internal static class TranslatorGuards
         {
             throw new ArgumentException($"The text exceeds the maximum length of {maxLength} characters allowed for the translator.", parameterName);
         }
-    }
-
-    public static void ObjectNotDisposed(object obj, [DoesNotReturnIf(true)] bool disposed)
-    {
-#if NET8_0_OR_GREATER
-        ObjectDisposedException.ThrowIf(disposed, obj);
-#else
-        if (disposed)
-        {
-            throw new ObjectDisposedException(obj.GetType().FullName);
-        }
-#endif
     }
 }

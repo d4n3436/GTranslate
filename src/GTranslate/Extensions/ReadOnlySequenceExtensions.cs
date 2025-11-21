@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.IO;
 using GTranslate.Common;
@@ -7,9 +7,6 @@ namespace GTranslate.Extensions;
 
 internal static class ReadOnlySequenceExtensions
 {
-    public static ReadOnlySequence<byte> AsReadOnlySequence(this Span<ReadOnlyMemory<byte>> chunks)
-        => AsReadOnlySequence((ReadOnlySpan<ReadOnlyMemory<byte>>)chunks);
-
     public static ReadOnlySequence<byte> AsReadOnlySequence(this ReadOnlySpan<ReadOnlyMemory<byte>> chunks)
     {
         if (chunks.Length == 0)

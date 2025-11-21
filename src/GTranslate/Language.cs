@@ -21,7 +21,7 @@ public sealed class Language : ILanguage, IEquatable<Language>
     /// <remarks>It is recommended to use <see cref="GetLanguage(string)"/> or <see cref="TryGetLanguage(string, out Language)"/> instead.</remarks>
     public Language(string nameOrCode)
     {
-        TranslatorGuards.NotNull(nameOrCode);
+        ArgumentNullException.ThrowIfNull(nameOrCode);
         TranslatorGuards.LanguageFound(nameOrCode, out var language);
 
         Name = language.Name;

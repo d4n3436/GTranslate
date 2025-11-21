@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -30,10 +30,10 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
 
     /// <inheritdoc />
     public IEnumerator<KeyValuePair<string, Language>> GetEnumerator()
-        => _languages.GetEnumerator();
+        => _languages.GetEnumerator()!;
 
     /// <inheritdoc />
-    IEnumerator IEnumerable.GetEnumerator() => _languages.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => _languages.GetEnumerator()!;
 
     /// <inheritdoc />
     public int Count => _languages.Count;
@@ -42,10 +42,10 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
     public Language this[string key] => _languages[key];
 
     /// <inheritdoc />
-    public IEnumerable<string> Keys => _languages.Keys;
+    public IEnumerable<string> Keys => _languages.Keys!;
 
     /// <inheritdoc />
-    public IEnumerable<Language> Values => _languages.Values;
+    public IEnumerable<Language> Values => _languages.Values!;
 
     /// <inheritdoc />
     public bool ContainsKey(string key) => _languages.ContainsKey(key);
@@ -66,7 +66,7 @@ public sealed class LanguageDictionary : ILanguageDictionary<string, Language>
     /// <exception cref="ArgumentException">Thrown when the language was not found.</exception>
     public Language GetLanguage(string code)
     {
-        TranslatorGuards.NotNull(code);
+        ArgumentNullException.ThrowIfNull(code);
         if (!TryGetLanguage(code, out var language))
             throw new ArgumentException($"Unknown language \"{code}\".", nameof(code));
 

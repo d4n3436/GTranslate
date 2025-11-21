@@ -103,7 +103,7 @@ internal sealed class ReadOnlySequenceStream : Stream
     /// <inheritdoc/>
     public override long Seek(long offset, SeekOrigin origin)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _isDisposed);
+        ObjectDisposedException.ThrowIf(_isDisposed, this);
 
         SequencePosition relativeTo;
         switch (origin)
@@ -201,13 +201,13 @@ internal sealed class ReadOnlySequenceStream : Stream
 
     private T ReturnOrThrowDisposed<T>(T value)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _isDisposed);
+        ObjectDisposedException.ThrowIf(_isDisposed, this);
         return value;
     }
 
     private Exception ThrowDisposedOr(Exception ex)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _isDisposed);
+        ObjectDisposedException.ThrowIf(_isDisposed, this);
         throw ex;
     }
 }

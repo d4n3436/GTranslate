@@ -55,7 +55,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <param name="httpClient">An <see cref="HttpClient"/> instance.</param>
     public YandexTranslator(HttpClient httpClient)
     {
-        TranslatorGuards.NotNull(httpClient);
+        ArgumentNullException.ThrowIfNull(httpClient);
 
         if (httpClient.DefaultRequestHeaders.UserAgent.Count == 0)
         {
@@ -80,9 +80,9 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// </exception>
     public async Task<YandexTranslationResult> TranslateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
         TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
         TranslatorGuards.LanguageSupported(this, toLang, fromLang);
@@ -93,9 +93,9 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="TranslateAsync(string, string, string)"/>
     public async Task<YandexTranslationResult> TranslateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
         string query = $"?ucid={GetOrUpdateUcid():N}&srv=android&format=text";
@@ -143,9 +143,9 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// </exception>
     public async Task<YandexTransliterationResult> TransliterateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
         TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
         TranslatorGuards.LanguageSupported(this, toLang, fromLang);
@@ -156,9 +156,9 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="TransliterateAsync(string, string, string)"/>
     public async Task<YandexTransliterationResult> TransliterateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
 
         // It seems like the source language is required for transliterations
@@ -198,8 +198,8 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <exception cref="TranslatorException">Thrown when an error occurred during the operation.</exception>
     public async Task<Language> DetectLanguageAsync(string text)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
 
         string query = $"?ucid={GetOrUpdateUcid():N}&srv=android&format=text";
 
@@ -238,9 +238,9 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <exception cref="TranslatorException">Thrown when <paramref name="language"/> is not supported.</exception>
     public async Task<Stream> TextToSpeechAsync(string text, string language, float speed = 1)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(language);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(language);
         TranslatorGuards.LanguageFound(language, out var lang);
         EnsureValidTTSLanguage(lang);
 
@@ -250,9 +250,9 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="TextToSpeechAsync(string, string, float)"/>
     public async Task<Stream> TextToSpeechAsync(string text, ILanguage language, float speed = 1)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(language);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(language);
         EnsureValidTTSLanguage(language);
 
         string url = $"https://tts.voicetech.yandex.net/tts?text={Uri.EscapeDataString(text)}&lang={YandexTTSHotPatch(language.ISO6391)}&speed={speed}&format=mp3&quality=hi&platform=android&application=translate";
@@ -271,7 +271,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <returns><see langword="true"/> if the language is supported, otherwise <see langword="false"/>.</returns>
     public bool IsLanguageSupported(string language)
     {
-        TranslatorGuards.NotNull(language);
+        ArgumentNullException.ThrowIfNull(language);
 
         return Language.TryGetLanguage(language, out var lang) && IsLanguageSupported(lang);
     }
@@ -279,7 +279,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="IsLanguageSupported(string)"/>
     public bool IsLanguageSupported(Language language)
     {
-        TranslatorGuards.NotNull(language);
+        ArgumentNullException.ThrowIfNull(language);
 
         return (language.SupportedServices & TranslationServices.Yandex) == TranslationServices.Yandex;
     }
@@ -316,7 +316,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
     /// <returns>The hot-patched language code.</returns>
     private static string YandexHotPatch(string languageCode)
     {
-        TranslatorGuards.NotNull(languageCode);
+        ArgumentNullException.ThrowIfNull(languageCode);
 
         return languageCode switch
         {
@@ -329,7 +329,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
     private static string ReversePatch(string languageCode)
     {
-        TranslatorGuards.NotNull(languageCode);
+        ArgumentNullException.ThrowIfNull(languageCode);
 
         return languageCode switch
         {
@@ -340,7 +340,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
     private static string YandexTTSHotPatch(string languageCode)
     {
-        TranslatorGuards.NotNull(languageCode);
+        ArgumentNullException.ThrowIfNull(languageCode);
 
         return languageCode switch
         {

@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Buffers.Text;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -49,7 +50,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <param name="httpClient">An <see cref="HttpClient"/> instance.</param>
     public BingTranslator(HttpClient httpClient)
     {
-        TranslatorGuards.NotNull(httpClient);
+        ArgumentNullException.ThrowIfNull(httpClient);
 
         if (httpClient.DefaultRequestHeaders.UserAgent.Count == 0)
         {
@@ -74,9 +75,9 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// </exception>
     public async Task<BingTranslationResult> TranslateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
         TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
         TranslatorGuards.LanguageSupported(this, toLang, fromLang);
@@ -88,9 +89,9 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="TranslateAsync(string, string, string)"/>
     public async Task<BingTranslationResult> TranslateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
         TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
@@ -102,7 +103,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
             { "text", text },
             { "to", BingHotPatch(toLanguage.ISO6391) },
             { "token", credentials.Token },
-            { "key", credentials.Key.ToString() }
+            { "key", credentials.Key.ToString(CultureInfo.InvariantCulture) }
         };
 
         using var content = new FormUrlEncodedContent(data);
@@ -150,9 +151,9 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// </exception>
     public async Task<BingTransliterationResult> TransliterateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
         TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
         TranslatorGuards.LanguageSupported(this, toLang, fromLang);
@@ -164,9 +165,9 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="TransliterateAsync(string, string, string)"/>
     public async Task<BingTransliterationResult> TransliterateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
         TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
@@ -189,7 +190,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <exception cref="TranslatorException">Thrown when an error occurred during the operation.</exception>
     public async Task<Language> DetectLanguageAsync(string text)
     {
-        TranslatorGuards.NotNull(text);
+        ArgumentNullException.ThrowIfNull(text);
         TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         var result = await TranslateAsync(text, "en").ConfigureAwait(false);
@@ -209,9 +210,9 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <exception cref="TranslatorException">Thrown when <paramref name="language"/> is not supported, or an error occurred during the operation.</exception>
     public async Task<Stream> TextToSpeechAsync(string text, string language, float speakRate = 1)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(language);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(language);
         EnsureValidTTSLanguage(language, out var voice);
 
         return await TextToSpeechAsync(text, voice, speakRate).ConfigureAwait(false);
@@ -230,9 +231,9 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <exception cref="TranslatorException">Thrown when an error occurred during the operation.</exception>
     public async Task<Stream> TextToSpeechAsync(string text, MicrosoftVoice voice, float speakRate = 1)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(voice);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(voice);
 
         var credentials = await GetOrUpdateCredentialsAsync().ConfigureAwait(false);
 
@@ -242,7 +243,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
         {
             { "ssml", ssml },
             { "token", credentials.Token },
-            { "key", credentials.Key.ToString() }
+            { "key", credentials.Key.ToString(CultureInfo.InvariantCulture) }
         };
 
         using var content = new FormUrlEncodedContent(data);
@@ -264,7 +265,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <returns><see langword="true"/> if the language is supported, otherwise <see langword="false"/>.</returns>
     public bool IsLanguageSupported(string language)
     {
-        TranslatorGuards.NotNull(language);
+        ArgumentNullException.ThrowIfNull(language);
 
         return Language.TryGetLanguage(language, out var lang) && IsLanguageSupported(lang);
     }
@@ -272,7 +273,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="IsLanguageSupported(string)"/>
     public bool IsLanguageSupported(Language language)
     {
-        TranslatorGuards.NotNull(language);
+        ArgumentNullException.ThrowIfNull(language);
 
         return (language.SupportedServices & TranslationServices.Bing) == TranslationServices.Bing;
     }
@@ -351,7 +352,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <returns>The hot-patched language code.</returns>
     private static string BingHotPatch(string languageCode)
     {
-        TranslatorGuards.NotNull(languageCode);
+        ArgumentNullException.ThrowIfNull(languageCode);
 
         return languageCode switch
         {

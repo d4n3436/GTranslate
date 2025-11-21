@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -127,10 +127,10 @@ public class GoogleLanguageScraper : ILanguageScraper
 
     private static JsonDocument GetLanguageData(byte[] bytes, ReadOnlySpan<byte> id)
     {
-        int idIndex = bytes.AsSpan().IndexOf(id);
+        int idIndex = bytes.IndexOf(id);
         byte[] callbackStart = Encoding.UTF8.GetBytes($"AF_initDataCallback({{key: 'ds:{bytes[idIndex - 10] - '0'}'");
 
-        int callbackIndex = bytes.AsSpan().IndexOf(callbackStart);
+        int callbackIndex = bytes.IndexOf(callbackStart);
 
         int start = bytes.AsSpan(callbackIndex).IndexOf(LanguagesStart) + LanguagesStart.Length;
         int length = bytes.AsSpan(start + callbackIndex).IndexOf(LanguagesEnd);

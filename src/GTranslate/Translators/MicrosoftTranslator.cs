@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -40,7 +40,11 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     internal static readonly HtmlEncoder SsmlEncoder = HtmlEncoder.Create(UnicodeRanges.All); // Like the default encoder but only encodes required characters
 
     // From Microsoft Translator Android app
+#if NET6_0_OR_GREATER
+    private static ReadOnlySpan<byte> PrivateKey =>
+#else
     private static readonly byte[] PrivateKey =
+#endif
     [
         0xa2, 0x29, 0x3a, 0x3d, 0xd0, 0xdd, 0x32, 0x73,
         0x97, 0x7a, 0x64, 0xdb, 0xc2, 0xf3, 0x27, 0xf5,
@@ -190,7 +194,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <param name="httpClient">An <see cref="HttpClient"/> instance.</param>
     public MicrosoftTranslator(HttpClient httpClient)
     {
-        TranslatorGuards.NotNull(httpClient);
+        ArgumentNullException.ThrowIfNull(httpClient);
 
         if (httpClient.DefaultRequestHeaders.UserAgent.Count == 0)
         {
@@ -215,9 +219,9 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// </exception>
     public async Task<MicrosoftTranslationResult> TranslateAsync(string text, string toLanguage, string? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
         TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
         TranslatorGuards.LanguageSupported(this, toLang, fromLang);
@@ -229,9 +233,9 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="TranslateAsync(string, string, string)"/>
     public async Task<MicrosoftTranslationResult> TranslateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage = null)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(toLanguage);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
         TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
@@ -270,11 +274,11 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <exception cref="TranslatorException">Thrown when a parameter is not supported, or an error occurred during the operation.</exception>
     public async Task<MicrosoftTransliterationResult> TransliterateAsync(string text, string language, string fromScript, string toScript)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(language);
-        TranslatorGuards.NotNull(fromScript);
-        TranslatorGuards.NotNull(toScript);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(language);
+        ArgumentNullException.ThrowIfNull(fromScript);
+        ArgumentNullException.ThrowIfNull(toScript);
         TranslatorGuards.LanguageFound(language, out var lang);
         TranslatorGuards.LanguageSupported(this, lang);
         TranslatorGuards.MaxTextLength(text, MaxTextLength);
@@ -285,11 +289,11 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="TransliterateAsync(string, string, string, string)"/>
     public async Task<MicrosoftTransliterationResult> TransliterateAsync(string text, ILanguage language, string fromScript, string toScript)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(language);
-        TranslatorGuards.NotNull(fromScript);
-        TranslatorGuards.NotNull(toScript);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(language);
+        ArgumentNullException.ThrowIfNull(fromScript);
+        ArgumentNullException.ThrowIfNull(toScript);
         TranslatorGuards.MaxTextLength(text, MaxTextLength);
         EnsureValidScripts(language.ISO6391, fromScript, toScript);
 
@@ -316,8 +320,8 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <exception cref="TranslatorException">Thrown when an error occurred during the operation.</exception>
     public async Task<Language> DetectLanguageAsync(string text)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
         TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, DetectUri);
@@ -344,9 +348,9 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <exception cref="TranslatorException">Thrown when <paramref name="language"/> is not supported, or an error occurred during the operation.</exception>
     public async Task<Stream> TextToSpeechAsync(string text, string language, float speakRate = 1)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(language);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(language);
         EnsureValidTTSLanguage(language, out var voice);
 
         return await TextToSpeechAsync(text, voice, speakRate).ConfigureAwait(false);
@@ -365,9 +369,9 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <exception cref="TranslatorException">Thrown when an error occurred during the operation.</exception>
     public async Task<Stream> TextToSpeechAsync(string text, MicrosoftVoice voice, float speakRate = 1)
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
-        TranslatorGuards.NotNull(text);
-        TranslatorGuards.NotNull(voice);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(voice);
 
         var authInfo = await GetOrUpdateMicrosoftAuthTokenAsync().ConfigureAwait(false);
 
@@ -393,7 +397,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <returns>A <see cref="ValueTask{TResult}"/> containing the list of voices.</returns>
     public async ValueTask<IReadOnlyCollection<MicrosoftVoice>> GetTTSVoicesAsync()
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
+        ObjectDisposedException.ThrowIf(_disposed, this);
 
         if (_voices.Length != 0)
         {
@@ -438,7 +442,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <exception cref="TranslatorException">Thrown when the token could not be obtained from the response.</exception>
     public async ValueTask<MicrosoftAuthTokenInfo> GetOrUpdateMicrosoftAuthTokenAsync()
     {
-        TranslatorGuards.ObjectNotDisposed(this, _disposed);
+        ObjectDisposedException.ThrowIf(_disposed, this);
 
         if (!_cachedAuthTokenInfo.IsExpired())
         {
@@ -468,7 +472,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
             // if another API request is made while the token is still valid.
 
             // https://docs.microsoft.com/en-us/azure/cognitive-services/authentication?tabs=powershell#authenticate-with-an-authentication-token
-            if (!TryGetExpirationDate(model.Token.AsSpan(), out var expirationDate))
+            if (!TryGetExpirationDate(model.Token, out var expirationDate))
             {
                 throw new TranslatorException("Unable to obtain the expiration date from the auth token.", Name);
             }
@@ -492,7 +496,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <returns><see langword="true"/> if the language is supported, otherwise <see langword="false"/>.</returns>
     public bool IsLanguageSupported(string language)
     {
-        TranslatorGuards.NotNull(language);
+        ArgumentNullException.ThrowIfNull(language);
 
         return Language.TryGetLanguage(language, out var lang) && IsLanguageSupported(lang);
     }
@@ -500,7 +504,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="IsLanguageSupported(string)"/>
     public bool IsLanguageSupported(Language language)
     {
-        TranslatorGuards.NotNull(language);
+        ArgumentNullException.ThrowIfNull(language);
 
         return (language.SupportedServices & TranslationServices.Microsoft) == TranslationServices.Microsoft;
     }
@@ -535,7 +539,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <returns>The hot-patched language code.</returns>
     private static string MicrosoftHotPatch(string languageCode)
     {
-        TranslatorGuards.NotNull(languageCode);
+        ArgumentNullException.ThrowIfNull(languageCode);
 
         return languageCode switch
         {
@@ -630,7 +634,12 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         if (index != -1 && index < lastIndex)
         {
             var encodedPayload = token[++index..lastIndex];
+
+#if NET9_0_OR_GREATER
+            byte[] payload = System.Buffers.Text.Base64Url.DecodeFromChars(encodedPayload);
+#else
             byte[] payload = Base64UrlDecode(encodedPayload.ToString());
+#endif
 
             var document = JsonDocument.Parse(payload);
             if (document.RootElement.TryGetProperty("exp"u8, out var exp) && exp.TryGetInt64(out long unixSeconds))
