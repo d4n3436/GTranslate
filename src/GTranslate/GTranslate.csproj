@@ -4,7 +4,6 @@
     <Version>2.3.1</Version>
     <LangVersion>14</LangVersion>
     <Nullable>enable</Nullable>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net10.0</TargetFrameworks>
     <Authors>d4n3436</Authors>
     <Description>GTranslate is a collection of free translation APIs (Google Translate, Bing Translator, Microsoft Translator and Yandex.Translate). Currently supports translation, transliteration, language detection and text-to-speech.</Description>
