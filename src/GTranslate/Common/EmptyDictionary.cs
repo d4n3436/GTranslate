@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace GTranslate;
+namespace GTranslate.Common;
 
 internal static class EmptyDictionary<TKey, TValue> where TKey : notnull
 {

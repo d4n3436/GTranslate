@@ -1,4 +1,4 @@
-﻿namespace GTranslate;
+﻿namespace GTranslate.Common;
 
 internal static class Constants
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace GTranslate;
+namespace GTranslate.Common;
 
 /// <summary>
 /// Represents a generic cached object.

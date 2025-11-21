@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GTranslate;
+namespace GTranslate.Common;
 
 internal readonly struct BingCredentials
 {

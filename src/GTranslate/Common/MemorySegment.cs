@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Buffers;
 
-namespace GTranslate;
+namespace GTranslate.Common;
 
 internal sealed class MemorySegment<T> : ReadOnlySequenceSegment<T>
 {

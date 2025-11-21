@@ -13,6 +13,7 @@ using System.Text.Json;
 using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
+using GTranslate.Common;
 using GTranslate.Extensions;
 using GTranslate.Models;
 using GTranslate.Results;
