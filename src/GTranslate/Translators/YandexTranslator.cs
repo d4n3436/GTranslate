@@ -394,7 +394,7 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
     private Guid GetOrUpdateUcid()
     {
-        if (_cachedUcid.IsExpired())
+        if (_cachedUcid.IsExpired)
         {
             _cachedUcid = new CachedObject<Guid>(Guid.NewGuid(), TimeSpan.FromSeconds(360));
         }

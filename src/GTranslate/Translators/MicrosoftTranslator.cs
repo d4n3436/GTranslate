@@ -452,7 +452,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        if (!_cachedAuthTokenInfo.IsExpired())
+        if (!_cachedAuthTokenInfo.IsExpired)
         {
             return _cachedAuthTokenInfo.Value;
         }
@@ -461,7 +461,7 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
 
         try
         {
-            if (!_cachedAuthTokenInfo.IsExpired())
+            if (!_cachedAuthTokenInfo.IsExpired)
             {
                 return _cachedAuthTokenInfo.Value;
             }

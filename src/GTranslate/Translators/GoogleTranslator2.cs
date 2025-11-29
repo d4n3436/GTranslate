@@ -374,6 +374,6 @@ public sealed class GoogleTranslator2 : ITranslator, IDisposable
         }
 
         byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-        return JsonDocument.Parse(bytes.AsMemory(6, bytes.Length - 6));
+        return JsonDocument.Parse(bytes.AsMemory(6));
     }
 }

@@ -420,7 +420,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
     private async ValueTask<BingCredentials> GetOrUpdateCredentialsAsync()
     {
-        if (!_cachedCredentials.IsExpired())
+        if (!_cachedCredentials.IsExpired)
         {
             return _cachedCredentials.Value;
         }
@@ -429,7 +429,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
         try
         {
-            if (!_cachedCredentials.IsExpired())
+            if (!_cachedCredentials.IsExpired)
             {
                 return _cachedCredentials.Value;
             }

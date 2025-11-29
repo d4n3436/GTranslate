@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 
 namespace GTranslate.Common;
@@ -59,13 +59,15 @@ internal readonly struct CachedObject<T>
     public DateTimeOffset CachedDate { get; }
 
     /// <summary>
-    /// Returns whether this object has expired.
+    /// Gets a value indicating whether this object has expired.
     /// </summary>
-    /// <returns><see langword="true"/> if the object has expired, otherwise <see langword="false"/>.</returns>
-    public bool IsExpired() => DateTimeOffset.UtcNow > ExpirationDate;
+    /// <value>
+    /// <see langword="true"/> if the object has expired, otherwise <see langword="false"/>.
+    /// </value>
+    public bool IsExpired => DateTimeOffset.UtcNow > ExpirationDate;
 
     /// <inheritdoc/>
-    public override string ToString() => $"{nameof(Value)}: {Value}, {nameof(IsExpired)}: {IsExpired()}";
+    public override string ToString() => $"{nameof(Value)}: {Value}, {nameof(IsExpired)}: {IsExpired}";
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => ToString();
