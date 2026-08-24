@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using GTranslate.Common;
 using GTranslate.Extensions;
@@ -17,7 +19,7 @@ namespace GTranslate.Translators;
 /// Represents a translator that uses the old (previous) Google Translate API.
 /// </summary>
 [PublicAPI]
-public sealed class GoogleTranslator : ITranslator, IDisposable
+public sealed class GoogleTranslator : IDictionaryTranslator, IDisposable
 {
     private const string Salt1 = "+-a^+6";
     private const string Salt2 = "+-3^+b+-f";
@@ -40,6 +42,21 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
 
     /// <inheritdoc/>
     public string Name => nameof(GoogleTranslator);
+
+    /// <inheritdoc/>
+    public TranslationServiceCapabilities Capabilities => TranslationServiceCapabilities.Translation
+        | TranslationServiceCapabilities.Detection
+        | TranslationServiceCapabilities.Transliteration
+        | TranslationServiceCapabilities.TextToSpeech
+        | TranslationServiceCapabilities.Dictionary
+        | TranslationServiceCapabilities.AlternativeTranslations
+        | TranslationServiceCapabilities.PartOfSpeech
+        | TranslationServiceCapabilities.BackTranslations
+        | TranslationServiceCapabilities.Confidence
+        | TranslationServiceCapabilities.Definitions
+        | TranslationServiceCapabilities.Synonyms
+        | TranslationServiceCapabilities.Examples
+        | TranslationServiceCapabilities.Pronunciation;
 
     private readonly HttpClient _httpClient;
     private bool _disposed;
@@ -111,6 +128,41 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
         string? transliteration = result.Sentences is null ? null : string.Concat(result.Sentences.Select(x => x.Transliteration));
 
         return new GoogleTranslationResult(translation, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(result.Source), transliteration, null, result.Confidence);
+    }
+
+    /// <inheritdoc cref="IDictionaryTranslator.LookupDictionaryAsync(string, string, string, CancellationToken)"/>
+    public async Task<DictionaryResult> LookupDictionaryAsync(string text, string toLanguage, string fromLanguage, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
+        ArgumentNullException.ThrowIfNull(fromLanguage);
+        TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
+        TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
+
+        return await LookupDictionaryAsync(text, toLang, fromLang, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="IDictionaryTranslator.LookupDictionaryAsync(string, ILanguage, ILanguage, CancellationToken)"/>
+    public async Task<DictionaryResult> LookupDictionaryAsync(string text, ILanguage toLanguage, ILanguage fromLanguage, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
+        ArgumentNullException.ThrowIfNull(fromLanguage);
+        TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
+
+        string url = $"{ApiEndpoint}?client=gtx&sl={GoogleHotPatch(fromLanguage.ISO6391)}&tl={GoogleHotPatch(toLanguage.ISO6391)}&dt=t&dt=bd&dt=at&dt=ex&dt=md&dt=ss&dj=1&source=input&tk={MakeToken(text)}";
+        using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(url));
+        request.Content = new FormUrlEncodedContent([new KeyValuePair<string, string>("q", text)]);
+
+        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        var model = await JsonSerializer.DeserializeAsync(stream, GoogleTranslationResultModelContext.Default.GoogleTranslationResultModel, cancellationToken).ConfigureAwait(false)
+            ?? throw new TranslatorException("Received an invalid response from the API.", Name);
+
+        return GoogleDictionaryParser.Parse(model, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(model.Source), Name);
     }
 
     /// <summary>
@@ -252,6 +304,12 @@ public sealed class GoogleTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="TranslateAsync(string, ILanguage, ILanguage)"/>
     async Task<ITranslationResult> ITranslator.TranslateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage)
         => await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
+
+    async Task<IDictionaryResult> IDictionaryTranslator.LookupDictionaryAsync(string text, string toLanguage, string fromLanguage, CancellationToken cancellationToken)
+        => await LookupDictionaryAsync(text, toLanguage, fromLanguage, cancellationToken).ConfigureAwait(false);
+
+    async Task<IDictionaryResult> IDictionaryTranslator.LookupDictionaryAsync(string text, ILanguage toLanguage, ILanguage fromLanguage, CancellationToken cancellationToken)
+        => await LookupDictionaryAsync(text, toLanguage, fromLanguage, cancellationToken).ConfigureAwait(false);
 
     /// <inheritdoc cref="TransliterateAsync(string, string, string)"/>
     async Task<ITransliterationResult> ITranslator.TransliterateAsync(string text, string toLanguage, string? fromLanguage)

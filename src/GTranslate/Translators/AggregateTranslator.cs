@@ -13,10 +13,17 @@ namespace GTranslate.Translators;
 /// Represents an aggregate translator. This class groups multiple translation services into a single class for ease of use.
 /// </summary>
 [PublicAPI]
-public sealed class AggregateTranslator : ITranslator, IDisposable
+public sealed class AggregateTranslator : ITranslator, ITranslatorCapabilities, IDisposable
 {
     /// <inheritdoc/>
     public string Name => nameof(AggregateTranslator);
+
+    /// <inheritdoc/>
+    /// <remarks>Dictionary composition is intentionally not performed by this translator.</remarks>
+    public TranslationServiceCapabilities Capabilities => TranslationServiceCapabilities.Translation
+        | TranslationServiceCapabilities.Detection
+        | TranslationServiceCapabilities.Transliteration
+        | TranslationServiceCapabilities.TextToSpeech;
 
     private readonly IReadOnlyCollection<ITranslator> _translators;
     private bool _disposed;

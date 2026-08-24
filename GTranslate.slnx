@@ -2,4 +2,5 @@
   <Project Path="examples/TranslatorExample/TranslatorExample.csproj" />
   <Project Path="LanguageScraper/LanguageScraper.csproj" />
   <Project Path="src/GTranslate/GTranslate.csproj" />
+  <Project Path="tests/GTranslate.Tests/GTranslate.Tests.csproj" />
 </Solution>

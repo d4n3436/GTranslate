@@ -11,7 +11,7 @@ GTranslate is a collection of free translation APIs (Google Translate, Bing Tran
   - Microsoft Azure Translator
   - Yandex.Translate
 
-- Support for translation, transliteration, language detection and text-to-speech in the included translators.
+- Support for translation, rich dictionary lookup, transliteration, language detection and text-to-speech in the included translators.
 
 - Support for all the languages of each translator.
 
@@ -46,6 +46,33 @@ Console.WriteLine(result);
 // Output:
 // Translation: 'Hola Mundo', TargetLanguage: 'Spanish (es)', SourceLanguage: 'English (en)', Service: GoogleTranslator
 ```
+
+### Rich dictionary lookup
+
+Dictionary lookup is an explicit operation and is never performed by `TranslateAsync`. Google Web, Bing and Microsoft expose native rich dictionary data through `IDictionaryTranslator`; Google RPC remains unsupported because its current response has no reliable rich dictionary schema.
+
+```c#
+using GTranslate;
+using GTranslate.Translators;
+
+IDictionaryTranslator translator = new MicrosoftTranslator();
+
+if (translator.Capabilities.HasFlag(TranslationServiceCapabilities.Dictionary))
+{
+    var result = await translator.LookupDictionaryAsync("bank", "zh-CN", "en", cancellationToken);
+
+    foreach (var group in result.Groups)
+    {
+        Console.WriteLine(group.PartOfSpeech);
+        foreach (var entry in group.Entries)
+        {
+            Console.WriteLine($"- {entry.Text} ({entry.Confidence:P0})");
+        }
+    }
+}
+```
+
+Dictionary language pairs are provider-specific and are usually narrower than translation language support. In particular, Microsoft and Bing dictionary data supports `zh-Hans` but not `zh-Hant` at the time of writing. HTTP, authentication and protocol failures throw; a successful lookup with no entries returns a result whose `Groups` collection is empty.
 
 ### Transliteration
 Transliteration is similar to translation but the way it works is specific to each translator. Some translators only support transliteration implicitly and others have dedicated transliteration endpoints (like Yandex).

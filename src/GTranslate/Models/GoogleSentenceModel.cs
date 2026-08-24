@@ -11,4 +11,7 @@ internal sealed class GoogleSentenceModel
 
     [JsonPropertyName("translit")]
     public string? Transliteration { get; set; }
+
+    [JsonPropertyName("src_translit")]
+    public string? SourceTransliteration { get; set; }
 }

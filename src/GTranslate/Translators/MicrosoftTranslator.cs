@@ -25,11 +25,12 @@ namespace GTranslate.Translators;
 /// Represents the Microsoft Azure translator.
 /// </summary>
 [PublicAPI]
-public sealed class MicrosoftTranslator : ITranslator, IDisposable
+public sealed class MicrosoftTranslator : IDictionaryTranslator, IDisposable
 {
     private const string ApiEndpoint = "api.cognitive.microsofttranslator.com";
     private const string ApiVersion = "3.0";
     private const string DetectUrl = $"{ApiEndpoint}/detect?api-version={ApiVersion}";
+    private const int MaxDictionaryExamplesRequests = 10;
     private const string SpeechTokenUrl = "dev.microsofttranslator.com/apps/endpoint?api-version=1.0";
     private const int MaxTextLength = 1000;
 
@@ -60,6 +61,18 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
 
     /// <inheritdoc/>
     public string Name => nameof(MicrosoftTranslator);
+
+    /// <inheritdoc/>
+    public TranslationServiceCapabilities Capabilities => TranslationServiceCapabilities.Translation
+        | TranslationServiceCapabilities.Detection
+        | TranslationServiceCapabilities.Transliteration
+        | TranslationServiceCapabilities.TextToSpeech
+        | TranslationServiceCapabilities.Dictionary
+        | TranslationServiceCapabilities.AlternativeTranslations
+        | TranslationServiceCapabilities.PartOfSpeech
+        | TranslationServiceCapabilities.BackTranslations
+        | TranslationServiceCapabilities.Confidence
+        | TranslationServiceCapabilities.Examples;
 
     private readonly HttpClient _httpClient;
     private CachedObject<MicrosoftAuthTokenInfo> _cachedAuthTokenInfo;
@@ -264,6 +277,74 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
         string sourceLanguage = fromLanguage?.ISO6391 ?? result.DetectedLanguage?.Language ?? throw new TranslatorException("Expected detected language to be present on API response when fromLanguage is not provided.", Name);
 
         return new MicrosoftTranslationResult(translation.Text, text, Language.GetLanguage(translation.To), Language.GetLanguage(sourceLanguage), result.DetectedLanguage?.Score ?? 0);
+    }
+
+    /// <inheritdoc cref="IDictionaryTranslator.LookupDictionaryAsync(string, string, string, CancellationToken)"/>
+    public async Task<DictionaryResult> LookupDictionaryAsync(string text, string toLanguage, string fromLanguage, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
+        ArgumentNullException.ThrowIfNull(fromLanguage);
+        TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
+        TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
+
+        return await LookupDictionaryAsync(text, toLang, fromLang, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="IDictionaryTranslator.LookupDictionaryAsync(string, ILanguage, ILanguage, CancellationToken)"/>
+    public async Task<DictionaryResult> LookupDictionaryAsync(string text, ILanguage toLanguage, ILanguage fromLanguage, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
+        ArgumentNullException.ThrowIfNull(fromLanguage);
+        TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
+
+        string languageParameters = $"&from={MicrosoftHotPatch(fromLanguage.ISO6391)}&to={MicrosoftHotPatch(toLanguage.ISO6391)}";
+        string lookupUrl = $"{ApiEndpoint}/dictionary/lookup?api-version={ApiVersion}{languageParameters}";
+        using var lookupRequest = new HttpRequestMessage(HttpMethod.Post, new Uri($"https://{lookupUrl}"));
+        lookupRequest.Headers.Add("X-MT-Signature", GetSignature(lookupUrl));
+        lookupRequest.Content = JsonContent.Create([new MicrosoftTranslatorRequest { Text = text }], MicrosoftTranslatorRequestContext.Default.MicrosoftTranslatorRequestArray);
+
+        using var lookupResponse = await _httpClient.SendAsync(lookupRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        lookupResponse.EnsureSuccessStatusCode();
+        using var lookupStream = await lookupResponse.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        var lookupModels = await JsonSerializer.DeserializeAsync(lookupStream, MicrosoftDictionaryModelContext.Default.MicrosoftDictionaryResultModelArray, cancellationToken).ConfigureAwait(false)
+            ?? throw new TranslatorException("Received an invalid response from the dictionary lookup API.", Name);
+
+        var exampleRequests = lookupModels
+            .SelectMany(x => (x.Translations ?? Array.Empty<MicrosoftDictionaryTranslationModel>())
+                .Select(translation => new
+                {
+                    Text = x.NormalizedSource ?? text,
+                    Translation = translation.NormalizedTarget ?? translation.DisplayTarget
+                }))
+            .Where(static x => !string.IsNullOrWhiteSpace(x.Translation))
+            .GroupBy(static x => x.Translation, StringComparer.OrdinalIgnoreCase)
+            .Select(static x => x.First())
+            .Take(MaxDictionaryExamplesRequests)
+            .Select(static x => new MicrosoftDictionaryExampleRequestModel { Text = x.Text, Translation = x.Translation! })
+            .ToArray();
+
+        MicrosoftDictionaryExamplesResultModel[] exampleModels = [];
+        if (exampleRequests.Length > 0)
+        {
+            string examplesUrl = $"{ApiEndpoint}/dictionary/examples?api-version={ApiVersion}{languageParameters}";
+            using var examplesRequest = new HttpRequestMessage(HttpMethod.Post, new Uri($"https://{examplesUrl}"));
+            examplesRequest.Headers.Add("X-MT-Signature", GetSignature(examplesUrl));
+            examplesRequest.Content = JsonContent.Create(exampleRequests, MicrosoftDictionaryModelContext.Default.MicrosoftDictionaryExampleRequestModelArray);
+
+            using var examplesResponse = await _httpClient.SendAsync(examplesRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            examplesResponse.EnsureSuccessStatusCode();
+            using var examplesStream = await examplesResponse.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            exampleModels = await JsonSerializer.DeserializeAsync(examplesStream, MicrosoftDictionaryModelContext.Default.MicrosoftDictionaryExamplesResultModelArray, cancellationToken).ConfigureAwait(false)
+                ?? throw new TranslatorException("Received an invalid response from the dictionary examples API.", Name);
+        }
+
+        return MicrosoftDictionaryParser.Parse(lookupModels, exampleModels, text,
+            Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(fromLanguage.ISO6391), Name);
     }
 
     /// <summary>
@@ -527,6 +608,12 @@ public sealed class MicrosoftTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="TranslateAsync(string, ILanguage, ILanguage)"/>
     async Task<ITranslationResult> ITranslator.TranslateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage)
         => await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
+
+    async Task<IDictionaryResult> IDictionaryTranslator.LookupDictionaryAsync(string text, string toLanguage, string fromLanguage, CancellationToken cancellationToken)
+        => await LookupDictionaryAsync(text, toLanguage, fromLanguage, cancellationToken).ConfigureAwait(false);
+
+    async Task<IDictionaryResult> IDictionaryTranslator.LookupDictionaryAsync(string text, ILanguage toLanguage, ILanguage fromLanguage, CancellationToken cancellationToken)
+        => await LookupDictionaryAsync(text, toLanguage, fromLanguage, cancellationToken).ConfigureAwait(false);
 
     Task<ITransliterationResult> ITranslator.TransliterateAsync(string text, string toLanguage, string? fromLanguage)
         => throw new NotSupportedException("This translator does not support transliteration via languages.");

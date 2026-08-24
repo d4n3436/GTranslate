@@ -17,7 +17,7 @@ namespace GTranslate.Translators;
 /// Represents the Yandex Translator.
 /// </summary>
 [PublicAPI]
-public sealed class YandexTranslator : ITranslator, IDisposable
+public sealed class YandexTranslator : ITranslator, ITranslatorCapabilities, IDisposable
 {
     private const string ApiUrl = "https://translate.yandex.net/api/v1/tr.json";
     private const string DefaultUserAgent = "ru.yandex.translate/3.20.2024";
@@ -38,6 +38,12 @@ public sealed class YandexTranslator : ITranslator, IDisposable
 
     /// <inheritdoc/>
     public string Name => nameof(YandexTranslator);
+
+    /// <inheritdoc/>
+    public TranslationServiceCapabilities Capabilities => TranslationServiceCapabilities.Translation
+        | TranslationServiceCapabilities.Detection
+        | TranslationServiceCapabilities.Transliteration
+        | TranslationServiceCapabilities.TextToSpeech;
 
     private readonly HttpClient _httpClient;
     private CachedObject<Guid> _cachedUcid;

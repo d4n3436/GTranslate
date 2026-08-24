@@ -20,7 +20,7 @@ namespace GTranslate.Translators;
 /// Represents the Bing Translator.
 /// </summary>
 [PublicAPI]
-public sealed class BingTranslator : ITranslator, IDisposable
+public sealed class BingTranslator : IDictionaryTranslator, IDisposable
 {
     private const string HostUrl = "https://www.bing.com";
     private const string TtsEndpoint = $"{HostUrl}/tfettts";
@@ -32,6 +32,18 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
     /// <inheritdoc/>
     public string Name => nameof(BingTranslator);
+
+    /// <inheritdoc/>
+    public TranslationServiceCapabilities Capabilities => TranslationServiceCapabilities.Translation
+        | TranslationServiceCapabilities.Detection
+        | TranslationServiceCapabilities.Transliteration
+        | TranslationServiceCapabilities.TextToSpeech
+        | TranslationServiceCapabilities.Dictionary
+        | TranslationServiceCapabilities.AlternativeTranslations
+        | TranslationServiceCapabilities.PartOfSpeech
+        | TranslationServiceCapabilities.BackTranslations
+        | TranslationServiceCapabilities.Confidence
+        | TranslationServiceCapabilities.Pronunciation;
 
     private readonly HttpClient _httpClient;
     private CachedObject<BingCredentials> _cachedCredentials;
@@ -97,7 +109,12 @@ public sealed class BingTranslator : ITranslator, IDisposable
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
         TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
-        var credentials = await GetOrUpdateCredentialsAsync().ConfigureAwait(false);
+        return await TranslateAsyncCore(text, toLanguage, fromLanguage, default).ConfigureAwait(false);
+    }
+
+    private async Task<BingTranslationResult> TranslateAsyncCore(string text, ILanguage toLanguage, ILanguage? fromLanguage, CancellationToken cancellationToken)
+    {
+        var credentials = await GetOrUpdateCredentialsAsync(cancellationToken).ConfigureAwait(false);
 
         var data = new Dictionary<string, string>
         {
@@ -112,12 +129,12 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
         // For some reason the "isVertical" parameter allows you to translate up to 1000 characters instead of 500
         var uri = new Uri($"{HostUrl}/ttranslatev3?isVertical=1&IG={credentials.ImpressionGuid.ToString("N").ToUpperInvariant()}&IID={Iid}");
-        using var response = await _httpClient.PostAsync(uri, content).ConfigureAwait(false);
+        using var response = await _httpClient.PostAsync(uri, content, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
         // Bing Translator always return status code 200 regardless of the content
-        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
+        using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         ThrowIfStatusCodeIsPresent(document);
 
@@ -136,6 +153,54 @@ public sealed class BingTranslator : ITranslator, IDisposable
 
         return new BingTranslationResult(translation.Text, text, Language.GetLanguage(translation.To), sourceLanguage is null ? null : Language.GetLanguage(sourceLanguage),
             transliteration, sourceTransliteration, translation.Transliteration?.Script, result.DetectedLanguage?.Score ?? 0);
+    }
+
+    /// <inheritdoc cref="IDictionaryTranslator.LookupDictionaryAsync(string, string, string, CancellationToken)"/>
+    public async Task<DictionaryResult> LookupDictionaryAsync(string text, string toLanguage, string fromLanguage, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
+        ArgumentNullException.ThrowIfNull(fromLanguage);
+        TranslatorGuards.LanguageFound(toLanguage, out var toLang, "Unknown target language.");
+        TranslatorGuards.LanguageFound(fromLanguage, out var fromLang, "Unknown source language.");
+
+        return await LookupDictionaryAsync(text, toLang, fromLang, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="IDictionaryTranslator.LookupDictionaryAsync(string, ILanguage, ILanguage, CancellationToken)"/>
+    public async Task<DictionaryResult> LookupDictionaryAsync(string text, ILanguage toLanguage, ILanguage fromLanguage, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(toLanguage);
+        ArgumentNullException.ThrowIfNull(fromLanguage);
+        TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
+        TranslatorGuards.MaxTextLength(text, MaxTextLength);
+
+        var translation = await TranslateAsyncCore(text, toLanguage, fromLanguage, cancellationToken).ConfigureAwait(false);
+        var credentials = await GetOrUpdateCredentialsAsync(cancellationToken).ConfigureAwait(false);
+        var data = new Dictionary<string, string>
+        {
+            { "from", BingHotPatch(fromLanguage.ISO6391) },
+            { "to", BingHotPatch(toLanguage.ISO6391) },
+            { "text", text },
+            { "translatedtext", translation.Translation },
+            { "token", credentials.Token },
+            { "key", credentials.Key.ToString(CultureInfo.InvariantCulture) }
+        };
+
+        using var content = new FormUrlEncodedContent(data);
+        var uri = new Uri($"{HostUrl}/tlookupv3?isVertical=1&IG={credentials.ImpressionGuid.ToString("N").ToUpperInvariant()}&IID={Iid}");
+        using var response = await _httpClient.PostAsync(uri, content, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+        ThrowIfStatusCodeIsPresent(document);
+
+        var models = document.Deserialize(BingDictionaryResultModelContext.Default.BingDictionaryResultModelArray)
+            ?? throw new TranslatorException("Received an invalid response from the API.", Name);
+        return BingDictionaryParser.Parse(models, text, Language.GetLanguage(toLanguage.ISO6391), Language.GetLanguage(fromLanguage.ISO6391), Name);
     }
 
     /// <summary>
@@ -291,6 +356,12 @@ public sealed class BingTranslator : ITranslator, IDisposable
     async Task<ITranslationResult> ITranslator.TranslateAsync(string text, ILanguage toLanguage, ILanguage? fromLanguage)
         => await TranslateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
 
+    async Task<IDictionaryResult> IDictionaryTranslator.LookupDictionaryAsync(string text, string toLanguage, string fromLanguage, CancellationToken cancellationToken)
+        => await LookupDictionaryAsync(text, toLanguage, fromLanguage, cancellationToken).ConfigureAwait(false);
+
+    async Task<IDictionaryResult> IDictionaryTranslator.LookupDictionaryAsync(string text, ILanguage toLanguage, ILanguage fromLanguage, CancellationToken cancellationToken)
+        => await LookupDictionaryAsync(text, toLanguage, fromLanguage, cancellationToken).ConfigureAwait(false);
+
     /// <inheritdoc cref="TransliterateAsync(string, string, string)"/>
     async Task<ITransliterationResult> ITranslator.TransliterateAsync(string text, string toLanguage, string? fromLanguage)
         => await TransliterateAsync(text, toLanguage, fromLanguage).ConfigureAwait(false);
@@ -305,9 +376,12 @@ public sealed class BingTranslator : ITranslator, IDisposable
     /// <inheritdoc cref="IsLanguageSupported(Language)"/>
     bool ITranslator.IsLanguageSupported(ILanguage language) => language is Language lang && IsLanguageSupported(lang);
 
-    private async Task<CachedObject<BingCredentials>> GetCredentialsAsync()
+    private async Task<CachedObject<BingCredentials>> GetCredentialsAsync(CancellationToken cancellationToken = default)
     {
-        byte[] bytes = await _httpClient.GetByteArrayAsync(TranslatorPageUri).ConfigureAwait(false);
+        using var request = new HttpRequestMessage(HttpMethod.Get, TranslatorPageUri);
+        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        byte[] bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
         return GetCredentials(bytes);
     }
 
@@ -418,14 +492,14 @@ public sealed class BingTranslator : ITranslator, IDisposable
         _disposed = true;
     }
 
-    private async ValueTask<BingCredentials> GetOrUpdateCredentialsAsync()
+    private async ValueTask<BingCredentials> GetOrUpdateCredentialsAsync(CancellationToken cancellationToken = default)
     {
         if (!_cachedCredentials.IsExpired)
         {
             return _cachedCredentials.Value;
         }
 
-        await _credentialsSemaphore.WaitAsync().ConfigureAwait(false);
+        await _credentialsSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {
@@ -434,7 +508,7 @@ public sealed class BingTranslator : ITranslator, IDisposable
                 return _cachedCredentials.Value;
             }
 
-            _cachedCredentials = await GetCredentialsAsync().ConfigureAwait(false);
+            _cachedCredentials = await GetCredentialsAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
         {
