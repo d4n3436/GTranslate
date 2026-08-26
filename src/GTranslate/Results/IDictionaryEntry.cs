@@ -45,16 +45,6 @@ public interface IDictionaryEntry
     IReadOnlyList<string> BackTranslations { get; }
 
     /// <summary>
-    /// Gets definitions associated with this entry.
-    /// </summary>
-    IReadOnlyList<string> Definitions { get; }
-
-    /// <summary>
-    /// Gets synonyms associated with this entry.
-    /// </summary>
-    IReadOnlyList<string> Synonyms { get; }
-
-    /// <summary>
     /// Gets usage examples associated with this entry.
     /// </summary>
     IReadOnlyList<IDictionaryExample> Examples { get; }
