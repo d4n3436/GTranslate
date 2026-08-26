@@ -97,12 +97,7 @@ public sealed class BingTranslator : IDictionaryTranslator, IDisposable
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
         TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
-        return await TranslateAsyncCore(text, toLanguage, fromLanguage, default).ConfigureAwait(false);
-    }
-
-    private async Task<BingTranslationResult> TranslateAsyncCore(string text, ILanguage toLanguage, ILanguage? fromLanguage, CancellationToken cancellationToken)
-    {
-        var credentials = await GetOrUpdateCredentialsAsync(cancellationToken).ConfigureAwait(false);
+        var credentials = await GetOrUpdateCredentialsAsync().ConfigureAwait(false);
 
         var data = new Dictionary<string, string>
         {
@@ -117,12 +112,12 @@ public sealed class BingTranslator : IDictionaryTranslator, IDisposable
 
         // For some reason the "isVertical" parameter allows you to translate up to 1000 characters instead of 500
         var uri = new Uri($"{HostUrl}/ttranslatev3?isVertical=1&IG={credentials.ImpressionGuid.ToString("N").ToUpperInvariant()}&IID={Iid}");
-        using var response = await _httpClient.PostAsync(uri, content, cancellationToken).ConfigureAwait(false);
+        using var response = await _httpClient.PostAsync(uri, content).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
         // Bing Translator always return status code 200 regardless of the content
-        using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+        using var document = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
 
         ThrowIfStatusCodeIsPresent(document);
 
@@ -174,14 +169,12 @@ public sealed class BingTranslator : IDictionaryTranslator, IDisposable
         TranslatorGuards.LanguageSupported(this, toLanguage, fromLanguage);
         TranslatorGuards.MaxTextLength(text, MaxTextLength);
 
-        var translation = await TranslateAsyncCore(text, toLanguage, fromLanguage, cancellationToken).ConfigureAwait(false);
         var credentials = await GetOrUpdateCredentialsAsync(cancellationToken).ConfigureAwait(false);
         var data = new Dictionary<string, string>
         {
             { "from", BingHotPatch(fromLanguage.ISO6391) },
             { "to", BingHotPatch(toLanguage.ISO6391) },
             { "text", text },
-            { "translatedtext", translation.Translation },
             { "token", credentials.Token },
             { "key", credentials.Key.ToString(CultureInfo.InvariantCulture) }
         };

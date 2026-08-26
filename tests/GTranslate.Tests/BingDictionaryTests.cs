@@ -20,14 +20,10 @@ public sealed class BingDictionaryTests
             }
 
             string body = request.Content is null ? string.Empty : await request.Content.ReadAsStringAsync();
-            if (request.RequestUri.AbsolutePath == "/ttranslatev3")
-            {
-                Assert.Contains("fromLang=en", body);
-                return FixtureHttpMessageHandler.Json(Fixture.Read("Bing", "translation"));
-            }
 
             Assert.Equal("/tlookupv3", request.RequestUri.AbsolutePath);
-            Assert.Contains("translatedtext=", body);
+            Assert.Contains("from=en", body);
+            Assert.Contains("text=bank", body);
             return FixtureHttpMessageHandler.Json(Fixture.Read("Bing", "polysemous-word"));
         }));
         using var translator = new BingTranslator(client);
@@ -75,7 +71,6 @@ public sealed class BingDictionaryTests
             string response = request.RequestUri!.AbsolutePath switch
             {
                 "/translator" => "var params_AbusePreventionHelper = [4102444800000,\"fixture-token\"",
-                "/ttranslatev3" => Fixture.Read("Bing", "translation"),
                 _ => lookupFixture
             };
             return Task.FromResult(FixtureHttpMessageHandler.Json(response));
