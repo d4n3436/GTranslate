@@ -31,10 +31,10 @@ public sealed class DictionaryResult : IDictionaryResult
     /// <inheritdoc/>
     public string Service { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc cref="IDictionaryResult.TargetLanguage"/>
     public Language TargetLanguage { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc cref="IDictionaryResult.SourceLanguage"/>
     public Language SourceLanguage { get; }
 
     /// <inheritdoc/>
