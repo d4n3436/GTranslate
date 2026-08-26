@@ -62,18 +62,6 @@ public sealed class MicrosoftTranslator : IDictionaryTranslator, IDisposable
     /// <inheritdoc/>
     public string Name => nameof(MicrosoftTranslator);
 
-    /// <inheritdoc/>
-    public TranslationServiceCapabilities Capabilities => TranslationServiceCapabilities.Translation
-        | TranslationServiceCapabilities.Detection
-        | TranslationServiceCapabilities.Transliteration
-        | TranslationServiceCapabilities.TextToSpeech
-        | TranslationServiceCapabilities.Dictionary
-        | TranslationServiceCapabilities.AlternativeTranslations
-        | TranslationServiceCapabilities.PartOfSpeech
-        | TranslationServiceCapabilities.BackTranslations
-        | TranslationServiceCapabilities.Confidence
-        | TranslationServiceCapabilities.Examples;
-
     private readonly HttpClient _httpClient;
     private CachedObject<MicrosoftAuthTokenInfo> _cachedAuthTokenInfo;
     private readonly SemaphoreSlim _voicesSemaphore = new(1, 1);
@@ -280,6 +268,10 @@ public sealed class MicrosoftTranslator : IDictionaryTranslator, IDisposable
     }
 
     /// <inheritdoc cref="IDictionaryTranslator.LookupDictionaryAsync(string, string, string, CancellationToken)"/>
+    /// <remarks>
+    /// Microsoft returns translations grouped by part of speech, along with confidence scores, back translations
+    /// and usage examples. Definitions, synonyms and pronunciations are not returned.
+    /// </remarks>
     public async Task<DictionaryResult> LookupDictionaryAsync(string text, string toLanguage, string fromLanguage, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -293,6 +285,10 @@ public sealed class MicrosoftTranslator : IDictionaryTranslator, IDisposable
     }
 
     /// <inheritdoc cref="IDictionaryTranslator.LookupDictionaryAsync(string, ILanguage, ILanguage, CancellationToken)"/>
+    /// <remarks>
+    /// Microsoft returns translations grouped by part of speech, along with confidence scores, back translations
+    /// and usage examples. Definitions, synonyms and pronunciations are not returned.
+    /// </remarks>
     public async Task<DictionaryResult> LookupDictionaryAsync(string text, ILanguage toLanguage, ILanguage fromLanguage, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);

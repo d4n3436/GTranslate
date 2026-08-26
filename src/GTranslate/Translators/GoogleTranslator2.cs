@@ -17,7 +17,7 @@ namespace GTranslate.Translators;
 /// Represents a translator for the new Google Translate RPC API.
 /// </summary>
 [PublicAPI]
-public sealed class GoogleTranslator2 : ITranslator, ITranslatorCapabilities, IDisposable
+public sealed class GoogleTranslator2 : ITranslator, IDisposable
 {
     private const string TranslateRpcId = "MkEWBc";
     private const string TtsRpcId = "jQ1olc";
@@ -40,12 +40,6 @@ public sealed class GoogleTranslator2 : ITranslator, ITranslatorCapabilities, ID
 
     /// <inheritdoc/>
     public string Name => nameof(GoogleTranslator2);
-
-    /// <inheritdoc/>
-    public TranslationServiceCapabilities Capabilities => TranslationServiceCapabilities.Translation
-        | TranslationServiceCapabilities.Detection
-        | TranslationServiceCapabilities.Transliteration
-        | TranslationServiceCapabilities.TextToSpeech;
 
     private readonly HttpClient _httpClient;
     private bool _disposed;

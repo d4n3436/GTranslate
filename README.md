@@ -49,28 +49,33 @@ Console.WriteLine(result);
 
 ### Rich dictionary lookup
 
-Dictionary lookup is an explicit operation and is never performed by `TranslateAsync`. Google Web, Bing and Microsoft expose native rich dictionary data through `IDictionaryTranslator`; Google RPC remains unsupported because its current response has no reliable rich dictionary schema.
+Dictionary lookup is an explicit operation and is never performed by `TranslateAsync`. A translator supports it if it implements `IDictionaryTranslator`, which Google Web, Bing and Microsoft do; Google RPC doesn't because its current response has no reliable rich dictionary schema.
 
 ```c#
 using GTranslate;
 using GTranslate.Translators;
 
-IDictionaryTranslator translator = new MicrosoftTranslator();
+var translator = new MicrosoftTranslator();
 
-if (translator.Capabilities.HasFlag(TranslationServiceCapabilities.Dictionary))
+var result = await translator.LookupDictionaryAsync("bank", "zh-CN", "en");
+
+foreach (var group in result.Groups)
 {
-    var result = await translator.LookupDictionaryAsync("bank", "zh-CN", "en", cancellationToken);
-
-    foreach (var group in result.Groups)
+    Console.WriteLine(group.PartOfSpeech);
+    foreach (var entry in group.Entries)
     {
-        Console.WriteLine(group.PartOfSpeech);
-        foreach (var entry in group.Entries)
-        {
-            Console.WriteLine($"- {entry.Text} ({entry.Confidence:P0})");
-        }
+        Console.WriteLine($"- {entry.Text} ({entry.Confidence:P0})");
     }
 }
 ```
+
+The sections a lookup returns depend on the service:
+
+| Translator | Part of speech | Confidence | Back translations | Definitions | Synonyms | Examples | Pronunciation |
+|-|-|-|-|-|-|-|-|
+| `GoogleTranslator` | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| `BingTranslator` | Yes | Yes | Yes | No | No | No | Transliteration only |
+| `MicrosoftTranslator` | Yes | Yes | Yes | No | No | Yes | No |
 
 Dictionary language pairs are provider-specific and are usually narrower than translation language support. In particular, Microsoft and Bing dictionary data supports `zh-Hans` but not `zh-Hant` at the time of writing. HTTP, authentication and protocol failures throw; a successful lookup with no entries returns a result whose `Groups` collection is empty.
 

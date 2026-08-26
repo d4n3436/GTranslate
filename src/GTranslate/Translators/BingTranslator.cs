@@ -33,18 +33,6 @@ public sealed class BingTranslator : IDictionaryTranslator, IDisposable
     /// <inheritdoc/>
     public string Name => nameof(BingTranslator);
 
-    /// <inheritdoc/>
-    public TranslationServiceCapabilities Capabilities => TranslationServiceCapabilities.Translation
-        | TranslationServiceCapabilities.Detection
-        | TranslationServiceCapabilities.Transliteration
-        | TranslationServiceCapabilities.TextToSpeech
-        | TranslationServiceCapabilities.Dictionary
-        | TranslationServiceCapabilities.AlternativeTranslations
-        | TranslationServiceCapabilities.PartOfSpeech
-        | TranslationServiceCapabilities.BackTranslations
-        | TranslationServiceCapabilities.Confidence
-        | TranslationServiceCapabilities.Pronunciation;
-
     private readonly HttpClient _httpClient;
     private CachedObject<BingCredentials> _cachedCredentials;
     private readonly SemaphoreSlim _credentialsSemaphore = new(1, 1);
@@ -156,6 +144,10 @@ public sealed class BingTranslator : IDictionaryTranslator, IDisposable
     }
 
     /// <inheritdoc cref="IDictionaryTranslator.LookupDictionaryAsync(string, string, string, CancellationToken)"/>
+    /// <remarks>
+    /// Bing returns translations grouped by part of speech, along with confidence scores, back translations
+    /// and the transliteration of each translation. Definitions, synonyms and usage examples are not returned.
+    /// </remarks>
     public async Task<DictionaryResult> LookupDictionaryAsync(string text, string toLanguage, string fromLanguage, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -169,6 +161,10 @@ public sealed class BingTranslator : IDictionaryTranslator, IDisposable
     }
 
     /// <inheritdoc cref="IDictionaryTranslator.LookupDictionaryAsync(string, ILanguage, ILanguage, CancellationToken)"/>
+    /// <remarks>
+    /// Bing returns translations grouped by part of speech, along with confidence scores, back translations
+    /// and the transliteration of each translation. Definitions, synonyms and usage examples are not returned.
+    /// </remarks>
     public async Task<DictionaryResult> LookupDictionaryAsync(string text, ILanguage toLanguage, ILanguage fromLanguage, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);

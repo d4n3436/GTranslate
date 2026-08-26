@@ -8,8 +8,12 @@ namespace GTranslate.Translators;
 /// <summary>
 /// Represents a translator that can perform explicit dictionary lookups.
 /// </summary>
+/// <remarks>
+/// The sections a lookup can return depend on the service; see the documentation of each implementation of
+/// <see cref="LookupDictionaryAsync(string, ILanguage, ILanguage, CancellationToken)"/>.
+/// </remarks>
 [PublicAPI]
-public interface IDictionaryTranslator : ITranslator, ITranslatorCapabilities
+public interface IDictionaryTranslator : ITranslator
 {
     /// <summary>
     /// Looks up dictionary information for a word or short phrase.

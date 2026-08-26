@@ -1,4 +1,3 @@
-using GTranslate;
 using GTranslate.Translators;
 
 namespace GTranslate.Tests;
@@ -6,26 +5,22 @@ namespace GTranslate.Tests;
 public sealed class DictionaryCapabilityTests
 {
     [Fact]
-    public void SupportedProvidersAdvertiseDictionaryCapability()
+    public void SupportedProvidersImplementDictionaryTranslator()
     {
-        AssertDictionarySupported(new GoogleTranslator());
-        AssertDictionarySupported(new BingTranslator());
-        AssertDictionarySupported(new MicrosoftTranslator());
+        using var google = new GoogleTranslator();
+        using var bing = new BingTranslator();
+        using var microsoft = new MicrosoftTranslator();
+
+        Assert.IsAssignableFrom<IDictionaryTranslator>(google);
+        Assert.IsAssignableFrom<IDictionaryTranslator>(bing);
+        Assert.IsAssignableFrom<IDictionaryTranslator>(microsoft);
     }
 
     [Fact]
-    public void GoogleRpcDoesNotAdvertiseUnverifiedDictionaryCapability()
+    public void GoogleRpcDoesNotImplementDictionaryTranslator()
     {
         using var translator = new GoogleTranslator2();
-        var capabilities = Assert.IsAssignableFrom<ITranslatorCapabilities>(translator).Capabilities;
 
-        Assert.False(capabilities.HasFlag(TranslationServiceCapabilities.Dictionary));
         Assert.IsNotAssignableFrom<IDictionaryTranslator>(translator);
-    }
-
-    private static void AssertDictionarySupported(IDictionaryTranslator translator)
-    {
-        using var disposable = Assert.IsAssignableFrom<IDisposable>(translator);
-        Assert.True(translator.Capabilities.HasFlag(TranslationServiceCapabilities.Dictionary));
     }
 }

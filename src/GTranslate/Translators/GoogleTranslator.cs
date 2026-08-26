@@ -43,21 +43,6 @@ public sealed class GoogleTranslator : IDictionaryTranslator, IDisposable
     /// <inheritdoc/>
     public string Name => nameof(GoogleTranslator);
 
-    /// <inheritdoc/>
-    public TranslationServiceCapabilities Capabilities => TranslationServiceCapabilities.Translation
-        | TranslationServiceCapabilities.Detection
-        | TranslationServiceCapabilities.Transliteration
-        | TranslationServiceCapabilities.TextToSpeech
-        | TranslationServiceCapabilities.Dictionary
-        | TranslationServiceCapabilities.AlternativeTranslations
-        | TranslationServiceCapabilities.PartOfSpeech
-        | TranslationServiceCapabilities.BackTranslations
-        | TranslationServiceCapabilities.Confidence
-        | TranslationServiceCapabilities.Definitions
-        | TranslationServiceCapabilities.Synonyms
-        | TranslationServiceCapabilities.Examples
-        | TranslationServiceCapabilities.Pronunciation;
-
     private readonly HttpClient _httpClient;
     private bool _disposed;
 
@@ -131,6 +116,10 @@ public sealed class GoogleTranslator : IDictionaryTranslator, IDisposable
     }
 
     /// <inheritdoc cref="IDictionaryTranslator.LookupDictionaryAsync(string, string, string, CancellationToken)"/>
+    /// <remarks>
+    /// Google returns translations grouped by part of speech, along with confidence scores, frequency ranks,
+    /// back translations, definitions, synonyms, usage examples and the pronunciation of the looked up text.
+    /// </remarks>
     public async Task<DictionaryResult> LookupDictionaryAsync(string text, string toLanguage, string fromLanguage, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -144,6 +133,10 @@ public sealed class GoogleTranslator : IDictionaryTranslator, IDisposable
     }
 
     /// <inheritdoc cref="IDictionaryTranslator.LookupDictionaryAsync(string, ILanguage, ILanguage, CancellationToken)"/>
+    /// <remarks>
+    /// Google returns translations grouped by part of speech, along with confidence scores, frequency ranks,
+    /// back translations, definitions, synonyms, usage examples and the pronunciation of the looked up text.
+    /// </remarks>
     public async Task<DictionaryResult> LookupDictionaryAsync(string text, ILanguage toLanguage, ILanguage fromLanguage, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
